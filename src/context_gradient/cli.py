@@ -96,6 +96,11 @@ def main() -> None:
     parser.add_argument("--history-dir", default=".context-gradient/history")
     parser.add_argument("--writeback-file", default=".context-gradient/writeback.json")
     parser.add_argument("--request-capability", help="Evaluate one agent action against the Predicate Certificate")
+    parser.add_argument(
+        "--enable-writeback",
+        action="store_true",
+        help="Explicitly publish through configured DataHub mutation documents.",
+    )
     parser.add_argument("--record-live-run", action="store_true", help="Append this capability decision to the live proof data file")
     parser.add_argument("--live-runs-file", default="examples/outputs/live-runs.json", help="Path used by --record-live-run")
     parser.add_argument("--explain", action="store_true", help="Print evidence-to-decision explanation")
@@ -106,11 +111,12 @@ def main() -> None:
     else:
         client = FileDataHubClient(args.datahub_file, args.writeback_file)
     policy = load_policy(args.policy)
+    writeback = DataHubWriteback(client) if args.enable_writeback else None
     scanner = BackgroundScanner(
         extractor=DataHubEvidenceExtractor(client, cache=JsonCache(args.cache_file)),
         engine=ReadinessEngine(policy),
         history=ReadinessHistory(Path(args.history_dir)),
-        writeback=DataHubWriteback(client),
+        writeback=writeback,
     )
     result = scanner.handle_metadata_events([args.urn])[0]
     output = result.certificate

@@ -53,6 +53,9 @@ predicate \
   --request-capability autonomous-agent-action
 ```
 
+Evaluations are read-only by default. Live DataHub write-back requires the
+explicit `--enable-writeback` flag plus deployment-approved mutation documents.
+
 Example result:
 
 ```json

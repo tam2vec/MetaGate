@@ -147,6 +147,11 @@ class DataHubWriteback:
         self.client = client
 
     def publish(self, urn: str, certificate: Dict[str, Any]) -> Dict[str, Any]:
+        if isinstance(self.client, GraphQLDataHubClient) and not os.environ.get("DATAHUB_CERTIFICATE_MUTATION"):
+            raise RuntimeError(
+                "Live write-back is not configured. Set DATAHUB_CERTIFICATE_MUTATION "
+                "after testing an approved mutation in a non-production namespace."
+            )
         self.client.write_certificate(urn, certificate)
         tasks_created = 0
         for gap in certificate.get("gaps", []):

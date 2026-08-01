@@ -19,6 +19,7 @@ private deployment.
 ## Safe Defaults
 
 - read-only evaluation by default
+- live write-back requires the explicit `--enable-writeback` flag
 - write-back requires deployment-provided mutation documents
 - DataHub token stays server-side
 - public demo uses sanitized fixture data

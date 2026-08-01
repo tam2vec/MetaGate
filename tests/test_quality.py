@@ -19,6 +19,10 @@ URN = "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PRO
 
 
 class QualityTest(unittest.TestCase):
+    def test_live_writeback_fails_closed_without_mutation_config(self):
+        client = GraphQLDataHubClient("http://datahub.invalid/api/graphql")
+        with self.assertRaisesRegex(RuntimeError, "Live write-back is not configured"):
+            DataHubWriteback(client).publish("urn:li:dataset:test", {"gaps": []})
     def test_lexical_description_glossary_contradiction_is_detected(self):
         client = type("Client", (), {
             "get_entity": lambda _self, _urn: {"urn": URN, "description": {"text": "Net revenue"}, "glossary": {"terms": ["Gross Revenue"]}},

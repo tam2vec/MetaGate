@@ -1,0 +1,9 @@
+asset_urn,platform,capability,predicate_decision,human_decision,human_agrees,labeler_role,reviewer_notes
+"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,autonomous-agent-action,blocked,blocked,yes,person_1,needs to be blocked. ai shouldn't work on it cause there's no proof that the no of ppl that signup are correct.
+"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,autonomous-agent-action,blocked,blocked,yes,person_1,think it should be blocked because deleting data is important work and there needs to be a check that they are deleted for a reason b4 running ai.
+"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,autonomous-agent-action,allowed,allowed,yes,person_1,pretty sure its good to go because everything checks out.
+"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,autonomous-agent-action,blocked,blocked,yes,person_1,Blocked cause streams can manifest breaks in various ways. Need to be checked.
+"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,answer-business-questions,allowed,allowed,yes,person_2,allowed as long as ai only explains and doesnt provide recommn.
+"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,autonomous-agent-action,blocked,blocked,yes,person_2,blockd cause risky to delete data.
+"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,autonomous-agent-action,allowed,allowed,yes,person_2,allowed cause theres enough info provided.
+"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,answer-business-questions,allowed,allowed,yes,person_2,allowed as long as ai only explains and doesnt provide recommn.

@@ -1,0 +1,29 @@
+{
+  "name": "Context Gradient Preflight",
+  "trigger": "Request AI Readiness",
+  "request": {
+    "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+    "capability": "autonomous-agent-action",
+    "requested_by": "urn:li:corpuser:analyst",
+    "request_context": {
+      "source": "datahub_dataset_page",
+      "agent_workflow": "executive_metric_summary"
+    }
+  },
+  "response": {
+    "status": "BLOCKED",
+    "confidence": 86.25,
+    "readiness_score": 91.22,
+    "decision_id": "cg-2026-08-01-0001",
+    "failed_terms": [
+      "assertions.present",
+      "readiness_score >= 92.0",
+      "confidence >= 88.0"
+    ],
+    "recommended_constraints": [
+      "Do not allow autonomous agent action.",
+      "Allow only lower-risk read-only answers if the active policy permits."
+    ],
+    "writeback_target": "aiContextContract"
+  }
+}

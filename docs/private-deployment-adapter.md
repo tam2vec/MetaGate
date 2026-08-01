@@ -1,0 +1,65 @@
+# Private Deployment Adapter
+
+Predicate should be deployed beside a private DataHub instance, not as a public
+service connected to private metadata.
+
+## Default Data Access
+
+Predicate consumes metadata by default:
+
+- asset URN
+- schema and column descriptions
+- ownership
+- glossary terms
+- tags and domain
+- lineage and column lineage
+- assertions and assertion results
+- freshness signals
+- incidents
+- usage and downstream consumers
+- policy profile
+- previous Predicate decision records
+
+Predicate does not need raw table rows for the default admission decision.
+
+Optional sampled profiles can be added by a deployment owner, but they should be
+treated as sensitive and governed by the same access rules as DataHub metadata.
+
+## Private Deployment Shape
+
+```text
+DataHub UI
+  -> Request AI Readiness
+  -> Predicate API inside private network
+  -> DataHub GraphQL metadata read
+  -> Predicate policy evaluation
+  -> Context Contract
+  -> optional DataHub write-back
+```
+
+## Finance Stress Case
+
+The demo finance asset simulates a clean-looking schema that should still be
+blocked:
+
+- missing or weak owner
+- incomplete glossary
+- incomplete column lineage
+- contradictory metric definitions
+- stale freshness
+- open incidents
+- downstream executive dashboard impact
+
+The point is:
+
+> A schema can look clean while the metadata is not decision-ready.
+
+Run:
+
+```bash
+predicate \
+  "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)" \
+  --policy examples/policies/finance-production.yml \
+  --datahub-file examples/data/difficult_datahub_graph.json \
+  --request-capability autonomous-agent-action
+```

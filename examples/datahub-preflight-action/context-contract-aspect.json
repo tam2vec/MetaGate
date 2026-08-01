@@ -1,0 +1,24 @@
+{
+  "aspect": "aiContextContract",
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+  "status": "BLOCKED",
+  "readiness_score": 91.22,
+  "confidence": 86.25,
+  "policy": "enterprise-ai",
+  "capability": "autonomous-agent-action",
+  "missing_evidence": [
+    "assertions.present"
+  ],
+  "recommended_constraints": [
+    "Do not allow autonomous agent action.",
+    "Require signup quality assertions before generated operational recommendations.",
+    "Permit lower-risk read-only explanation only if the active policy allows it."
+  ],
+  "decision_record": {
+    "decision_id": "cg-2026-08-01-0001",
+    "evaluated_at": "2026-08-01T00:00:00Z",
+    "requested_by": "urn:li:corpuser:analyst",
+    "override_required_role": "Data Steward",
+    "override_reason_required": true
+  }
+}

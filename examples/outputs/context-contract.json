@@ -1,10 +1,32 @@
 {
-  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
   "policy": "enterprise-ai",
-  "allowed_capabilities": ["answer-business-questions", "generate-executive-metrics"],
-  "blocked_capabilities": ["rename-column"],
-  "verified_claims": ["ownership evidence is present and current.", "freshness evidence is present and current."],
-  "forbidden_claims": ["Do not claim rename-column is safe."],
-  "required_escalations": [{"capability": "rename-column", "reason": "Column lineage is not certified."}],
-  "valid_until_event": "Any relevant DataHub metadata graph change"
+  "capability": "autonomous-agent-action",
+  "status": "BLOCKED",
+  "readiness_score": 91.22,
+  "confidence": 86.25,
+  "decision_id": "cg-2026-08-01-0001",
+  "allowed_capabilities": [
+    "answer-business-questions"
+  ],
+  "blocked_capabilities": [
+    "generate-executive-metrics",
+    "autonomous-agent-action"
+  ],
+  "missing_evidence": [
+    "assertions.present"
+  ],
+  "recommended_constraints": [
+    "Do not allow autonomous agent action.",
+    "Do not generate executive metrics until signup assertions exist.",
+    "Allow read-only explanation only if the active policy permits it."
+  ],
+  "required_repairs": [
+    "Add user_id not-null assertion.",
+    "Add user_id uniqueness-per-reporting-day assertion.",
+    "Add daily signup row-count anomaly assertion.",
+    "Add freshness SLA assertion."
+  ],
+  "valid_until_event": "Any relevant DataHub metadata graph change",
+  "evaluated_at": "2026-08-01T00:00:00Z"
 }

@@ -73,6 +73,25 @@ Example result:
   Docker path, tests, and curated benchmark.
 - It is read-only by default; write-back is explicit and deployment-gated.
 
+## Production Path: Context Gradient Preflight
+
+The tight production story is:
+
+> Predicate is the engine behind a native DataHub preflight gate. Before an AI
+> workflow touches a dataset, it checks whether the metadata is decision-ready,
+> writes a governed Context Contract back into DataHub, and either constrains
+> the agent or blocks it with an auditable reason.
+
+Proof layers:
+
+| Layer | Artifact |
+| --- | --- |
+| DataHub preflight action | [Context Gradient Preflight](examples/datahub-preflight-action/README.md) |
+| Context Contract write-back shape | [AI Context Contract aspect](examples/datahub-preflight-action/context-contract-aspect.json) |
+| Private deployment adapter | [Private Deployment Adapter](docs/private-deployment-adapter.md) |
+| Unsafe-answer benchmark framing | [Unsafe-Answer Reduction Benchmark](docs/unsafe-answer-reduction-benchmark.md) |
+| Auth and RBAC enforcement model | [RBAC Enforcement Model](docs/rbac-enforcement-model.md) |
+
 ## Proof From Local DataHub
 
 Predicate was validated against a local DataHub quickstart seeded with sample
@@ -184,6 +203,7 @@ print(certificate.as_dict())
 - [3-minute demo script](docs/demo-script.md)
 - [Judge proof](docs/judge-proof.md)
 - [Production gap closure](docs/production-gap-closure.md)
+- [Proof layers](docs/proof-layers.md)
 - [Public API fixture demo](docs/public-live-demo.md)
 - [Live review app](docs/live-review-app.md)
 - [Capability matrix](docs/capability-matrix.md)
@@ -191,6 +211,9 @@ print(certificate.as_dict())
 - [Policy catalog](docs/policy-catalog.md)
 - [Write-back safety](docs/writeback-safety.md)
 - [Independent benchmark protocol](docs/independent-benchmark-protocol.md)
+- [Unsafe-answer reduction benchmark](docs/unsafe-answer-reduction-benchmark.md)
+- [Private deployment adapter](docs/private-deployment-adapter.md)
+- [RBAC enforcement model](docs/rbac-enforcement-model.md)
 - [External benchmark request](docs/external-benchmark-request.md)
 - [Screenshots checklist](docs/screenshots-checklist.md)
 

@@ -16,7 +16,8 @@ Use these examples in the demo and submission.
 ## Outputs
 
 - `outputs/certificate.json`: Predicate Certificate.
-- `outputs/context-contract.json`: agent-facing permission contract.
+- `outputs/context-contract.json`: AI Context Contract returned to an agent or
+  written back to DataHub.
 - `outputs/explainability-report.json`: evidence-to-policy-to-decision report.
 - `outputs/blocked-action.json`: admission-control result for a risky action.
 - `outputs/readiness-diff.json`: before/after capability movement.
@@ -34,6 +35,8 @@ Use these examples in the demo and submission.
   DataHub AI readiness skill.
 - `datahub-embed/`: compact Predicate side-panel prototype and JSON contract
   for a DataHub asset page integration.
+- `datahub-preflight-action/`: Context Gradient Preflight action contract and
+  AI Context Contract aspect shape.
 
 Local outputs are generated from the bundled fixture. Use
 `docs/live-datahub-validation.md` before describing any output as real

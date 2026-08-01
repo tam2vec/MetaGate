@@ -39,3 +39,7 @@ independent enterprise validation, or a universal precision claim. Expand
 export before making an enterprise quality claim. For an admission controller,
 track unexpected allows separately: an unsafe allow is more serious than a
 conservative block.
+
+For the external benchmark story, measure unsafe-answer reduction rather than
+generic model accuracy. See
+[Unsafe-Answer Reduction Benchmark](unsafe-answer-reduction-benchmark.md).

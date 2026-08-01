@@ -1,10 +1,33 @@
 {
-  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
-  "aspect": "predicateCertificate",
-  "readiness_score": 98.31,
-  "confidence": 96.62,
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+  "aspect": "aiContextContract",
+  "status": "BLOCKED",
+  "readiness_score": 91.22,
+  "confidence": 86.25,
   "active_policy": "enterprise-ai",
-  "certified_capabilities": ["answer-business-questions", "generate-executive-metrics"],
-  "blocked_capabilities": ["rename-column"],
-  "remediation_tasks": [{"title": "Complete column lineage", "severity": "high"}]
+  "capability": "autonomous-agent-action",
+  "decision_id": "cg-2026-08-01-0001",
+  "certified_capabilities": [
+    "answer-business-questions"
+  ],
+  "blocked_capabilities": [
+    "generate-executive-metrics",
+    "autonomous-agent-action"
+  ],
+  "missing_evidence": [
+    "assertions.present"
+  ],
+  "recommended_constraints": [
+    "Do not allow autonomous agent action.",
+    "Require signup quality assertions before generated operational recommendations."
+  ],
+  "remediation_tasks": [
+    {
+      "title": "Add signup quality assertions",
+      "severity": "high",
+      "owner": "Growth Analytics",
+      "details": "Add user_id not-null, uniqueness-per-day, signup row-count anomaly, and freshness SLA assertions."
+    }
+  ],
+  "evaluated_at": "2026-08-01T00:00:00Z"
 }

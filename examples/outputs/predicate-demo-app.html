@@ -71,6 +71,10 @@
       padding: 11px 12px;
       color: #dbe5f5;
       margin-bottom: 8px;
+      width: 100%;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
     }
     .nav-item.active {
       background: #f3f7ff;
@@ -911,17 +915,17 @@
       <div class="brand"><span class="mark">P</span>Predicate</div>
       <div>
         <div class="nav-label">Workspace</div>
-        <div class="nav-item active">Embed Prototype</div>
-        <div class="nav-item">Decision Details</div>
-        <div class="nav-item">Policy Checks</div>
-        <div class="nav-item">DataHub Evidence</div>
-        <div class="nav-item">Write-back Queue</div>
-        <div class="nav-item">Security & RBAC</div>
+        <button class="nav-item active" type="button" data-target="embed-demo">Embed Prototype</button>
+        <button class="nav-item" type="button" data-target="full-review">Decision Details</button>
+        <button class="nav-item" type="button" data-target="remediation-plan">Policy Checks</button>
+        <button class="nav-item" type="button" data-target="evidence-section">DataHub Evidence</button>
+        <button class="nav-item" type="button" data-target="writeback-section">Write-back Queue</button>
+        <button class="nav-item" type="button" data-target="security-section">Security & RBAC</button>
       </div>
       <div>
         <div class="nav-label">Proof</div>
-        <div class="nav-item">30/30 Benchmark</div>
-        <div class="nav-item">Live DataHub Runs</div>
+        <button class="nav-item" type="button" data-target="scoreboard">30/30 Benchmark</button>
+        <button class="nav-item" type="button" data-target="assetList">Live DataHub Runs</button>
       </div>
       <div class="sidebar-assets">
         <div class="nav-label">Assets</div>
@@ -934,6 +938,7 @@
         <div>
           <h1>Predicate Review</h1>
           <p class="subtitle">A product review surface for DataHub-backed AI action checks. Public mode is sanitized; local mode reads DataHub GraphQL and renders the same allowed or blocked decision path.</p>
+          <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
         </div>
         <div class="environment">
           <strong id="environmentTitle">Public static visual demo</strong>
@@ -941,18 +946,17 @@
           <span>Review API: predicate-review</span>
           <span id="dataMode">Mode: recorded proof data</span>
           <span id="dataUpdate">Updates when this page is connected to a Predicate API.</span>
-          <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
         </div>
       </div>
 
-      <section class="scoreboard" aria-label="Proof metrics">
+      <section id="scoreboard" class="scoreboard" aria-label="Proof metrics">
         <div class="metric"><strong id="assetCount">0</strong><span>assets in the current run</span></div>
         <div class="metric"><strong id="financeCount">0</strong><span>finance stress-test assets</span></div>
         <div class="metric"><strong id="allowedCount">0</strong><span>allowed autonomous actions</span></div>
         <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
       </section>
 
-      <section class="embed-demo" aria-label="Intended DataHub embedded Predicate panel">
+      <section id="embed-demo" class="embed-demo" aria-label="Intended DataHub embedded Predicate panel">
         <div class="datahub-page">
           <div class="datahub-top">
             <div class="platform-icon">Hive</div>
@@ -1077,7 +1081,7 @@
             <div class="insight"><strong>Where it shows up</strong><p>DataHub panel, approval workflow, CLI, CI, or write-back certificate.</p></div>
           </div>
 
-          <div class="two-col">
+          <div id="evidence-section" class="two-col">
             <div>
               <h3 class="section-title">Failed terms</h3>
               <ul id="failedTerms"></ul>
@@ -1122,7 +1126,7 @@
               </table>
             </section>
 
-            <section class="feature-card">
+            <section id="writeback-section" class="feature-card">
               <h3>Capability Diff</h3>
               <div class="diff-box">
                 <div class="diff-side">
@@ -1137,7 +1141,7 @@
               </div>
             </section>
 
-            <section class="feature-card">
+            <section id="security-section" class="feature-card">
               <h3>Trust Timeline</h3>
               <div id="trustTimeline" class="timeline"></div>
             </section>
@@ -1318,6 +1322,12 @@
     const openRemediationDrawer = document.getElementById("openRemediationDrawer");
     const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
     const refreshData = document.getElementById("refreshData");
+    document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const target = document.getElementById(item.dataset.target);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
     let selected = 0;
     let embeddedView = "summary";
 

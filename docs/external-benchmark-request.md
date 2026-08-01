@@ -50,6 +50,14 @@ Use the CSV:
 examples/benchmark/independent-label-template.csv
 ```
 
+For examples of human-sounding labels, see:
+
+```text
+examples/benchmark/synthetic-reviewer-labels.csv
+```
+
+Those rows are synthetic guidance only, not external proof.
+
 Required columns:
 
 | Column | What reviewer fills |

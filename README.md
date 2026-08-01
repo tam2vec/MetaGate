@@ -215,6 +215,7 @@ print(certificate.as_dict())
 - [Private deployment adapter](docs/private-deployment-adapter.md)
 - [RBAC enforcement model](docs/rbac-enforcement-model.md)
 - [External benchmark request](docs/external-benchmark-request.md)
+- [Synthetic reviewer labels](docs/synthetic-reviewer-labels.md)
 - [Screenshots checklist](docs/screenshots-checklist.md)
 
 ## DataHub Version Notes

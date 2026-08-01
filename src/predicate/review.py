@@ -46,7 +46,18 @@ def _asset_name(urn: str) -> str:
     return urn.split(",")[-2] if "," in urn else urn
 
 
-def _decision_to_run(certificate: dict, decision: dict) -> dict:
+def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
+    action_thresholds = None
+    if policy is not None:
+        matching_policy = next(
+            (item for item in policy.capability_policies if item.name == decision["capability"]),
+            None,
+        )
+        if matching_policy:
+            action_thresholds = {
+                "score": matching_policy.minimum_score,
+                "confidence": matching_policy.minimum_confidence,
+            }
     return {
         "entity_urn": decision["entity_urn"],
         "urn": decision["entity_urn"],
@@ -63,6 +74,7 @@ def _decision_to_run(certificate: dict, decision: dict) -> dict:
         "failed": decision.get("action_predicate", {}).get("failed_terms", []),
         "action_predicate": decision.get("action_predicate", {}),
         "predicate": decision.get("action_predicate", {}),
+        "action_thresholds": action_thresholds,
     }
 
 
@@ -125,7 +137,7 @@ class ReviewState:
             capability,
             decision["allowed"],
         )
-        return _decision_to_run(certificate, decision)
+        return _decision_to_run(certificate, decision, self.policy)
 
     def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
         live_runs = []

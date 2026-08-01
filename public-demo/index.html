@@ -529,6 +529,13 @@
       padding-bottom: 18px;
       border-bottom: 1px solid var(--line);
     }
+    .decision-hero.updated {
+      animation: decision-pulse .35s ease-out;
+    }
+    @keyframes decision-pulse {
+      0% { background: #eef5ff; }
+      100% { background: transparent; }
+    }
     .decision-title {
       display: flex;
       flex-wrap: wrap;
@@ -612,6 +619,12 @@
       margin-bottom: 10px;
     }
     .bar-top span { color: var(--muted); font-size: 13px; }
+    .metric-context {
+      color: var(--blue);
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 4px;
+    }
     .bar-top strong { font-size: 22px; }
     .track {
       height: 9px;
@@ -624,6 +637,7 @@
       border-radius: 999px;
       background: linear-gradient(90deg, var(--cyan), var(--blue));
       width: 0;
+      transition: width .35s ease;
     }
     .insight-grid {
       display: grid;
@@ -1173,11 +1187,11 @@
           </div>
           <div class="bars">
             <div class="bar-card">
-              <div class="bar-top"><span>Readiness score</span><strong id="scoreText"></strong></div>
+              <div class="bar-top"><span>Readiness <small id="readinessContext" class="metric-context"></small></span><strong id="scoreText"></strong></div>
               <div class="track"><div id="scoreFill" class="fill"></div></div>
             </div>
             <div class="bar-card">
-              <div class="bar-top"><span>Confidence</span><strong id="confidenceText"></strong></div>
+              <div class="bar-top"><span>Confidence <small id="confidenceContext" class="metric-context"></small></span><strong id="confidenceText"></strong></div>
               <div class="track"><div id="confidenceFill" class="fill"></div></div>
             </div>
           </div>
@@ -1447,6 +1461,17 @@
     let selected = 0;
     let embeddedView = "summary";
     let activeApiBase = "";
+    const capabilityThresholds = {
+      "answer-business-questions": { score: 78, confidence: 75 },
+      "generate-executive-metrics": { score: 84, confidence: 80 },
+      "autonomous-agent-action": { score: 92, confidence: 88 }
+    };
+
+    function renderMetricContext(run) {
+      const thresholds = run.action_thresholds || capabilityThresholds[run.capability] || capabilityThresholds[capabilitySelect.value];
+      document.getElementById("readinessContext").textContent = thresholds ? `(action needs ${thresholds.score}+)` : "";
+      document.getElementById("confidenceContext").textContent = thresholds ? `(action needs ${thresholds.confidence}+)` : "";
+    }
 
     function formatMetric(value) {
       return value === null || value === undefined ? "n/a" : Number(value).toFixed(2);
@@ -1894,6 +1919,7 @@
       document.getElementById("scoreText").className = metricClass(run.readiness);
       document.getElementById("confidenceText").textContent = formatMetric(run.confidence);
       document.getElementById("confidenceText").className = metricClass(run.confidence);
+      renderMetricContext(run);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       const prettyPredicate = JSON.stringify(run.predicate, null, 2)
@@ -1923,6 +1949,45 @@
       renderTimeline(run);
     }
 
+    function renderDecisionOnly(run) {
+      const allowed = run.decision === "allowed";
+      document.getElementById("embeddedDecision").textContent = run.decision;
+      document.getElementById("embeddedDecision").style.color = allowed ? "var(--green)" : "var(--red)";
+      document.getElementById("embeddedReason").textContent = run.reason;
+      document.getElementById("embeddedScore").textContent = formatMetric(run.readiness);
+      document.getElementById("embeddedConfidence").textContent = formatMetric(run.confidence);
+      document.getElementById("embeddedScore").className = metricClass(run.readiness);
+      document.getElementById("embeddedConfidence").className = metricClass(run.confidence);
+      document.getElementById("decisionText").textContent = run.decision;
+      document.getElementById("decisionText").style.color = allowed ? "var(--green)" : "var(--red)";
+      const pill = document.getElementById("decisionPill");
+      pill.className = "pill " + run.decision;
+      pill.textContent = run.decision;
+      document.getElementById("scoreText").textContent = formatMetric(run.readiness);
+      document.getElementById("confidenceText").textContent = formatMetric(run.confidence);
+      document.getElementById("scoreText").className = metricClass(run.readiness);
+      document.getElementById("confidenceText").className = metricClass(run.confidence);
+      renderMetricContext(run);
+      document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
+      document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
+      document.getElementById("predicateBlock").textContent = JSON.stringify(run.predicate, null, 2).replace(/ && /g, " &&\n    ");
+      document.getElementById("whyText").textContent = allowed
+        ? "The evidence meets this action's policy."
+        : "This action needs proof that the asset does not have yet.";
+      document.getElementById("nextText").textContent = allowed ? "Use the certificate as evidence in the agent workflow." : primaryRepair(run)[1];
+      renderList("failedTerms", run.failed, "None. The selected action is certified.");
+      renderList("evidenceList", run.evidence, "No supporting evidence found.");
+      document.getElementById("readableStatus").textContent = allowed ? "Allowed to proceed" : "Blocked for review";
+      document.getElementById("readableStatus").style.color = allowed ? "var(--green)" : "var(--red)";
+      renderList("plainEnglish", [allowed ? "The required evidence meets the active policy." : run.reason, allowed ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run)[1]], "");
+      renderMiniQueue(run);
+      renderWorkbench(run);
+      renderDrawer(run);
+      renderCapabilityMatrix(run);
+      renderDiff(run);
+      renderTimeline(run);
+    }
+
     async function loadCapabilityDecision(capability) {
       const run = runs[selected];
       const actionResult = document.getElementById("actionResult");
@@ -1933,7 +1998,7 @@
         return;
       }
       document.getElementById("dataUpdate").textContent = "Checking selected capability...";
-      actionResult.textContent = `Checking ${actionName} against ${run.name}...`;
+      actionResult.textContent = `Checking ${actionName} on ${run.asset}...`;
       requestAction.disabled = true;
       requestAction.textContent = "Checking...";
       const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
@@ -1942,7 +2007,11 @@
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
         runs[selected] = payload;
-        render();
+        renderDecisionOnly(runs[selected]);
+        const decisionHero = document.querySelector(".decision-hero");
+        decisionHero.classList.remove("updated");
+        void decisionHero.offsetWidth;
+        decisionHero.classList.add("updated");
         document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
         actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
         requestAction.textContent = `Checked: ${runs[selected].decision.toUpperCase()}`;

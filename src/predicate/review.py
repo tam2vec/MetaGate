@@ -77,6 +77,7 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
         "action_predicate": decision.get("action_predicate", {}),
         "predicate": decision.get("action_predicate", {}),
         "action_thresholds": action_thresholds,
+        "score_trace": certificate.get("metadata", {}).get("score_trace", {}),
     }
 
 

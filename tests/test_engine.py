@@ -39,6 +39,10 @@ class EngineTest(unittest.TestCase):
                 "answer-business-questions",
                 result.certificate["context_contract"]["allowed_capabilities"],
             )
+            trace = result.certificate["metadata"]["score_trace"]
+            self.assertEqual(len(trace["evidence"]), result.certificate["metadata"]["evidence_signals"])
+            self.assertAlmostEqual(trace["final_readiness_score"], result.certificate["readiness_score"])
+            self.assertTrue(all(item["observed_at"] for item in trace["evidence"]))
             self.assertTrue((tmp_path / "writeback.json").exists())
             self.assertTrue(list((tmp_path / "history").glob("*.json")))
 

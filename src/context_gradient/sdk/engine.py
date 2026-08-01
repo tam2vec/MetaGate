@@ -45,6 +45,7 @@ class ReadinessEngine:
                 for cap in capabilities if not cap.certified
             ],
         )
+        score_trace = self._score_trace(evidence, bundle, score, propagated_score)
         return ReadinessCertificate(
             entity_urn=bundle.entity.urn,
             readiness_score=round(propagated_score, 2),
@@ -59,6 +60,7 @@ class ReadinessEngine:
                 "evidence_signals": len(evidence),
                 "connected_assets": len(bundle.neighbors) + 1,
                 "graph_coverage": round(min(100.0, confidence), 2),
+                "score_trace": score_trace,
             },
         )
 
@@ -135,6 +137,68 @@ class ReadinessEngine:
         expected_edges = len(bundle.entity.upstreams) + len(bundle.entity.downstreams)
         graph_coverage = 1.0 if expected_edges == 0 else min(1.0, len(bundle.neighbors) / expected_edges)
         return max(0.0, min(100.0, local_confidence * (0.75 + (0.25 * graph_coverage))))
+
+    def _score_trace(
+        self,
+        evidence: List[EvidenceItem],
+        bundle: EvidenceBundle,
+        base_score: float,
+        final_score: float,
+    ) -> dict:
+        """Expose the evidence math behind a certificate for audit and UI use."""
+        rows = []
+        possible = 0.0
+        earned = 0.0
+        for item in evidence:
+            weight = self.policy.evidence_weights.get(item.kind, 1.0) * item.weight
+            possible += weight
+            factor = 1.0
+            state = "present"
+            if not item.present:
+                factor, state = 0.0, "missing"
+            elif item.contradictory:
+                factor, state = 0.2, "contradictory"
+            elif item.stale:
+                factor, state = 0.45, "stale"
+            elif not item.complete:
+                factor, state = 0.65, "incomplete"
+            contribution = weight * factor
+            earned += contribution
+            rows.append({
+                "evidence_kind": item.kind.value,
+                "state": state,
+                "present": item.present,
+                "complete": item.complete,
+                "stale": item.stale,
+                "contradictory": item.contradictory,
+                "confidence": round(item.confidence, 4),
+                "weight": round(weight, 4),
+                "factor": factor,
+                "contribution": round(contribution, 4),
+                "observed_at": item.observed_at.isoformat(),
+                "details": item.details,
+            })
+        expected_edges = len(bundle.entity.upstreams) + len(bundle.entity.downstreams)
+        graph_coverage = 1.0 if expected_edges == 0 else min(1.0, len(bundle.neighbors) / expected_edges)
+        coverage = sum(1 for item in evidence if item.present) / len(evidence) if evidence else 0.0
+        quality = sum(item.confidence for item in evidence) / len(evidence) if evidence else 0.0
+        contradictions = sum(1 for item in evidence if item.contradictory) / len(evidence) if evidence else 0.0
+        return {
+            "score_formula": "weighted evidence earned / weighted evidence possible * 100",
+            "base_readiness_score": round(base_score, 2),
+            "graph_adjustment": round(final_score - base_score, 2),
+            "final_readiness_score": round(final_score, 2),
+            "weighted_evidence_earned": round(earned, 4),
+            "weighted_evidence_possible": round(possible, 4),
+            "confidence_formula": "((coverage * 60) + (quality * 40) - (contradictions * 35)) * graph factor",
+            "coverage": round(coverage, 4),
+            "average_source_confidence": round(quality, 4),
+            "contradiction_rate": round(contradictions, 4),
+            "expected_graph_edges": expected_edges,
+            "connected_graph_neighbors": len(bundle.neighbors),
+            "graph_coverage": round(graph_coverage, 4),
+            "evidence": rows,
+        }
 
     def _gaps(self, evidence: List[EvidenceItem]) -> List[ReadinessGap]:
         gaps: List[ReadinessGap] = []

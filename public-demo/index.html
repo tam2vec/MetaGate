@@ -736,6 +736,36 @@
     .evidence-fill { height: 100%; border-radius: inherit; background: var(--green); }
     .evidence-fill.failed { background: var(--red); }
     .evidence-label { color: var(--muted); text-align: right; }
+    .score-trace {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+    .score-trace h3 { margin: 0 0 8px; }
+    .score-trace p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .score-trace details { border-top: 1px solid var(--line); padding-top: 10px; }
+    .score-trace summary { cursor: pointer; color: var(--blue); font-weight: 800; font-size: 13px; }
+    .trace-row {
+      display: grid;
+      grid-template-columns: 130px 90px minmax(0, 1fr) 90px;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #edf1f7;
+      font-size: 12px;
+    }
+    .trace-row:last-child { border-bottom: 0; }
+    .trace-state { font-weight: 800; text-transform: capitalize; }
+    .trace-state.missing, .trace-state.contradictory, .trace-state.stale { color: var(--red); }
+    .trace-state.present { color: var(--green); }
+    .trace-detail { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .trace-time { color: var(--muted); text-align: right; }
+    @media (max-width: 760px) {
+      .trace-row { grid-template-columns: 1fr 80px; }
+      .trace-detail, .trace-time { grid-column: span 1; }
+    }
     .two-col > div {
       min-width: 0;
     }
@@ -1278,6 +1308,14 @@
             <h3>Evidence coverage</h3>
             <div id="evidenceChart"></div>
           </div>
+          <div class="score-trace">
+            <h3>Score basis</h3>
+            <p id="scoreTraceSummary">This score will show the DataHub evidence used to calculate it.</p>
+            <details>
+              <summary>Show evidence math</summary>
+              <div id="scoreTraceList"></div>
+            </details>
+          </div>
 
           <div class="two-col">
             <div>
@@ -1690,6 +1728,25 @@
       }).join("");
     }
 
+    function renderScoreTrace(run) {
+      const trace = run.score_trace || {};
+      const summary = document.getElementById("scoreTraceSummary");
+      const list = document.getElementById("scoreTraceList");
+      if (!trace.evidence || !trace.evidence.length) {
+        summary.textContent = "This recorded result has no live score trace. Live DataHub evaluations include the evidence and timestamps below.";
+        list.innerHTML = "";
+        return;
+      }
+      summary.textContent = `${trace.evidence.length} DataHub signals. Readiness ${formatMetric(trace.base_readiness_score)} before graph adjustment, ${formatMetric(trace.final_readiness_score)} after. Average source confidence: ${formatMetric(Number(trace.average_source_confidence || 0) * 100)}%.`;
+      list.innerHTML = trace.evidence.map((item) => {
+        const detail = item.details && typeof item.details === "object"
+          ? Object.entries(item.details).filter(([key]) => key !== "present").slice(0, 2).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.length + " items" : value}`).join("; ")
+          : "DataHub returned this signal.";
+        const time = item.observed_at ? new Date(item.observed_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "n/a";
+        return `<div class="trace-row"><strong>${escapeHtml(item.evidence_kind.replace("_", " "))}</strong><span class="trace-state ${escapeHtml(item.state)}">${escapeHtml(item.state)}</span><span class="trace-detail" title="${escapeHtml(detail)}">${escapeHtml(detail || "DataHub returned this signal.")}</span><span class="trace-time">+${Number(item.contribution || 0).toFixed(2)} · ${escapeHtml(time)}</span></div>`;
+      }).join("");
+    }
+
     function renderList(id, items, emptyText) {
       const list = document.getElementById(id);
       const values = items.length ? items : [emptyText];
@@ -2001,6 +2058,7 @@
       const run = runs[selected];
       renderScoreboard();
       renderEvidenceChart(run);
+      renderScoreTrace(run);
       renderAssetControls();
       document.getElementById("assetName").textContent = run.asset;
       document.getElementById("assetUrn").textContent = run.urn;
@@ -2025,6 +2083,7 @@
       renderMetricContext(run);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
+      renderScoreTrace(run);
       const prettyPredicate = JSON.stringify(run.predicate, null, 2)
         .replace(/ && /g, " &&\\n    ");
       document.getElementById("predicateBlock").textContent = prettyPredicate;

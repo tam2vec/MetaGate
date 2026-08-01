@@ -1818,6 +1818,7 @@
       const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
       activeApiBase = apiBase || (window.location.protocol !== "file:" ? window.location.origin : "");
       const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
+      const refreshEndpoint = `${endpoint}${endpoint.includes("?") ? "&" : "?"}refresh=${Date.now()}`;
       if (window.location.protocol === "file:" && !apiBase) {
         document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
         refreshData.disabled = false;
@@ -1827,7 +1828,7 @@
       try {
         const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
         const status = statusResponse.ok ? await statusResponse.json() : null;
-        const response = await fetch(endpoint, { cache: "no-store" });
+        const response = await fetch(refreshEndpoint, { cache: "no-store" });
         if (!response.ok) {
           throw new Error("API unavailable");
         }

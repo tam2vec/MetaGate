@@ -111,7 +111,9 @@ class ReviewState:
             cache=JsonCache(ROOT / ".context-gradient/review-cache.json"),
         )
 
-    def evaluate(self, urn: str, capability: str) -> dict:
+    def evaluate(self, urn: str, capability: str, *, refresh: bool = False) -> dict:
+        if refresh:
+            self.extractor.invalidate(urn)
         bundle = self.extractor.bundle(urn)
         certificate = self.engine.certify(bundle).as_dict()
         decision = admit_capability(certificate, capability).__dict__
@@ -123,11 +125,11 @@ class ReviewState:
         )
         return _decision_to_run(certificate, decision)
 
-    def runs(self, urns: list[str], capability: str) -> list[dict]:
+    def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
         live_runs = []
         for urn in urns:
             try:
-                live_runs.append(self.evaluate(urn, capability))
+                live_runs.append(self.evaluate(urn, capability, refresh=refresh))
             except Exception:
                 continue
         if live_runs:
@@ -216,10 +218,11 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                 self._html()
                 return
             if parsed.path == "/api/runs":
+                refresh = "refresh" in parse_qs(parsed.query)
                 self._json(
                     {
                         "source": "live-api" if not state.datahub_file else "fixture-api",
-                        "runs": state.runs(urns, capability),
+                        "runs": state.runs(urns, capability, refresh=refresh),
                     }
                 )
                 return
@@ -231,7 +234,7 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                     self._json({"error": "Missing urn query parameter."}, 400)
                     return
                 try:
-                    self._json(state.evaluate(urn, requested_capability))
+                    self._json(state.evaluate(urn, requested_capability, refresh=True))
                 except Exception as error:
                     self._json({"error": str(error)}, 500)
                 return

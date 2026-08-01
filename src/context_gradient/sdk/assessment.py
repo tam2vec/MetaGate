@@ -138,7 +138,11 @@ def evidence_facts(bundle: EvidenceBundle) -> Dict[str, Any]:
             "missing_columns": _fact_value(columns, ("missing_columns", "unmapped_columns"), []),
         },
         "assertions": {
-            "count": _fact_value(assertions, ("count",), 0),
+            "count": _fact_value(
+                assertions,
+                ("count",),
+                (assertions.get("passing", 0) or 0) + (assertions.get("failing", 0) or 0),
+            ),
             "passing": _fact_value(assertions, ("passing", "passed"), None),
             "failing": _fact_value(assertions, ("failing", "failed"), None),
             "names": _fact_value(assertions, ("names", "assertion_names"), []),

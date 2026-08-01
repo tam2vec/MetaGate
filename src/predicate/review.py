@@ -126,7 +126,9 @@ class ReviewState:
             self.client = GraphQLDataHubClient(datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL"))
         self.extractor = DataHubEvidenceExtractor(
             self.client,
-            cache=JsonCache(ROOT / ".context-gradient/review-cache.json"),
+            # The cache filename is versioned so a scoring/rubric change can
+            # never silently reuse an older evidence interpretation.
+            cache=JsonCache(ROOT / ".context-gradient/review-cache-v2.json"),
         )
         self.assessment_history = ReadinessHistory(ROOT / ".context-gradient/assessment-history")
         self.history: dict[str, list[dict]] = {}

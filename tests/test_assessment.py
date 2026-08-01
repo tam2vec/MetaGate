@@ -16,6 +16,7 @@ class AssessmentTest(unittest.TestCase):
         self.assertIn("assertions", result["rubric"])
         self.assertEqual(result["facts"]["assertions"]["passing"], 1)
         self.assertEqual(result["facts"]["assertions"]["failing"], 2)
+        self.assertEqual(result["facts"]["assertions"]["count"], 3)
         self.assertEqual(result["facts"]["freshness"]["minutes_late"], 2880)
         self.assertTrue(any(check["status"] == "needs attention" for check in result["checks"]))
 

@@ -19,11 +19,9 @@ It does not make AI smarter. It checks whether the metadata gives an agent enoug
 
 **Proof:** This MVP includes a CLI/SDK engine, a live local DataHub GraphQL run, a local API-backed review app, an automatic browser extension prototype for DataHub asset pages, a Dockerized review API path, a sanitized public demo, 18 automated tests, and 30 curated policy conformance checks.
 
-**Public demo:** [Predicate Review](https://leafy-maamoul-4acf4b.netlify.app) is a sanitized visual demo of the intended DataHub embedded experience.
+**Static visual demo:** [Predicate Review](https://leafy-maamoul-4acf4b.netlify.app) is a sanitized visual demo of the intended DataHub embedded experience.
 
-To make the public page live API-backed with sanitized fixture data, deploy the
-review API and open the page with `?api=<public-api-url>`. See
-[Public Live Demo](docs/public-live-demo.md).
+**API-backed public fixture demo:** [Predicate Review + Render API](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) uses the public Render API with sanitized fixture data. It should show `Mode: public API fixture`.
 
 **Run a live DataHub check:**
 
@@ -133,8 +131,9 @@ For a harder stress test, see [Difficult DataHub Run](docs/difficult-datahub-run
 
 Judges may review the repository without running it. The fastest path is:
 
-- [Public demo](https://leafy-maamoul-4acf4b.netlify.app)
-- [Public Live Demo](docs/public-live-demo.md)
+- [Static visual demo](https://leafy-maamoul-4acf4b.netlify.app)
+- [API-backed public fixture demo](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com)
+- [Public API Fixture Demo](docs/public-live-demo.md)
 - [Live Predicate Review App](docs/live-review-app.md)
 - [Browser Extension Prototype](examples/browser-extension/README.md)
 - [Production Gap Closure](docs/production-gap-closure.md)

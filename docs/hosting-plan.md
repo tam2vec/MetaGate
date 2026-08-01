@@ -9,6 +9,7 @@ review server.
 | --- | --- | --- |
 | Static visual proof | `examples/outputs/predicate-demo-app.html` | Works offline and is safe for screenshots |
 | Public static demo | `public-demo/index.html` | One-file deploy target for static hosting |
+| Public API-backed demo | `https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com` | Hosted page calling Render API with sanitized fixture data |
 | Live local review app | `scripts/serve_review.py` | Browser loads decisions from `/api/runs` |
 | Private review API container | `Dockerfile` | Runs the same review API behind a private network |
 | DataHub embed prototype | `examples/datahub-embed/` | Shows how the panel mounts beside a DataHub asset |
@@ -24,6 +25,7 @@ Safe public demo:
 
 - hosted static Predicate Review page
 - recorded sanitized demo decisions
+- optional public Render API using sanitized fixture data
 - no customer data
 - no DataHub token
 
@@ -53,8 +55,9 @@ Do not expose a private DataHub token from a public static page.
 
 Use:
 
-> The hosted page is a sanitized visual demo. The local live review server shows
-> the same UI backed by Predicate API calls against DataHub.
+> The hosted page has two safe modes: static visual proof, and API-backed proof
+> using sanitized fixture data. The local live review server shows the
+> same UI backed by Predicate API calls against a real local DataHub quickstart.
 
 Avoid:
 

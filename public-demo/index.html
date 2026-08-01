@@ -919,7 +919,7 @@
           <p class="subtitle">Sanitized demo of the intended DataHub embedded experience. The real proof path is local DataHub, Predicate CLI/API, allowed or blocked decisions, and the live local review server.</p>
         </div>
         <div class="environment">
-          <strong id="environmentTitle">Public demo: static proof</strong>
+          <strong id="environmentTitle">Public static visual demo</strong>
           <span id="environmentProof">Live proof: local DataHub GraphQL</span>
           <span>Review API: scripts/serve_review.py</span>
           <span id="dataMode">Mode: recorded proof data</span>
@@ -1715,7 +1715,7 @@
         if (Array.isArray(payload.runs) && payload.runs.length) {
           runs = payload.runs;
           selected = 0;
-          document.getElementById("environmentTitle").textContent = apiBase ? "Public demo: live API" : "Local demo: live API";
+          document.getElementById("environmentTitle").textContent = apiBase ? "Public API fixture demo" : "Local live API demo";
           document.getElementById("environmentProof").textContent = apiBase ? "API proof: sanitized fixture backend" : "Live proof: local DataHub GraphQL";
           document.getElementById("dataMode").textContent = apiBase ? "Mode: public API fixture" : "Mode: live local API";
           render();

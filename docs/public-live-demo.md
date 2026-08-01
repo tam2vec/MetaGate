@@ -1,4 +1,4 @@
-# Public Live Demo
+# Public API Fixture Demo
 
 This creates a public demo where the hosted page calls a live Predicate API.
 For safety, the API uses sanitized fixture data instead of private DataHub.
@@ -23,13 +23,13 @@ This is live API-backed, but not connected to a private DataHub deployment.
 6. Copy the deployed service URL, for example:
 
 ```text
-https://predicate-review-api.onrender.com
+https://predicate-ixz0.onrender.com
 ```
 
 Test the API:
 
 ```bash
-curl https://predicate-review-api.onrender.com/api/runs
+curl https://predicate-ixz0.onrender.com/api/runs
 ```
 
 You should see JSON with `runs`.
@@ -43,7 +43,7 @@ There are two safe options.
 Open the public page with:
 
 ```text
-https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-review-api.onrender.com
+https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com
 ```
 
 This requires no code change after you know the API URL.
@@ -53,7 +53,7 @@ This requires no code change after you know the API URL.
 In `public-demo/index.html`, set:
 
 ```js
-const PUBLIC_API_BASE = "https://predicate-review-api.onrender.com";
+const PUBLIC_API_BASE = "https://predicate-ixz0.onrender.com";
 ```
 
 Then redeploy Netlify.

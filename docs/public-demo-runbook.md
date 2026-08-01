@@ -2,7 +2,9 @@
 
 **Predicate helps teams know when AI is allowed to act.**
 
-This runbook is the shortest path to a reproducible live demo.
+This runbook is the shortest path to a reproducible Predicate demo. The public
+page is either a static visual demo or a Render API-backed fixture demo; the
+real DataHub proof runs locally or inside a private DataHub deployment.
 
 ## Local proof
 

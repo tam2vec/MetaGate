@@ -1,7 +1,10 @@
 # External Label Results
 
-Two reviewers labeled 10 Predicate decisions across the local DataHub demo
-assets.
+Two informal reviewers labeled 10 Predicate decisions across the local DataHub
+demo assets:
+
+- one reviewer with basic AI familiarity
+- one reviewer with basic data/analytics familiarity
 
 ## Result
 
@@ -18,9 +21,10 @@ assets.
 
 Use:
 
-> Two reviewers labeled 10 demo decisions. Predicate matched all 10 labels on
-> this small review set. This is early external agreement, not a production
-> accuracy claim.
+> Two informal reviewers labeled 10 demo decisions: one with basic AI
+> familiarity and one with basic data/analytics familiarity. Predicate matched
+> all 10 labels on this small review set. This is early external agreement, not
+> a production accuracy claim.
 
 Avoid:
 

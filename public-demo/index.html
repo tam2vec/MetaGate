@@ -155,6 +155,17 @@
       padding: 12px 14px;
       min-width: 230px;
     }
+    .refresh-button {
+      margin-top: 8px;
+      border: 1px solid #c8d5ef;
+      border-radius: 6px;
+      background: #fff;
+      color: #2458b8;
+      padding: 7px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
     .environment strong {
       display: block;
       font-size: 14px;
@@ -925,6 +936,7 @@
           <span>Review API: predicate-review</span>
           <span id="dataMode">Mode: recorded proof data</span>
           <span id="dataUpdate">Updates when this page is connected to a Predicate API.</span>
+          <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
         </div>
       </div>
 
@@ -1300,6 +1312,7 @@
     const remediationDrawer = document.getElementById("remediationDrawer");
     const openRemediationDrawer = document.getElementById("openRemediationDrawer");
     const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
+    const refreshData = document.getElementById("refreshData");
     let selected = 0;
     let embeddedView = "summary";
 
@@ -1727,6 +1740,7 @@
       const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
       const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
       if (window.location.protocol === "file:" && !apiBase) {
+        document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
         return;
       }
       try {
@@ -1752,6 +1766,7 @@
         }
       } catch (error) {
         document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
+        document.getElementById("dataUpdate").textContent = "Predicate API unavailable. Start Predicate Review once, then refresh this page.";
       }
     }
 
@@ -1777,6 +1792,7 @@
         remediationDrawer.classList.remove("open");
       }
     });
+    refreshData.addEventListener("click", loadLiveRuns);
     render();
     loadLiveRuns();
   </script>

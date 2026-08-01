@@ -189,7 +189,7 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 8px;
-      align-items: end;
+      align-items: center;
     }
     .control-status {
       margin: 8px 0 0;
@@ -197,6 +197,10 @@
       font-size: 12px;
       line-height: 1.35;
       min-height: 16px;
+    }
+    .control-status.result {
+      color: var(--ink);
+      font-weight: 700;
     }
     .environment strong {
       display: block;
@@ -1156,7 +1160,7 @@
                 </select>
                 <button id="requestAction" class="request-button" type="button">Request AI action</button>
               </div>
-              <p id="actionResult" class="control-status">Ready. Choose an action and request a decision.</p>
+              <p id="actionResult" class="control-status result">Ready. Choose an action and request a decision.</p>
             </div>
           </div>
 

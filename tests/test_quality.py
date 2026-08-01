@@ -47,6 +47,24 @@ class QualityTest(unittest.TestCase):
         incidents = next(item for item in bundle.entity.evidence if item.kind == EvidenceKind.INCIDENTS)
         self.assertFalse(incidents.present)
 
+    def test_empty_metadata_containers_are_not_treated_as_evidence(self):
+        client = type("Client", (), {
+            "get_entity": lambda _self, _urn: {
+                "urn": URN,
+                "glossary": {"terms": []},
+                "lineage": {"upstreams": []},
+                "tags": {"values": []},
+                "freshness": {},
+                "usage": {"buckets": []},
+                "policy": {},
+            },
+            "get_neighbors": lambda _self, _urn: [],
+        })()
+        bundle = DataHubEvidenceExtractor(client).bundle(URN)
+        for kind in (EvidenceKind.GLOSSARY, EvidenceKind.LINEAGE, EvidenceKind.TAGS, EvidenceKind.FRESHNESS, EvidenceKind.USAGE, EvidenceKind.POLICY):
+            item = next(item for item in bundle.entity.evidence if item.kind == kind)
+            self.assertFalse(item.present, kind.value)
+
     def test_writeback_returns_verified_receipt_and_scan_time(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

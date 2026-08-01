@@ -94,14 +94,37 @@ class DataHubEvidenceExtractor:
         details = value if isinstance(value, dict) else {"value": value}
         observed_at = details.get("observed_at")
         if isinstance(observed_at, str):
-            observed = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
+            observed_time = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
         else:
-            observed = datetime.now(timezone.utc)
+            observed_time = datetime.now(timezone.utc)
         explicit_present = details.get("present")
+        def has_content(candidate: Any) -> bool:
+            if candidate is None:
+                return False
+            if isinstance(candidate, dict):
+                return bool(candidate) and any(has_content(item) for item in candidate.values())
+            if isinstance(candidate, (list, tuple, set)):
+                return bool(candidate)
+            return True
+
+        empty_means_missing = kind in {
+            EvidenceKind.DESCRIPTION,
+            EvidenceKind.OWNERSHIP,
+            EvidenceKind.GLOSSARY,
+            EvidenceKind.DOMAIN,
+            EvidenceKind.TAGS,
+            EvidenceKind.LINEAGE,
+            EvidenceKind.COLUMN_LINEAGE,
+            EvidenceKind.ASSERTIONS,
+            EvidenceKind.FRESHNESS,
+            EvidenceKind.USAGE,
+            EvidenceKind.POLICY,
+        }
+        has_observed_content = has_content(value) if empty_means_missing else value is not None
         present = (
             bool(explicit_present)
             if explicit_present is not None
-            else value is not None and not details.get("missing", False)
+            else has_observed_content and not details.get("missing", False)
         )
         return EvidenceItem(
             kind=kind,
@@ -110,7 +133,7 @@ class DataHubEvidenceExtractor:
             stale=details.get("stale", False),
             contradictory=details.get("contradictory", False),
             confidence=float(details.get("confidence", 0.8 if present else 0.0)),
-            observed_at=observed,
+            observed_at=observed_time,
             details=details,
         )
 

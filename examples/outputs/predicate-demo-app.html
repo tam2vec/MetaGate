@@ -650,12 +650,37 @@
     }
     .evidence-chart h3 { margin: 0 0 12px; }
     .evidence-row {
+      position: relative;
       display: grid;
       grid-template-columns: 130px minmax(0, 1fr) 72px;
       gap: 10px;
       align-items: center;
       margin: 8px 0;
       font-size: 12px;
+      cursor: help;
+    }
+    .evidence-row::after {
+      content: attr(data-explanation);
+      position: absolute;
+      z-index: 5;
+      left: 0;
+      right: 72px;
+      bottom: calc(100% + 6px);
+      padding: 9px 10px;
+      border-radius: 6px;
+      background: #172238;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.35;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(3px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    .evidence-row:hover::after,
+    .evidence-row:focus-within::after {
+      opacity: 1;
+      transform: translateY(0);
     }
     .evidence-track {
       height: 8px;
@@ -701,9 +726,20 @@
       background: var(--soft);
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 14px 14px 14px 4px;
+      padding: 16px;
       min-height: 100%;
     }
+    .readable-status {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .readable-card ul { padding-left: 18px; }
+    .readable-card li { margin: 7px 0; }
     .action-workbench {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -877,6 +913,12 @@
     .timeline {
       display: grid;
       gap: 10px;
+    }
+    .timeline-note {
+      margin: -2px 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
     }
     .timeline-step {
       display: grid;
@@ -1155,7 +1197,10 @@
             </div>
             <div>
               <h3 class="section-title">Readable decision</h3>
-              <div class="readable-card"><ul id="plainEnglish"></ul></div>
+              <div class="readable-card">
+                <div id="readableStatus" class="readable-status"></div>
+                <ul id="plainEnglish"></ul>
+              </div>
             </div>
           </div>
 
@@ -1199,6 +1244,7 @@
 
             <section id="security-section" class="feature-card">
               <h3>Trust Timeline</h3>
+              <p class="timeline-note">A short audit trail showing how Predicate moved from DataHub evidence to the current decision and what happens next.</p>
               <div id="trustTimeline" class="timeline"></div>
             </section>
 
@@ -1455,11 +1501,25 @@
     function renderEvidenceChart(run) {
       const kinds = ["ownership", "glossary", "lineage", "column_lineage", "assertions", "freshness", "incidents", "usage", "policy"];
       const failed = new Set(run.failed || []);
+      const explanations = {
+        ownership: "A named owner means someone is accountable for fixing metadata or approving use.",
+        glossary: "Definitions help the AI understand what the asset and its metrics actually mean.",
+        lineage: "Lineage shows where the data came from and who could be affected by using it.",
+        column_lineage: "Column-level lineage explains where important fields came from, not just the table.",
+        assertions: "Assertions are checks that prove the data meets expected rules, such as valid counts or values.",
+        freshness: "Freshness tells us whether the data is current enough for this decision.",
+        incidents: "Open incidents lower trust because known problems may still affect the asset.",
+        usage: "Usage shows whether this asset is actively relied on by people or downstream systems.",
+        policy: "Policy evidence records which governance rules were used to make this decision."
+      };
       document.getElementById("evidenceChart").innerHTML = kinds.map((kind) => {
         const incidentFailure = kind === "incidents" && [...failed].some((term) => term.includes("incidents"));
         const isFailed = failed.has(`${kind}.present`) || incidentFailure;
         const width = isFailed ? 28 : 100;
-        return `<div class="evidence-row"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
+        const explanation = isFailed
+          ? `${explanations[kind]} Predicate could not verify it for this asset.`
+          : explanations[kind];
+        return `<div class="evidence-row" tabindex="0" data-explanation="${escapeHtml(explanation)}"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
       }).join("");
     }
 
@@ -1806,10 +1866,12 @@
         : primaryRepair(run)[1];
       renderList("failedTerms", run.failed, "None. The selected action is certified.");
       renderList("evidenceList", run.evidence, "No supporting evidence found.");
+      const readableStatus = document.getElementById("readableStatus");
+      readableStatus.textContent = run.decision === "allowed" ? "Allowed to proceed" : "Blocked for review";
+      readableStatus.style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
       renderList("plainEnglish", [
-        run.reason,
-        run.decision === "allowed" ? "The AI action can proceed under the active enterprise policy." : "The AI action should be stopped until the missing terms are fixed.",
-        "The same result is available to humans in this console and to automation as JSON."
+        run.decision === "allowed" ? "The required evidence meets the active policy." : run.reason,
+        run.decision === "allowed" ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run)[1]
       ], "");
       renderRemediation(run);
       renderMiniQueue(run);

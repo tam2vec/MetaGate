@@ -111,6 +111,16 @@ For a harder run, see [Difficult DataHub Run](docs/difficult-datahub-run.md).
 
 ## Local Review App
 
+From the project folder, start the live review once:
+
+```bash
+./scripts/start_predicate_review.sh
+```
+
+Then open `http://127.0.0.1:8765/review`. After metadata changes in DataHub,
+use **Refresh DataHub check** in the page. You do not rerun a separate CLI
+command for every asset.
+
 ```bash
 predicate-review \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \

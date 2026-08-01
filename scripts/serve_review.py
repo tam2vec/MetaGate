@@ -53,10 +53,12 @@ def _decision_to_run(certificate: dict, decision: dict) -> dict:
 
 def _normalize_recorded(run: dict) -> dict:
     predicate = run.get("action_predicate") or run.get("predicate") or {}
+    readiness = run.get("readiness", run.get("readiness_score"))
     return {
         **run,
         "urn": run.get("urn") or run.get("entity_urn"),
-        "readiness": run.get("readiness", run.get("readiness_score")),
+        "readiness": readiness,
+        "readiness_score": run.get("readiness_score", readiness),
         "failed": run.get("failed", predicate.get("failed_terms", [])),
         "predicate": predicate,
     }

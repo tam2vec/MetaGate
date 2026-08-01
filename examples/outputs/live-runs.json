@@ -7,8 +7,8 @@
     "allowed": true,
     "decision": "allowed",
     "reason": "Capability is certified by the active policy.",
-    "readiness_score": null,
-    "confidence": null,
+    "readiness_score": 96.8,
+    "confidence": 94.4,
     "policy": "enterprise-ai",
     "evidence": [
       "description evidence is present and current.",
@@ -100,8 +100,8 @@
     "allowed": false,
     "decision": "blocked",
     "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
-    "readiness_score": null,
-    "confidence": null,
+    "readiness_score": 84.1,
+    "confidence": 82.5,
     "policy": "enterprise-ai",
     "evidence": [
       "description evidence is present and current.",

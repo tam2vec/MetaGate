@@ -618,6 +618,31 @@
       gap: 16px;
       margin-top: 16px;
     }
+    .evidence-chart {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcff;
+    }
+    .evidence-chart h3 { margin: 0 0 12px; }
+    .evidence-row {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr) 72px;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 12px;
+    }
+    .evidence-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #e8edf5;
+      overflow: hidden;
+    }
+    .evidence-fill { height: 100%; border-radius: inherit; background: var(--green); }
+    .evidence-fill.failed { background: var(--red); }
+    .evidence-label { color: var(--muted); text-align: right; }
     .two-col > div {
       min-width: 0;
     }
@@ -1091,6 +1116,10 @@
               <ul id="evidenceList"></ul>
             </div>
           </div>
+          <div class="evidence-chart" aria-label="Evidence coverage chart">
+            <h3>Evidence coverage</h3>
+            <div id="evidenceChart"></div>
+          </div>
 
           <div class="two-col">
             <div>
@@ -1392,6 +1421,17 @@
       document.getElementById("assetCount").textContent = runs.length;
       document.getElementById("financeCount").textContent = finance.length;
       document.getElementById("allowedCount").textContent = allowed.length;
+    }
+
+    function renderEvidenceChart(run) {
+      const kinds = ["ownership", "glossary", "lineage", "column_lineage", "assertions", "freshness", "incidents", "usage", "policy"];
+      const failed = new Set(run.failed || []);
+      document.getElementById("evidenceChart").innerHTML = kinds.map((kind) => {
+        const incidentFailure = kind === "incidents" && [...failed].some((term) => term.includes("incidents"));
+        const isFailed = failed.has(`${kind}.present`) || incidentFailure;
+        const width = isFailed ? 28 : 100;
+        return `<div class="evidence-row"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
+      }).join("");
     }
 
     function renderList(id, items, emptyText) {
@@ -1702,6 +1742,7 @@
     function render() {
       const run = runs[selected];
       renderScoreboard();
+      renderEvidenceChart(run);
       renderAssetControls();
       document.getElementById("assetName").textContent = run.asset;
       document.getElementById("assetUrn").textContent = run.urn;

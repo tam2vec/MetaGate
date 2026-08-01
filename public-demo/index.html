@@ -762,9 +762,26 @@
     .trace-state.present { color: var(--green); }
     .trace-detail { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .trace-time { color: var(--muted); text-align: right; }
+    .assessment-panel { margin-top: 16px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: #fff; }
+    .assessment-panel h3 { margin: 0 0 6px; }
+    .assessment-panel p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .fact-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .fact { border: 1px solid #edf1f7; border-radius: 6px; padding: 10px; min-width: 0; }
+    .fact strong { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; }
+    .fact span { display: block; margin-top: 4px; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
+    .assessment-panel details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+    .assessment-panel summary { cursor: pointer; color: var(--blue); font-weight: 800; font-size: 13px; }
+    .profile-check { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #edf1f7; font-size: 12px; }
+    .profile-check:last-child { border-bottom: 0; }
+    .profile-check strong { min-width: 94px; }
+    .profile-check .pass { color: var(--green); font-weight: 800; }
+    .profile-check .needs { color: var(--red); font-weight: 800; }
+    .assessment-guidance { margin-top: 12px; padding: 10px 12px; background: #f4f7fb; border-left: 3px solid var(--blue); color: var(--ink); font-size: 13px; }
+    .before-after { margin-top: 12px; color: var(--muted); font-size: 12px; }
     @media (max-width: 760px) {
       .trace-row { grid-template-columns: 1fr 80px; }
       .trace-detail, .trace-time { grid-column: span 1; }
+      .fact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     .two-col > div {
       min-width: 0;
@@ -1316,6 +1333,17 @@
               <div id="scoreTraceList"></div>
             </details>
           </div>
+          <div class="assessment-panel">
+            <h3 id="assessmentTitle">Assessment profile</h3>
+            <p id="assessmentSummary">The profile determines which checks matter for this kind of dataset.</p>
+            <div id="assessmentFacts" class="fact-grid"></div>
+            <div id="assessmentGuidance" class="assessment-guidance"></div>
+            <div id="beforeAfter" class="before-after"></div>
+            <details>
+              <summary>Show the rubric for this dataset type</summary>
+              <div id="profileChecks"></div>
+            </details>
+          </div>
 
           <div class="two-col">
             <div>
@@ -1747,6 +1775,35 @@
       }).join("");
     }
 
+    function renderAssessment(run) {
+      const assessment = run.assessment || {};
+      const facts = run.facts || assessment.facts || {};
+      const lineage = facts.lineage || {};
+      const assertions = facts.assertions || {};
+      const freshness = facts.freshness || {};
+      document.getElementById("assessmentTitle").textContent = assessment.profile_label
+        ? `${assessment.profile_label} assessment`
+        : "Assessment profile";
+      document.getElementById("assessmentSummary").textContent = assessment.profile_match
+        ? `Checks are tailored to this asset: ${assessment.profile_match}.`
+        : "Live DataHub evaluations show the checks used for this asset.";
+      const factsRows = [
+        ["Owner", Array.isArray(facts.owner) ? facts.owner.length ? facts.owner.join(", ") : "missing" : facts.owner || "missing"],
+        ["Glossary", Array.isArray(facts.glossary_terms) ? `${facts.glossary_terms.length} terms` : "not returned"],
+        ["Lineage", `${lineage.upstream_count || 0} up · ${lineage.downstream_count || 0} down`],
+        ["Assertions", assertions.count ? `${assertions.count} checks · ${assertions.passing ?? "?"} passing` : "missing"],
+        ["Freshness", freshness.timestamp || freshness.observed_at || (freshness.stale ? "stale" : "not returned")],
+        ["Missing columns", Array.isArray(facts.column_lineage && facts.column_lineage.missing_columns) ? facts.column_lineage.missing_columns.length || "none" : "not returned"],
+      ];
+      document.getElementById("assessmentFacts").innerHTML = factsRows.map(([label, value]) => `<div class="fact"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(String(value))}</span></div>`).join("");
+      document.getElementById("assessmentGuidance").textContent = assessment.guidance || "Use the failed checks below as the steward's repair checklist.";
+      const delta = run.before_after || {};
+      document.getElementById("beforeAfter").textContent = delta.previous_readiness == null
+        ? "First saved assessment for this asset. Later checks will show before versus after."
+        : `Since the last assessment: readiness ${formatMetric(delta.readiness_delta)} · confidence ${formatMetric(delta.confidence_delta)}.`;
+      document.getElementById("profileChecks").innerHTML = (assessment.checks || []).map((check) => `<div class="profile-check"><strong>${escapeHtml(check.evidence_kind.replace("_", " "))}</strong><span class="${check.status === "pass" ? "pass" : "needs"}">${escapeHtml(check.status)}</span><span>${escapeHtml(check.check)}</span></div>`).join("") || "No profile checks returned.";
+    }
+
     function renderList(id, items, emptyText) {
       const list = document.getElementById(id);
       const values = items.length ? items : [emptyText];
@@ -2034,10 +2091,16 @@
 
     function renderTimeline(run) {
       const recordedHistory = Array.isArray(run.history) ? run.history : [];
+      const savedAssessments = Array.isArray(run.saved_assessments) ? run.saved_assessments : [];
       const steps = recordedHistory.length
         ? recordedHistory.map((event) => [
           new Date(event.evaluated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           `${event.capability}: ${event.decision.toUpperCase()} - ${event.reason}`
+        ])
+        : savedAssessments.length
+        ? savedAssessments.map((item) => [
+          new Date(item.issued_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          `Saved assessment: readiness ${formatMetric(item.readiness_score)}, confidence ${formatMetric(item.confidence)}, ${item.gap_count} gap${item.gap_count === 1 ? "" : "s"}.`
         ])
         : run.decision === "allowed"
         ? [
@@ -2059,6 +2122,7 @@
       renderScoreboard();
       renderEvidenceChart(run);
       renderScoreTrace(run);
+      renderAssessment(run);
       renderAssetControls();
       document.getElementById("assetName").textContent = run.asset;
       document.getElementById("assetUrn").textContent = run.urn;
@@ -2084,6 +2148,7 @@
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       renderScoreTrace(run);
+      renderAssessment(run);
       const prettyPredicate = JSON.stringify(run.predicate, null, 2)
         .replace(/ && /g, " &&\\n    ");
       document.getElementById("predicateBlock").textContent = prettyPredicate;

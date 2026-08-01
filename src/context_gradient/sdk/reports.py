@@ -28,4 +28,5 @@ def explain_certificate(certificate: ReadinessCertificate | dict) -> Dict[str, A
             "evidence_signals": payload["metadata"].get("evidence_signals", 0),
         },
         "score_trace": payload["metadata"].get("score_trace", {}),
+        "assessment": payload["metadata"].get("assessment", {}),
     }

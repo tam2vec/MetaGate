@@ -13,6 +13,7 @@ from context_gradient.sdk.models import (
     ReadinessCertificate,
     ReadinessGap,
 )
+from context_gradient.sdk.assessment import assessment
 from context_gradient.sdk.policy import PolicyProfile
 
 
@@ -61,6 +62,7 @@ class ReadinessEngine:
                 "connected_assets": len(bundle.neighbors) + 1,
                 "graph_coverage": round(min(100.0, confidence), 2),
                 "score_trace": score_trace,
+                "assessment": assessment(bundle),
             },
         )
 

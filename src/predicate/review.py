@@ -15,6 +15,7 @@ from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.sdk.admission import admit_capability
 from context_gradient.sdk.cache import JsonCache
 from context_gradient.sdk.engine import ReadinessEngine
+from context_gradient.sdk.history import ReadinessHistory
 from context_gradient.sdk.policy import load_policy
 
 
@@ -127,6 +128,7 @@ class ReviewState:
             self.client,
             cache=JsonCache(ROOT / ".context-gradient/review-cache.json"),
         )
+        self.assessment_history = ReadinessHistory(ROOT / ".context-gradient/assessment-history")
         self.history: dict[str, list[dict]] = {}
         self.last_errors: list[dict] = []
 
@@ -134,7 +136,10 @@ class ReviewState:
         if refresh:
             self.extractor.invalidate(urn)
         bundle = self.extractor.bundle(urn)
-        certificate = self.engine.certify(bundle).as_dict()
+        certificate_obj = self.engine.certify(bundle)
+        certificate = certificate_obj.as_dict()
+        previous = self.assessment_history.latest(urn)
+        self.assessment_history.append(certificate_obj)
         decision = admit_capability(certificate, capability).__dict__
         decision["action_predicate"] = _action_predicate(
             certificate,
@@ -143,6 +148,19 @@ class ReviewState:
             decision["allowed"],
         )
         run = _decision_to_run(certificate, decision, self.policy)
+        run["assessment"] = certificate.get("metadata", {}).get("assessment", {})
+        run["facts"] = run["assessment"].get("facts", {})
+        run["guidance"] = run["assessment"].get("guidance", "")
+        run["before_after"] = {
+            "previous_readiness": previous.get("readiness_score") if previous else None,
+            "current_readiness": run["readiness_score"],
+            "readiness_delta": round(run["readiness_score"] - previous["readiness_score"], 2) if previous else None,
+            "previous_confidence": previous.get("confidence") if previous else None,
+            "current_confidence": run["confidence"],
+            "confidence_delta": round(run["confidence"] - previous["confidence"], 2) if previous else None,
+            "previous_gaps": [gap["evidence_kind"] for gap in (previous.get("gaps", []) if previous else [])],
+            "current_gaps": [gap["evidence_kind"] for gap in run["gaps"]],
+        }
         event = {
             "decision_id": f"pred-{int(time.time() * 1000)}",
             "evaluated_at": datetime.now(timezone.utc).isoformat(),
@@ -154,6 +172,15 @@ class ReviewState:
         run["decision_id"] = event["decision_id"]
         run["evaluated_at"] = event["evaluated_at"]
         run["history"] = self.history[urn][-10:]
+        run["saved_assessments"] = [
+            {
+                "issued_at": item.get("issued_at"),
+                "readiness_score": item.get("readiness_score"),
+                "confidence": item.get("confidence"),
+                "gap_count": len(item.get("gaps", [])),
+            }
+            for item in self.assessment_history.list(urn)
+        ]
         return run
 
     def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
@@ -275,6 +302,13 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                     self._json(state.evaluate(urn, requested_capability, refresh=True))
                 except Exception as error:
                     self._json({"error": str(error)}, 500)
+                return
+            if parsed.path == "/api/history":
+                urn = parse_qs(parsed.query).get("urn", [""])[0]
+                if not urn:
+                    self._json({"error": "Missing urn query parameter."}, 400)
+                    return
+                self._json({"urn": urn, "assessments": state.assessment_history.list(urn, limit=25)})
                 return
             self.send_error(404)
 

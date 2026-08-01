@@ -571,6 +571,10 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin: 16px 0;
+      align-items: start;
+    }
+    .controls > div {
+      min-width: 0;
     }
     label {
       display: block;
@@ -2002,11 +2006,17 @@
       selected = Number(event.target.value);
       requestAction.textContent = "Request AI action";
       render();
+      const assetName = runs[selected] ? runs[selected].asset : "the selected asset";
+      const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
+      document.getElementById("dataUpdate").textContent = `Asset changed to ${assetName}.`;
+      document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
     });
     capabilitySelect.addEventListener("change", () => {
       requestAction.textContent = "Request AI action";
-      document.getElementById("dataUpdate").textContent = "Action selected. Click Request AI action to evaluate it.";
-      document.getElementById("actionResult").textContent = "Ready. Click Request AI action to check this capability.";
+      const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
+      const assetName = runs[selected] ? runs[selected].asset : "this asset";
+      document.getElementById("dataUpdate").textContent = `Action changed for ${assetName}.`;
+      document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
     });
     requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
     document.querySelectorAll(".tab").forEach((tab) => {

@@ -198,21 +198,11 @@
       line-height: 1.35;
       min-height: 16px;
     }
-    .action-result {
-      border: 1px solid var(--line);
-      border-left: 4px solid var(--blue);
-      border-radius: 6px;
-      background: var(--soft);
-      color: var(--ink);
-      padding: 9px 12px;
-      margin: -4px 0 16px;
-      font-size: 13px;
-      line-height: 1.35;
-      min-height: 18px;
-    }
-    .action-result.result {
-      color: var(--ink);
+    .action-log {
+      color: var(--ink) !important;
+      font-size: 12px !important;
       font-weight: 700;
+      line-height: 1.35;
     }
     .environment strong {
       display: block;
@@ -1054,6 +1044,7 @@
           <span>Review API: predicate-review</span>
           <span id="dataMode">Mode: recorded proof data</span>
           <span id="dataUpdate">Updates when this page is connected to a Predicate API.</span>
+          <span id="actionResult" class="action-log">Ready for an AI action request.</span>
         </div>
       </div>
 
@@ -1174,8 +1165,6 @@
               </div>
             </div>
           </div>
-          <div id="actionResult" class="action-result result">Ready. Choose an action and request a decision.</div>
-
           <div class="bars">
             <div class="bar-card">
               <div class="bar-top"><span>Readiness score</span><strong id="scoreText"></strong></div>

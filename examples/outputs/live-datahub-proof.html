@@ -1930,12 +1930,13 @@
         render();
         document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
         actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
+        requestAction.textContent = `Checked: ${runs[selected].decision.toUpperCase()}`;
       } catch (error) {
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
         actionResult.textContent = friendlyApiError(error);
       }
       requestAction.disabled = false;
-      requestAction.textContent = "Request AI action";
+      if (requestAction.textContent === "Checking...") requestAction.textContent = "Request AI action";
     }
 
     async function loadLiveRuns() {
@@ -1990,9 +1991,11 @@
 
     assetSelect.addEventListener("change", (event) => {
       selected = Number(event.target.value);
+      requestAction.textContent = "Request AI action";
       render();
     });
     capabilitySelect.addEventListener("change", () => {
+      requestAction.textContent = "Request AI action";
       document.getElementById("dataUpdate").textContent = "Action selected. Click Request AI action to evaluate it.";
       document.getElementById("actionResult").textContent = "Ready. Click Request AI action to check this capability.";
     });

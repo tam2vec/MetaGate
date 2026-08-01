@@ -995,6 +995,8 @@
       .topbar, .decision-hero { display: block; }
       .environment, .decision-box { width: 100%; margin-top: 12px; }
       .scoreboard, .controls, .bars, .insight-grid, .datahub-body { grid-template-columns: 1fr; }
+      .action-row { grid-template-columns: 1fr; }
+      .action-row .request-button { width: 100%; }
       h1 { font-size: 28px; }
     }
   </style>
@@ -1905,7 +1907,7 @@
         actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
       } catch (error) {
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
-        actionResult.textContent = "Request failed. Make sure the local review server is running, then try again.";
+        actionResult.textContent = "Predicate Review is offline. Start the review service, then press Refresh DataHub check.";
       }
       requestAction.disabled = false;
       requestAction.textContent = "Request AI action";
@@ -1950,7 +1952,8 @@
         }
       } catch (error) {
         document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
-        document.getElementById("dataUpdate").textContent = "Predicate API unavailable. Start once: ./scripts/start_predicate_review.sh, then refresh this page.";
+        document.getElementById("dataUpdate").textContent = "Review service offline. Start Predicate Review, then press Refresh DataHub check.";
+        document.getElementById("actionResult").textContent = "Waiting for Predicate Review at http://127.0.0.1:8765.";
       }
       refreshData.disabled = false;
       refreshData.textContent = "Refresh DataHub check";

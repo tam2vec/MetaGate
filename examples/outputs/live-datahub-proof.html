@@ -1900,14 +1900,15 @@
       const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
       try {
         const response = await fetch(endpoint, { cache: "no-store" });
-        if (!response.ok) throw new Error("Capability check failed");
-        runs[selected] = await response.json();
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        runs[selected] = payload;
         render();
         document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
         actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
       } catch (error) {
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
-        actionResult.textContent = "Predicate Review is offline. Start the review service, then press Refresh DataHub check.";
+        actionResult.textContent = `Request failed: ${error.message || "Predicate API could not evaluate this asset."}`;
       }
       requestAction.disabled = false;
       requestAction.textContent = "Request AI action";
@@ -1932,7 +1933,8 @@
         const status = statusResponse.ok ? await statusResponse.json() : null;
         const response = await fetch(refreshEndpoint, { cache: "no-store" });
         if (!response.ok) {
-          throw new Error("API unavailable");
+          const detail = await response.text().catch(() => "");
+          throw new Error(detail || `Predicate returned HTTP ${response.status}`);
         }
         const payload = await response.json();
         if (Array.isArray(payload.runs) && payload.runs.length) {

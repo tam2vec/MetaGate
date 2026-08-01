@@ -1359,6 +1359,7 @@
     });
     let selected = 0;
     let embeddedView = "summary";
+    let activeApiBase = "";
 
     function formatMetric(value) {
       return value === null || value === undefined ? "n/a" : Number(value).toFixed(2);
@@ -1791,11 +1792,31 @@
       renderTimeline(run);
     }
 
+    async function loadCapabilityDecision(capability) {
+      const run = runs[selected];
+      if (!run || !activeApiBase) {
+        document.getElementById("dataUpdate").textContent = "Select a live API-backed review to re-evaluate capabilities.";
+        return;
+      }
+      document.getElementById("dataUpdate").textContent = "Checking selected capability...";
+      const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
+      try {
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) throw new Error("Capability check failed");
+        runs[selected] = await response.json();
+        render();
+        document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
+      }
+    }
+
     async function loadLiveRuns() {
       refreshData.disabled = true;
       refreshData.textContent = "Checking DataHub...";
       const params = new URLSearchParams(window.location.search);
       const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
+      activeApiBase = apiBase || (window.location.protocol !== "file:" ? window.location.origin : "");
       const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
       if (window.location.protocol === "file:" && !apiBase) {
         document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
@@ -1837,7 +1858,7 @@
       selected = Number(event.target.value);
       render();
     });
-    capabilitySelect.addEventListener("change", render);
+    capabilitySelect.addEventListener("change", (event) => loadCapabilityDecision(event.target.value));
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         embeddedView = tab.dataset.view;

@@ -319,11 +319,22 @@
 
   evaluateCurrentAsset();
   let lastUrl = location.href;
-  setInterval(() => {
+  function handleUrlChange() {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       window.__predicateDismissedUrl = null;
       evaluateCurrentAsset();
     }
-  }, 800);
+  }
+
+  window.addEventListener("popstate", handleUrlChange);
+  window.addEventListener("hashchange", handleUrlChange);
+  for (const method of ["pushState", "replaceState"]) {
+    const original = history[method];
+    history[method] = function (...args) {
+      const result = original.apply(this, args);
+      handleUrlChange();
+      return result;
+    };
+  }
 })();

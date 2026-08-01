@@ -924,13 +924,14 @@
           <span id="environmentProof">Live proof: local DataHub GraphQL</span>
           <span>Review API: predicate-review</span>
           <span id="dataMode">Mode: recorded proof data</span>
+          <span id="dataUpdate">Updates when this page is connected to a Predicate API.</span>
         </div>
       </div>
 
       <section class="scoreboard" aria-label="Proof metrics">
-        <div class="metric"><strong>5</strong><span>assets shown, including local DataHub proof and finance stress case</span></div>
-        <div class="metric"><strong>1</strong><span>finance stress-test asset</span></div>
-        <div class="metric"><strong>1</strong><span>allowed autonomous action</span></div>
+        <div class="metric"><strong id="assetCount">0</strong><span>assets in the current run</span></div>
+        <div class="metric"><strong id="financeCount">0</strong><span>finance stress-test assets</span></div>
+        <div class="metric"><strong id="allowedCount">0</strong><span>allowed autonomous actions</span></div>
         <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
       </section>
 
@@ -1357,6 +1358,14 @@
       assetSelect.value = selected;
     }
 
+    function renderScoreboard() {
+      const finance = runs.filter((run) => /finance|customer_lifetime_value/i.test(`${run.asset} ${run.urn}`));
+      const allowed = runs.filter((run) => run.allowed === true || run.decision === "allowed");
+      document.getElementById("assetCount").textContent = runs.length;
+      document.getElementById("financeCount").textContent = finance.length;
+      document.getElementById("allowedCount").textContent = allowed.length;
+    }
+
     function renderList(id, items, emptyText) {
       const list = document.getElementById(id);
       const values = items.length ? items : [emptyText];
@@ -1664,6 +1673,7 @@
 
     function render() {
       const run = runs[selected];
+      renderScoreboard();
       renderAssetControls();
       document.getElementById("assetName").textContent = run.asset;
       document.getElementById("assetUrn").textContent = run.urn;
@@ -1735,6 +1745,9 @@
           document.getElementById("environmentProof").textContent = liveMode ? "Proof: Predicate reads DataHub GraphQL" : "Proof: sanitized fixture backend";
           const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
           document.getElementById("dataMode").textContent = `${liveMode ? "Mode: live DataHub API" : "Mode: public API fixture"} - Write-back: ${writebackMode}`;
+          document.getElementById("dataUpdate").textContent = liveMode
+            ? "Live: refresh this page after a new DataHub evaluation."
+            : "Fixture: this page updates only when the API fixture changes.";
           render();
         }
       } catch (error) {

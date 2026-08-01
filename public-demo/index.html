@@ -317,6 +317,27 @@
       font-size: 20px;
       margin-top: 4px;
     }
+    .metric-value {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-weight: 900;
+      background: #fff6df;
+      color: var(--yellow);
+    }
+    .metric-value.strong {
+      background: #e8f7ee;
+      color: var(--green);
+    }
+    .metric-value.warn {
+      background: #fff6df;
+      color: var(--yellow);
+    }
+    .metric-value.weak {
+      background: #fff0f0;
+      color: var(--red);
+    }
     .review-link {
       display: inline-flex;
       justify-content: center;
@@ -1274,6 +1295,19 @@
       return value === null || value === undefined ? "n/a" : Number(value).toFixed(2);
     }
 
+    function metricClass(value) {
+      if (value === null || value === undefined) {
+        return "metric-value warn";
+      }
+      if (Number(value) >= 92) {
+        return "metric-value strong";
+      }
+      if (Number(value) >= 85) {
+        return "metric-value warn";
+      }
+      return "metric-value weak";
+    }
+
     function escapeHtml(value) {
       return String(value)
         .replace(/&/g, "&amp;")
@@ -1626,14 +1660,18 @@
       document.getElementById("embeddedDecision").style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
       document.getElementById("embeddedReason").textContent = run.reason;
       document.getElementById("embeddedScore").textContent = formatMetric(run.readiness);
+      document.getElementById("embeddedScore").className = metricClass(run.readiness);
       document.getElementById("embeddedConfidence").textContent = formatMetric(run.confidence);
+      document.getElementById("embeddedConfidence").className = metricClass(run.confidence);
       document.getElementById("decisionText").textContent = run.decision;
       document.getElementById("decisionText").style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
       const pill = document.getElementById("decisionPill");
       pill.className = "pill " + run.decision;
       pill.textContent = run.decision;
       document.getElementById("scoreText").textContent = formatMetric(run.readiness);
+      document.getElementById("scoreText").className = metricClass(run.readiness);
       document.getElementById("confidenceText").textContent = formatMetric(run.confidence);
+      document.getElementById("confidenceText").className = metricClass(run.confidence);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       const prettyPredicate = JSON.stringify(run.predicate, null, 2)

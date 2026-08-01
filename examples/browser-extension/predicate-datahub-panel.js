@@ -28,6 +28,19 @@
     return decision === "allowed" ? "#e8f7ee" : "#fff0f0";
   }
 
+  function metricClass(value) {
+    if (value === null || value === undefined || value === "n/a") {
+      return "warn";
+    }
+    if (Number(value) >= 92) {
+      return "strong";
+    }
+    if (Number(value) >= 85) {
+      return "warn";
+    }
+    return "weak";
+  }
+
   function failedTerms(run) {
     const predicate = run.predicate || run.action_predicate || {};
     return run.failed || predicate.failed_terms || [];
@@ -156,9 +169,25 @@
         font-size: 12px;
       }
       #${PANEL_ID} .predicate-metric strong {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px 9px;
         margin-top: 3px;
         font-size: 20px;
+        font-weight: 900;
+      }
+      #${PANEL_ID} .predicate-metric strong.strong {
+        background: #e8f7ee;
+        color: #13824c;
+      }
+      #${PANEL_ID} .predicate-metric strong.warn {
+        background: #fff6df;
+        color: #a96d10;
+      }
+      #${PANEL_ID} .predicate-metric strong.weak {
+        background: #fff0f0;
+        color: #bc3030;
       }
       #${PANEL_ID} ol {
         margin: 8px 0 0;
@@ -200,6 +229,8 @@
 
   function renderResult(panel, run) {
     const decision = run.decision || (run.allowed ? "allowed" : "blocked");
+    const readiness = run.readiness ?? run.readiness_score ?? "n/a";
+    const confidence = run.confidence ?? "n/a";
     const body = panel.querySelector(".predicate-body");
     const status = panel.querySelector(".predicate-status");
     status.remove();
@@ -209,8 +240,8 @@
         <strong>${decision}</strong>
       </div>
       <div class="predicate-meta">
-        <div class="predicate-metric"><span>Readiness</span><strong>${run.readiness ?? run.readiness_score ?? "n/a"}</strong></div>
-        <div class="predicate-metric"><span>Confidence</span><strong>${run.confidence ?? "n/a"}</strong></div>
+        <div class="predicate-metric"><span>Readiness</span><strong class="${metricClass(readiness)}">${readiness}</strong></div>
+        <div class="predicate-metric"><span>Confidence</span><strong class="${metricClass(confidence)}">${confidence}</strong></div>
       </div>
       <div class="predicate-status">${run.reason || "Predicate evaluated this asset."}</div>
       <h3 style="font-size:14px; margin:12px 0 0;">Repair queue</h3>

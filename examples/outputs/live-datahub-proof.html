@@ -94,12 +94,15 @@
     .sidebar-assets .asset-list {
       padding: 0;
       gap: 7px;
+      max-height: 360px;
+      overflow-y: auto;
     }
     .sidebar-assets .asset-button {
       color: #dbe5f5;
       border-color: rgba(255,255,255,.08);
       background: rgba(255,255,255,.03);
-      padding: 10px;
+      padding: 8px 10px;
+      min-height: 42px;
     }
     .sidebar-assets .asset-button:hover,
     .sidebar-assets .asset-button.active {
@@ -111,14 +114,16 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       font-size: 13px;
+      min-width: 0;
+    }
+    .sidebar-assets .asset-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .sidebar-assets .urn {
-      color: #9fb0c9;
-      font-size: 10px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      display: none;
     }
     .sidebar-assets .asset-button.active .urn,
     .sidebar-assets .asset-button:hover .urn {
@@ -1359,7 +1364,7 @@
         button.type = "button";
         button.className = "asset-button" + (index === selected ? " active" : "");
         button.innerHTML = `
-          <span class="asset-name">${escapeHtml(run.asset)}<span class="pill ${run.decision}">${run.decision}</span></span>
+          <span class="asset-name"><span class="asset-label" title="${escapeHtml(run.asset)}">${escapeHtml(run.asset)}</span><span class="pill ${run.decision}">${run.decision}</span></span>
           <span class="urn">${escapeHtml(run.urn)}</span>
         `;
         button.addEventListener("click", () => {

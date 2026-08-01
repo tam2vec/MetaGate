@@ -3,7 +3,7 @@ services:
     name: predicate-review-api
     runtime: docker
     plan: free
-    healthCheckPath: /api/runs
+    healthCheckPath: /healthz
     envVars:
       - key: PREDICATE_DEMO_MODE
         value: fixture

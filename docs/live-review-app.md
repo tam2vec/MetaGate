@@ -30,6 +30,13 @@ The page will show:
 - failed predicate terms
 - full evidence review
 
+Health checks:
+
+```text
+http://127.0.0.1:8765/healthz
+http://127.0.0.1:8765/readyz
+```
+
 ## Evaluate one asset through the API
 
 ```text
@@ -43,6 +50,33 @@ predicate-review \
   --datahub-file examples/data/datahub_graph.json \
   --policy examples/policies/enterprise_ai.yml \
   --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)"
+```
+
+## Fail closed in private deployments
+
+Use `--no-recorded-fallback` when the API is connected to a private DataHub
+deployment:
+
+```bash
+predicate-review \
+  --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --policy examples/policies/enterprise_ai.yml \
+  --no-recorded-fallback
+```
+
+That prevents the server from returning recorded demo data if live DataHub
+evaluation fails.
+
+For private deployments, restrict which browser UI can call the API:
+
+```bash
+export PREDICATE_CORS_ORIGIN="https://predicate-ui.example.com"
+
+predicate-review \
+  --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --policy examples/policies/enterprise_ai.yml \
+  --no-recorded-fallback \
+  --cors-origin "$PREDICATE_CORS_ORIGIN"
 ```
 
 ## What to say in the demo

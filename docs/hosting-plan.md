@@ -10,7 +10,7 @@ review server.
 | Static visual proof | `examples/outputs/predicate-demo-app.html` | Works offline and is safe for screenshots |
 | Public static demo | `public-demo/index.html` | One-file deploy target for static hosting |
 | Public API-backed demo | `https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com` | Hosted page calling Render API with sanitized fixture data |
-| Live local review app | `scripts/serve_review.py` | Browser loads decisions from `/api/runs` |
+| Live local review app | `predicate-review` | Browser loads decisions from `/api/runs` |
 | Private review API container | `Dockerfile` | Runs the same review API behind a private network |
 | DataHub embed prototype | `examples/datahub-embed/` | Shows how the panel mounts beside a DataHub asset |
 | Browser extension prototype | `examples/browser-extension/` | Auto-runs Predicate on local DataHub asset pages |
@@ -45,8 +45,19 @@ docker build -t predicate-review .
 
 docker run --rm -p 8765:8765 \
   -e DATAHUB_GRAPHQL_URL="http://host.docker.internal:8080/api/graphql" \
+  -e DATAHUB_TOKEN="<optional-private-token>" \
+  -e PREDICATE_CORS_ORIGIN="https://predicate-ui.example.com" \
   predicate-review
 ```
+
+Health endpoints:
+
+- `/healthz`: process and configuration health
+- `/readyz`: checks whether the API can return at least one decision
+
+For private deployments, start with `--no-recorded-fallback` so the API fails
+closed instead of returning recorded demo data when DataHub evaluation fails.
+Set `PREDICATE_CORS_ORIGIN` to the exact UI URL that is allowed to call the API.
 
 Use this only for private demo networks or non-sensitive demo DataHub instances.
 Do not expose a private DataHub token from a public static page.

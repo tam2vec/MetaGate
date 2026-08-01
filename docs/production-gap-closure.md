@@ -13,6 +13,7 @@ included for each one.
 | Install friction | Package entrypoints, `predicate`, `predicate-review`, Dockerfile, browser extension README, and runbooks exist. | "The demo can be run with local DataHub plus one Predicate server command." |
 | Scoring calibration | Scoring docs exist. Calibration still needs independent labeled data. | "Weights are policy-configurable and not claimed as universal accuracy." |
 | Security story | Security policy, write-back safety docs, UI Security & RBAC panel, and RBAC enforcement model exist. Production RBAC/token controls must be configured by deployment. | "Predicate can be read-only, uses DataHub auth token server-side, and gates mutation write-back." |
+| Runtime readiness | Health endpoints, startup validation, Docker healthcheck, Render health check, and fail-closed mode exist. | "Predicate has production-oriented runtime controls, while deployment hardening remains environment-specific." |
 | Remediation depth | Public review app now shows asset-specific repair steps, approved glossary suggestions, concrete assertions, owner actions, and rerun expectations. | "Predicate returns a repair plan, not just a blocked decision." |
 | Trust lifecycle | Public review app now shows a trust timeline for evidence change, policy check, trust revocation or certification, repair, and rerun. | "Predicate is continuous control, not a one-time score." |
 

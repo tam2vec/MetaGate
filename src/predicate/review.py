@@ -187,6 +187,7 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
             body = json.dumps(payload, indent=2).encode()
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
             self.send_header("Access-Control-Allow-Origin", cors_origin)
             self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
@@ -198,6 +199,8 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
             body = APP.read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+            self.send_header("Pragma", "no-cache")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -296,6 +299,7 @@ def main() -> None:
         make_handler(state, urns, args.capability, args.cors_origin),
     )
     print(f"Predicate Review is running at http://{args.host}:{args.port}/review")
+    print(f"Serving app from {APP}")
     server.serve_forever()
 
 

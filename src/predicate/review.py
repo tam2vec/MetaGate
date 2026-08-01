@@ -25,7 +25,9 @@ def _repo_root() -> Path:
 
 
 ROOT = _repo_root()
-APP = ROOT / "examples/outputs/predicate-demo-app.html"
+# Local review serves the source page directly, so UI edits are visible after
+# restarting the service without relying on a copied/generated HTML artifact.
+APP = ROOT / "public-demo/index.html"
 RUNS = ROOT / "examples/outputs/live-runs.json"
 DEFAULT_URNS = [
     "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",

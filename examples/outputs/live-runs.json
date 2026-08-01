@@ -1,0 +1,127 @@
+[
+  {
+    "recorded_at": "2026-08-01T00:00:00+00:00",
+    "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+    "asset": "SampleHiveDataset",
+    "capability": "autonomous-agent-action",
+    "allowed": true,
+    "decision": "allowed",
+    "reason": "Capability is certified by the active policy.",
+    "readiness_score": null,
+    "confidence": null,
+    "policy": "enterprise-ai",
+    "evidence": [
+      "description evidence is present and current.",
+      "ownership evidence is present and current.",
+      "glossary evidence is present and current.",
+      "domain evidence is present and current.",
+      "tags evidence is present and current.",
+      "lineage evidence is present and current.",
+      "column_lineage evidence is present and current.",
+      "assertions evidence is present and current."
+    ],
+    "action_predicate": {
+      "action": "autonomous-agent-action",
+      "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+      "result": true,
+      "failed_terms": [],
+      "decision": "allowed"
+    }
+  },
+  {
+    "recorded_at": "2026-08-01T00:00:00+00:00",
+    "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+    "asset": "fct_users_created",
+    "capability": "autonomous-agent-action",
+    "allowed": false,
+    "decision": "blocked",
+    "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
+    "readiness_score": 91.22,
+    "confidence": 86.25,
+    "policy": "enterprise-ai",
+    "evidence": [
+      "description evidence is present and current.",
+      "ownership evidence is present and current.",
+      "glossary evidence is present and current.",
+      "domain evidence is present and current.",
+      "tags evidence is present and current.",
+      "lineage evidence is present and current.",
+      "column_lineage evidence is present and current."
+    ],
+    "action_predicate": {
+      "action": "autonomous-agent-action",
+      "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+      "result": false,
+      "failed_terms": [
+        "assertions.present",
+        "readiness_score >= policy.minimum_score",
+        "confidence >= policy.minimum_confidence"
+      ],
+      "decision": "blocked"
+    }
+  },
+  {
+    "recorded_at": "2026-08-01T00:00:00+00:00",
+    "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",
+    "asset": "fct_users_deleted",
+    "capability": "autonomous-agent-action",
+    "allowed": false,
+    "decision": "blocked",
+    "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
+    "readiness_score": 91.22,
+    "confidence": 86.25,
+    "policy": "enterprise-ai",
+    "evidence": [
+      "description evidence is present and current.",
+      "ownership evidence is present and current.",
+      "glossary evidence is present and current.",
+      "domain evidence is present and current.",
+      "tags evidence is present and current.",
+      "lineage evidence is present and current.",
+      "column_lineage evidence is present and current."
+    ],
+    "action_predicate": {
+      "action": "autonomous-agent-action",
+      "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+      "result": false,
+      "failed_terms": [
+        "assertions.present",
+        "readiness_score >= policy.minimum_score",
+        "confidence >= policy.minimum_confidence"
+      ],
+      "decision": "blocked"
+    }
+  },
+  {
+    "recorded_at": "2026-08-01T00:00:00+00:00",
+    "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",
+    "asset": "SampleKafkaDataset",
+    "capability": "autonomous-agent-action",
+    "allowed": false,
+    "decision": "blocked",
+    "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
+    "readiness_score": null,
+    "confidence": null,
+    "policy": "enterprise-ai",
+    "evidence": [
+      "description evidence is present and current.",
+      "ownership evidence is present and current.",
+      "glossary evidence is present and current.",
+      "domain evidence is present and current.",
+      "tags evidence is present and current.",
+      "lineage evidence is present and current.",
+      "column_lineage evidence is present and current."
+    ],
+    "action_predicate": {
+      "action": "autonomous-agent-action",
+      "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+      "result": false,
+      "failed_terms": [
+        "assertions.present",
+        "readiness_score >= policy.minimum_score",
+        "confidence >= policy.minimum_confidence"
+      ],
+      "decision": "blocked"
+    }
+  }
+]

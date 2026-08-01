@@ -1,0 +1,9 @@
+{
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "capability": "rename-column",
+  "decision": "blocked",
+  "evidence": ["column_lineage evidence is incomplete.", "16 downstream consumers are known."],
+  "policy_rule": "schema-change-control requires complete column lineage and downstream consumers.",
+  "graph_path": ["revenue_daily", "11 dashboards", "3 pipelines", "2 ML features"],
+  "recommended_fix": "Complete column lineage and obtain owner approval."
+}

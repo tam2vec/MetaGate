@@ -1,0 +1,28 @@
+{
+  "source": "local DataHub quickstart seeded with sample metadata",
+  "policy": "enterprise-ai",
+  "capability": "autonomous-agent-action",
+  "assets": [
+    {
+      "name": "SampleHiveDataset",
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+      "decision": "allowed",
+      "reason": "Capability is certified by the active policy.",
+      "evidence_summary": "Required evidence is present."
+    },
+    {
+      "name": "fct_users_created",
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+      "decision": "blocked",
+      "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
+      "evidence_summary": "Assertions are missing for a high-risk autonomous action."
+    },
+    {
+      "name": "fct_users_deleted",
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",
+      "decision": "blocked",
+      "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
+      "evidence_summary": "Assertions are missing for a high-risk autonomous action."
+    }
+  ]
+}

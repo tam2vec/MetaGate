@@ -1,0 +1,10 @@
+{
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "current_policy": "discovery",
+  "proposed_policy": "finance-production-v2",
+  "current_score": 98.31,
+  "proposed_score": 84.0,
+  "newly_blocked": ["trust-kpi", "rename-column"],
+  "newly_certified": [],
+  "note": "Simulation does not mutate DataHub or readiness history."
+}

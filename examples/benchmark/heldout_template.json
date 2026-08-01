@@ -1,0 +1,14 @@
+[
+  {
+    "name": "independent-case-01",
+    "expected_ready": false,
+    "entity": {
+      "description": {"missing": true},
+      "ownership": {"owners": ["team"]},
+      "glossary": {"terms": ["Metric"]},
+      "freshness": {"passed": true},
+      "column_lineage": {"complete": true},
+      "policy": {"profile": "independent"}
+    }
+  }
+]

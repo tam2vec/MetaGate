@@ -1,0 +1,12 @@
+name: schema-change-control
+minimum_score: 90
+graph_propagation: 0.3
+capabilities:
+  - name: rename-column
+    minimum_score: 90
+    minimum_confidence: 90
+    required_evidence: [ownership, column_lineage, downstream_consumers, policy]
+  - name: approve-schema-migration
+    minimum_score: 95
+    minimum_confidence: 95
+    required_evidence: [ownership, column_lineage, downstream_consumers, assertions, incidents, policy]

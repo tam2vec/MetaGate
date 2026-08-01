@@ -1,0 +1,1716 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Predicate Review</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #617086;
+      --soft: #f5f7fb;
+      --panel: #ffffff;
+      --line: #dce3ee;
+      --nav: #101827;
+      --blue: #315fd8;
+      --cyan: #1d7f9a;
+      --green: #13824c;
+      --red: #bc3030;
+      --yellow: #a96d10;
+      --shadow: 0 14px 34px rgba(18, 31, 52, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #eef2f7;
+    }
+    button, select { font: inherit; }
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 238px minmax(0, 1fr);
+    }
+    aside {
+      background: var(--nav);
+      color: #d8e2f3;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #f3f7ff;
+      color: var(--blue);
+      font-weight: 900;
+    }
+    .nav-label {
+      color: #8ea0bb;
+      font-size: 12px;
+      text-transform: uppercase;
+      margin: 10px 0 8px;
+    }
+    .nav-item {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: #dbe5f5;
+      margin-bottom: 8px;
+    }
+    .nav-item.active {
+      background: #f3f7ff;
+      color: #142033;
+    }
+    .sidebar-note {
+      margin-top: auto;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 14px;
+      color: #b7c5da;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .sidebar-assets {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255,255,255,.04);
+    }
+    .sidebar-assets .asset-list {
+      padding: 0;
+      gap: 7px;
+    }
+    .sidebar-assets .asset-button {
+      color: #dbe5f5;
+      border-color: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      padding: 10px;
+    }
+    .sidebar-assets .asset-button:hover,
+    .sidebar-assets .asset-button.active {
+      background: #f3f7ff;
+      border-color: transparent;
+      color: #142033;
+    }
+    .sidebar-assets .asset-name {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      font-size: 13px;
+    }
+    .sidebar-assets .urn {
+      color: #9fb0c9;
+      font-size: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .sidebar-assets .asset-button.active .urn,
+    .sidebar-assets .asset-button:hover .urn {
+      color: #5f6d80;
+    }
+    main {
+      padding: 24px;
+      min-width: 0;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 32px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 780px;
+      line-height: 1.45;
+    }
+    .environment {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 12px 14px;
+      min-width: 230px;
+    }
+    .environment strong {
+      display: block;
+      font-size: 14px;
+    }
+    .environment span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .embed-demo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 16px;
+      margin: 18px 0;
+      align-items: stretch;
+    }
+    .datahub-page {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .datahub-top {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .platform-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #fff6d8;
+      display: grid;
+      place-items: center;
+      color: #7b520b;
+      font-weight: 900;
+    }
+    .datahub-top h2 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .datahub-meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .tab {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 14px;
+      border-bottom: 3px solid transparent;
+    }
+    .tab.active {
+      color: var(--blue);
+      border-color: var(--blue);
+    }
+    .datahub-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px;
+    }
+    .metadata-box {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 112px;
+    }
+    .metadata-box strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+    .metadata-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+    .metadata-box code {
+      display: block;
+      margin-top: 6px;
+      color: #34435a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .predicate-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .panel-kicker {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .compact-decision {
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      background: #fbfcff;
+    }
+    .compact-decision strong {
+      display: block;
+      font-size: 31px;
+      margin: 4px 0 6px;
+      text-transform: uppercase;
+    }
+    .compact-decision p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: 13px;
+    }
+    .compact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .compact-metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px;
+      background: var(--soft);
+    }
+    .compact-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .compact-metric strong {
+      display: block;
+      font-size: 20px;
+      margin-top: 4px;
+    }
+    .review-link {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 42px;
+      border: 0;
+      cursor: pointer;
+      border-radius: 8px;
+      background: var(--blue);
+      color: white;
+      text-decoration: none;
+      font-weight: 800;
+    }
+    .review-caption {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .panel-actions {
+      display: grid;
+      gap: 8px;
+    }
+    .mini-queue {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+      padding: 12px;
+    }
+    .mini-queue strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+    .mini-queue ol {
+      margin: 0;
+      padding-left: 19px;
+    }
+    .mini-queue li {
+      font-size: 12px;
+      margin: 4px 0;
+    }
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      min-height: 102px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 29px;
+      margin-bottom: 5px;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      padding: 15px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .asset-list {
+      padding: 8px;
+      display: grid;
+      gap: 8px;
+    }
+    .asset-button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      color: var(--ink);
+    }
+    .asset-button:hover,
+    .asset-button.active {
+      background: var(--soft);
+      border-color: var(--line);
+    }
+    .asset-name {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-weight: 750;
+    }
+    .urn {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .allowed { color: var(--green); background: #e8f7ee; }
+    .blocked { color: var(--red); background: #fff0f0; }
+    .main-card { padding: 18px; }
+    .decision-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: start;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .decision-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .decision-title h2 {
+      font-size: 25px;
+      overflow-wrap: anywhere;
+    }
+    .asset-urn {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      color: #34435a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+    .decision-box {
+      width: 200px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcff;
+    }
+    .decision-box span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .decision-box strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 26px;
+      text-transform: uppercase;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 11px 12px;
+    }
+    .bars {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .bar-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: var(--soft);
+    }
+    .bar-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .bar-top span { color: var(--muted); font-size: 13px; }
+    .bar-top strong { font-size: 22px; }
+    .track {
+      height: 9px;
+      border-radius: 999px;
+      background: #dde5f0;
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--blue));
+      width: 0;
+    }
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .insight {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      min-height: 98px;
+    }
+    .insight strong {
+      display: block;
+      margin-bottom: 7px;
+    }
+    .insight p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: 13px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .two-col > div {
+      min-width: 0;
+    }
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .predicate {
+      background: #101725;
+      color: #edf3ff;
+      border-radius: 8px;
+      padding: 15px;
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .readable-card {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 14px 14px 4px;
+      min-height: 100%;
+    }
+    .action-workbench {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin: 18px 0;
+    }
+    .workbench-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .workbench-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .queue-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .queue-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+      padding: 13px;
+      min-height: 126px;
+    }
+    .queue-card span {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 9px;
+    }
+    .queue-card h3 {
+      margin: 0 0 7px;
+      font-size: 15px;
+    }
+    .queue-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .owner-chip { color: #275da8; background: #eaf1ff; }
+    .risk-chip { color: var(--red); background: #fff0f0; }
+    .repair-chip { color: var(--yellow); background: #fff6df; }
+    .verify-chip { color: var(--green); background: #e8f7ee; }
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(16, 24, 39, .38);
+      display: none;
+      align-items: stretch;
+      justify-content: flex-end;
+      z-index: 10;
+    }
+    .drawer-backdrop.open {
+      display: flex;
+    }
+    .drawer {
+      width: min(560px, 100%);
+      background: #fff;
+      box-shadow: -18px 0 40px rgba(16, 24, 39, .18);
+      padding: 22px;
+      overflow-y: auto;
+    }
+    .drawer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+    .drawer-head h2 {
+      font-size: 22px;
+    }
+    .drawer-close {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      min-width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+    .drawer-section {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fbfcff;
+    }
+    .drawer-section h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+    .drawer-section p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .feature-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+      padding: 16px;
+      min-width: 0;
+    }
+    .feature-card h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    .remediation-list {
+      display: grid;
+      gap: 10px;
+    }
+    .remediation-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .remediation-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+    .remediation-item span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .matrix th,
+    .matrix td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 7px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .matrix th {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+    .timeline-step {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .timeline-step time {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .timeline-step div {
+      border-left: 3px solid var(--line);
+      padding-left: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .diff-box {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .diff-side {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      min-height: 116px;
+    }
+    .diff-side strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .diff-arrow {
+      color: var(--blue);
+      font-weight: 900;
+    }
+    .quiet-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin: 8px 0 0;
+    }
+    .proof-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcff;
+      min-height: 112px;
+    }
+    .proof-step span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .proof-step strong {
+      display: block;
+      margin: 5px 0 7px;
+    }
+    .proof-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    @media (max-width: 1020px) {
+      .shell, .workspace, .two-col, .proof-strip, .embed-demo, .product-grid, .diff-box, .queue-grid { grid-template-columns: 1fr; }
+      aside { display: none; }
+    }
+    @media (max-width: 760px) {
+      main { padding: 16px; }
+      .topbar, .decision-hero { display: block; }
+      .environment, .decision-box { width: 100%; margin-top: 12px; }
+      .scoreboard, .controls, .bars, .insight-grid, .datahub-body { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand"><span class="mark">P</span>Predicate</div>
+      <div>
+        <div class="nav-label">Workspace</div>
+        <div class="nav-item active">Embed Prototype</div>
+        <div class="nav-item">Decision Details</div>
+        <div class="nav-item">Policy Checks</div>
+        <div class="nav-item">DataHub Evidence</div>
+        <div class="nav-item">Write-back Queue</div>
+      </div>
+      <div>
+        <div class="nav-label">Proof</div>
+        <div class="nav-item">30/30 Benchmark</div>
+        <div class="nav-item">Live DataHub Runs</div>
+      </div>
+      <div class="sidebar-assets">
+        <div class="nav-label">Assets</div>
+        <div id="assetList" class="asset-list"></div>
+      </div>
+      <div class="sidebar-note">This hosted page is sanitized static proof of the intended embedded experience. The local review server can load decisions from a live DataHub GraphQL run.</div>
+    </aside>
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>Predicate Review</h1>
+          <p class="subtitle">Sanitized demo of the intended DataHub embedded experience. The real proof path is local DataHub, Predicate CLI/API, allowed or blocked decisions, and the live local review server.</p>
+        </div>
+        <div class="environment">
+          <strong id="environmentTitle">Public demo: static proof</strong>
+          <span id="environmentProof">Live proof: local DataHub GraphQL</span>
+          <span>Review API: scripts/serve_review.py</span>
+          <span id="dataMode">Mode: recorded proof data</span>
+        </div>
+      </div>
+
+      <section class="scoreboard" aria-label="Proof metrics">
+        <div class="metric"><strong>4</strong><span>local DataHub assets evaluated</span></div>
+        <div class="metric"><strong>1</strong><span>finance stress-test asset</span></div>
+        <div class="metric"><strong>1</strong><span>allowed autonomous action</span></div>
+        <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
+      </section>
+
+      <section class="embed-demo" aria-label="Intended DataHub embedded Predicate panel">
+        <div class="datahub-page">
+          <div class="datahub-top">
+            <div class="platform-icon">Hive</div>
+            <div>
+              <h2 id="embeddedAssetName"></h2>
+              <div class="datahub-meta">Dataset · PROD · prototype DataHub asset page</div>
+            </div>
+          </div>
+          <div class="tabs">
+            <button class="tab active" type="button" data-view="summary">Summary</button>
+            <button class="tab" type="button" data-view="columns">Columns</button>
+            <button class="tab" type="button" data-view="lineage">Lineage</button>
+            <button class="tab" type="button" data-view="quality">Quality</button>
+            <button class="tab" type="button" data-view="governance">Governance</button>
+          </div>
+          <div id="embeddedMetadata" class="datahub-body">
+          </div>
+        </div>
+
+        <aside class="predicate-panel" aria-label="Predicate side panel">
+          <div>
+            <div class="panel-kicker">Predicate</div>
+            <h2>AI action check</h2>
+          </div>
+          <div class="compact-decision">
+            <span class="panel-kicker">Autonomous agent action</span>
+            <strong id="embeddedDecision"></strong>
+            <p id="embeddedReason"></p>
+          </div>
+          <div class="compact-grid">
+            <div class="compact-metric"><span>Readiness</span><strong id="embeddedScore"></strong></div>
+            <div class="compact-metric"><span>Confidence</span><strong id="embeddedConfidence"></strong></div>
+          </div>
+          <div class="mini-queue">
+            <strong>Immediate repair queue</strong>
+            <ol id="miniRepairQueue"></ol>
+          </div>
+          <div class="panel-actions">
+            <button id="openRemediationDrawer" class="review-link" type="button">Open Remediation Drawer</button>
+          </div>
+          <p class="review-caption">In the intended embedded flow, the asset page shows the basic decision immediately. Predicate opens when the user needs the repair plan, capability matrix, and audit trail.</p>
+        </aside>
+      </section>
+
+      <section class="action-workbench" aria-label="Predicate action workbench">
+        <div class="workbench-head">
+          <div>
+            <h2>Action Workbench</h2>
+            <p>Predicate should not stop at “allowed” or “blocked.” This queue turns the decision into assigned repairs and a rerun path.</p>
+          </div>
+          <span id="workbenchStatus" class="pill blocked">blocked</span>
+        </div>
+        <div class="queue-grid">
+          <div class="queue-card">
+            <span class="risk-chip">Risk</span>
+            <h3 id="riskSummary"></h3>
+            <p id="riskDetail"></p>
+          </div>
+          <div class="queue-card">
+            <span class="owner-chip">Owner</span>
+            <h3>Data owner</h3>
+            <p id="ownerTask"></p>
+          </div>
+          <div class="queue-card">
+            <span class="repair-chip">Repair</span>
+            <h3 id="repairSummary"></h3>
+            <p id="repairDetail"></p>
+          </div>
+          <div class="queue-card">
+            <span class="verify-chip">Rerun</span>
+            <h3>Expected unlock</h3>
+            <p id="rerunDetail"></p>
+          </div>
+        </div>
+      </section>
+
+      <div id="full-review" class="workspace">
+        <section class="panel main-card">
+          <div class="decision-hero">
+            <div>
+              <div class="decision-title">
+                <h2 id="assetName"></h2>
+                <span id="decisionPill" class="pill"></span>
+              </div>
+              <div id="assetUrn" class="asset-urn"></div>
+            </div>
+            <div id="decisionBox" class="decision-box">
+              <span>Decision</span>
+              <strong id="decisionText"></strong>
+            </div>
+          </div>
+
+          <div class="controls">
+            <div>
+              <label for="assetSelect">Selected asset</label>
+              <select id="assetSelect"></select>
+            </div>
+            <div>
+              <label for="capabilitySelect">Requested AI action</label>
+              <select id="capabilitySelect">
+                <option value="autonomous-agent-action">Autonomous agent action</option>
+                <option value="generate-executive-metrics">Generate executive metrics</option>
+                <option value="answer-business-questions">Answer business questions</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="bars">
+            <div class="bar-card">
+              <div class="bar-top"><span>Readiness score</span><strong id="scoreText"></strong></div>
+              <div class="track"><div id="scoreFill" class="fill"></div></div>
+            </div>
+            <div class="bar-card">
+              <div class="bar-top"><span>Confidence</span><strong id="confidenceText"></strong></div>
+              <div class="track"><div id="confidenceFill" class="fill"></div></div>
+            </div>
+          </div>
+
+          <div class="insight-grid">
+            <div class="insight"><strong>Why this matters</strong><p id="whyText"></p></div>
+            <div class="insight"><strong>Next human action</strong><p id="nextText"></p></div>
+            <div class="insight"><strong>Where it shows up</strong><p>DataHub panel, approval workflow, CLI, CI, or write-back certificate.</p></div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <h3 class="section-title">Failed terms</h3>
+              <ul id="failedTerms"></ul>
+            </div>
+            <div>
+              <h3 class="section-title">Evidence found</h3>
+              <ul id="evidenceList"></ul>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <h3 class="section-title">Action predicate</h3>
+              <pre id="predicateBlock" class="predicate"></pre>
+            </div>
+            <div>
+              <h3 class="section-title">Readable decision</h3>
+              <div class="readable-card"><ul id="plainEnglish"></ul></div>
+            </div>
+          </div>
+
+          <div class="proof-strip">
+            <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>Predicate gathers metadata like ownership, lineage, glossary terms, incidents, freshness, usage, and assertions.</p></div>
+            <div class="proof-step"><span>2</span><strong>Evaluate policy</strong><p>The requested action is checked against explicit metadata-backed terms.</p></div>
+            <div class="proof-step"><span>3</span><strong>Return decision</strong><p>The result is visible here for humans and available as JSON for agents or CI.</p></div>
+          </div>
+
+          <div id="remediation-plan" class="product-grid">
+            <section class="feature-card">
+              <h3>Remediation Plan</h3>
+              <div id="remediationList" class="remediation-list"></div>
+              <p class="quiet-note">Enterprise remediation should be specific: add quality assertions, repair stale freshness, complete column lineage, verify ownership, then rerun Predicate.</p>
+            </section>
+
+            <section class="feature-card">
+              <h3>Capability Matrix</h3>
+              <table class="matrix">
+                <thead>
+                  <tr><th>AI action</th><th>Decision</th><th>Why</th></tr>
+                </thead>
+                <tbody id="capabilityMatrix"></tbody>
+              </table>
+            </section>
+
+            <section class="feature-card">
+              <h3>Capability Diff</h3>
+              <div class="diff-box">
+                <div class="diff-side">
+                  <strong>Before repair</strong>
+                  <ul id="beforeDiff"></ul>
+                </div>
+                <div class="diff-arrow">→</div>
+                <div class="diff-side">
+                  <strong>After repair</strong>
+                  <ul id="afterDiff"></ul>
+                </div>
+              </div>
+            </section>
+
+            <section class="feature-card">
+              <h3>Trust Timeline</h3>
+              <div id="trustTimeline" class="timeline"></div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="remediationDrawer" class="drawer-backdrop" role="dialog" aria-modal="true" aria-label="Remediation drawer">
+    <div class="drawer">
+      <div class="drawer-head">
+        <div>
+          <div class="panel-kicker">Remediation drawer</div>
+          <h2 id="drawerTitle">Repair plan</h2>
+        </div>
+        <button id="closeRemediationDrawer" class="drawer-close" type="button" aria-label="Close remediation drawer">x</button>
+      </div>
+      <div id="drawerDecision" class="drawer-section"></div>
+      <div id="drawerRepairs"></div>
+      <div class="drawer-section">
+        <h3>After repair</h3>
+        <p id="drawerAfterRepair"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PUBLIC_API_BASE = "";
+
+    let runs = [
+      {
+        asset: "SampleHiveDataset",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "allowed",
+        readiness: null,
+        confidence: null,
+        reason: "Capability is certified by the active policy.",
+        failed: [],
+        evidence: [
+          "description evidence is present and current.",
+          "ownership evidence is present and current.",
+          "glossary evidence is present and current.",
+          "domain evidence is present and current.",
+          "tags evidence is present and current.",
+          "lineage evidence is present and current.",
+          "column_lineage evidence is present and current.",
+          "assertions evidence is present and current."
+        ],
+        predicate: {
+          action: "autonomous-agent-action",
+          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          result: true,
+          failed_terms: [],
+          decision: "allowed"
+        }
+      },
+      {
+        asset: "fct_users_created",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "blocked",
+        readiness: 91.22,
+        confidence: 86.25,
+        reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
+        failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+        evidence: [
+          "description evidence is present and current.",
+          "ownership evidence is present and current.",
+          "glossary evidence is present and current.",
+          "domain evidence is present and current.",
+          "tags evidence is present and current.",
+          "lineage evidence is present and current.",
+          "column_lineage evidence is present and current."
+        ],
+        predicate: {
+          action: "autonomous-agent-action",
+          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          result: false,
+          failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+          decision: "blocked"
+        }
+      },
+      {
+        asset: "fct_users_deleted",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "blocked",
+        readiness: 91.22,
+        confidence: 86.25,
+        reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
+        failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+        evidence: [
+          "description evidence is present and current.",
+          "ownership evidence is present and current.",
+          "glossary evidence is present and current.",
+          "domain evidence is present and current.",
+          "tags evidence is present and current.",
+          "lineage evidence is present and current.",
+          "column_lineage evidence is present and current."
+        ],
+        predicate: {
+          action: "autonomous-agent-action",
+          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          result: false,
+          failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+          decision: "blocked"
+        }
+      },
+      {
+        asset: "SampleKafkaDataset",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "blocked",
+        readiness: null,
+        confidence: null,
+        reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
+        failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+        evidence: [
+          "description evidence is present and current.",
+          "ownership evidence is present and current.",
+          "glossary evidence is present and current.",
+          "domain evidence is present and current.",
+          "tags evidence is present and current.",
+          "lineage evidence is present and current.",
+          "column_lineage evidence is present and current."
+        ],
+        predicate: {
+          action: "autonomous-agent-action",
+          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          result: false,
+          failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
+          decision: "blocked"
+        }
+      },
+      {
+        asset: "customer_lifetime_value",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "blocked",
+        readiness: 71.47,
+        confidence: 84.94,
+        reason: "Finance-critical asset has incomplete glossary, incomplete column lineage, contradictory assertions, stale freshness, and weak policy confidence.",
+        failed: ["glossary.present", "column_lineage.present", "assertions.present", "freshness.present", "readiness_score >= 95.0", "confidence >= 93.0"],
+        evidence: [
+          "description evidence is present and current.",
+          "ownership evidence is present and current.",
+          "lineage evidence is present and current.",
+          "assertions evidence is contradictory.",
+          "freshness evidence is stale.",
+          "downstream_consumers evidence is present and current."
+        ],
+        predicate: {
+          action: "autonomous-agent-action",
+          predicate: "description.present && ownership.present && glossary.present && lineage.present && column_lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && downstream_consumers.present && policy.present",
+          result: false,
+          failed_terms: ["glossary.present", "column_lineage.present", "assertions.present", "freshness.present", "readiness_score >= 95.0", "confidence >= 93.0"],
+          decision: "blocked"
+        }
+      }
+    ];
+
+    const assetList = document.getElementById("assetList");
+    const assetSelect = document.getElementById("assetSelect");
+    const capabilitySelect = document.getElementById("capabilitySelect");
+    const remediationDrawer = document.getElementById("remediationDrawer");
+    const openRemediationDrawer = document.getElementById("openRemediationDrawer");
+    const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
+    let selected = 0;
+    let embeddedView = "summary";
+
+    function formatMetric(value) {
+      return value === null || value === undefined ? "n/a" : Number(value).toFixed(2);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function fillWidth(value) {
+      return value === null || value === undefined ? "0%" : Math.max(0, Math.min(100, Number(value))) + "%";
+    }
+
+    function renderAssetControls() {
+      assetList.innerHTML = "";
+      assetSelect.innerHTML = "";
+      runs.forEach((run, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = run.asset;
+        assetSelect.appendChild(option);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "asset-button" + (index === selected ? " active" : "");
+        button.innerHTML = `
+          <span class="asset-name">${escapeHtml(run.asset)}<span class="pill ${run.decision}">${run.decision}</span></span>
+          <span class="urn">${escapeHtml(run.urn)}</span>
+        `;
+        button.addEventListener("click", () => {
+          selected = index;
+          render();
+        });
+        assetList.appendChild(button);
+      });
+      assetSelect.value = selected;
+    }
+
+    function renderList(id, items, emptyText) {
+      const list = document.getElementById(id);
+      const values = items.length ? items : [emptyText];
+      list.innerHTML = values.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    function assetProfile(run) {
+      const profiles = {
+        SampleHiveDataset: {
+          doc: "Sample user activity table with complete owner, glossary, lineage, assertion, freshness, and policy evidence.",
+          owner: "John Doe, DataHub platform steward",
+          columns: [
+            ["browser_id", "Stable browser identifier used for session stitching."],
+            ["user_id", "Authenticated user identifier with approved key semantics."]
+          ],
+          lineage: [
+            "Upstream: SampleHiveDataset ingestion task",
+            "Downstream: sample dashboard, feature consumer, and ML primary key references"
+          ],
+          quality: [
+            "Assertion: user_id is not null",
+            "Assertion: browser_id uniqueness is within policy",
+            "Assertion: daily freshness SLA is passing"
+          ],
+          governance: [
+            "Glossary: User Identity",
+            "Glossary: Product Usage",
+            "Policy: enterprise-ai"
+          ]
+        },
+        fct_users_created: {
+          doc: "Daily fact table counting newly created users. Good documentation and lineage exist, but the asset lacks quality assertions.",
+          owner: "John Doe, Growth Analytics",
+          columns: [
+            ["user_id", "Foreign key to the created user. Needs non-null and uniqueness checks."],
+            ["user_name", "Display name captured at signup. Needs null-rate monitoring before AI-generated summaries."]
+          ],
+          lineage: [
+            "Upstream: Users pipeline and user creation task",
+            "Downstream: signup dashboard, growth metrics, and user lifecycle analysis"
+          ],
+          quality: [
+            "Missing assertion: user_id is not null",
+            "Missing assertion: user_id is unique per day",
+            "Missing assertion: daily row count is within expected signup range",
+            "Missing assertion: freshness SLA passes before executive metric generation"
+          ],
+          governance: [
+            "Glossary present: User",
+            "Glossary present: Signup",
+            "Blocked term: assertions.present"
+          ]
+        },
+        fct_users_deleted: {
+          doc: "Daily fact table for deleted users. The policy blocks autonomous action until deletion-specific assertions exist.",
+          owner: "John Doe, Lifecycle Analytics",
+          columns: [
+            ["user_id", "Deleted user identifier. Needs non-null and referential checks."],
+            ["deleted_at", "Deletion timestamp. Needs freshness and monotonicity checks."]
+          ],
+          lineage: [
+            "Upstream: User deletion task",
+            "Downstream: retention, churn, privacy deletion, and lifecycle reporting"
+          ],
+          quality: [
+            "Missing assertion: deleted_at is not null",
+            "Missing assertion: deleted_at is within the reporting day",
+            "Missing assertion: deleted users do not reappear in active-user outputs",
+            "Missing assertion: deletion count anomaly threshold is passing"
+          ],
+          governance: [
+            "Glossary present: User Deletion",
+            "Governance concern: privacy-impacting table",
+            "Blocked term: assertions.present"
+          ]
+        },
+        SampleKafkaDataset: {
+          doc: "Kafka event stream with basic metadata. Autonomous action is blocked because stream quality assertions are absent.",
+          owner: "DataHub ingestion owner",
+          columns: [
+            ["event_key", "Kafka message key. Needs schema compatibility and null checks."],
+            ["event_payload", "Serialized payload. Needs schema validation before AI automation."]
+          ],
+          lineage: [
+            "Upstream: Kafka producer",
+            "Downstream: stream consumers and event-derived datasets"
+          ],
+          quality: [
+            "Missing assertion: schema compatibility check is passing",
+            "Missing assertion: consumer lag is below threshold",
+            "Missing assertion: event payload parse failure rate is acceptable",
+            "Missing assertion: topic freshness is current"
+          ],
+          governance: [
+            "Glossary present: Event Stream",
+            "Policy: enterprise-ai",
+            "Blocked term: assertions.present"
+          ]
+        },
+        customer_lifetime_value: {
+          doc: "Finance-critical CLV asset. The stress case blocks autonomous action because finance policy requires stricter glossary, lineage, assertion, and freshness proof.",
+          owner: "Finance Analytics owner and Revenue Data steward",
+          columns: [
+            ["customer_id", "Customer key. Requires lineage to CRM account identity and billing account mapping."],
+            ["predicted_lifetime_value", "Modeled currency value. Requires definition of gross vs net revenue and model-version lineage."],
+            ["prediction_date", "Scoring date. Requires freshness SLA and model recency evidence."]
+          ],
+          lineage: [
+            "Incomplete: customer_id lineage from CRM to warehouse to feature table",
+            "Incomplete: predicted_lifetime_value lineage from billing, renewals, churn model, and discount adjustments",
+            "Needs downstream owner confirmation for finance dashboards"
+          ],
+          quality: [
+            "Contradictory assertion: revenue definition conflicts between gross ARR and net revenue",
+            "Missing assertion: predicted_lifetime_value is non-negative",
+            "Missing assertion: currency is normalized to USD",
+            "Stale freshness: latest prediction date is outside finance policy window"
+          ],
+          governance: [
+            "Add glossary: Customer Lifetime Value",
+            "Add glossary: Net Revenue Retention",
+            "Add glossary: Billing Account",
+            "Resolve conflict: gross revenue vs net revenue definition"
+          ]
+        }
+      };
+      return profiles[run.asset] || profiles.fct_users_created;
+    }
+
+    function renderEmbeddedMetadata(run) {
+      const profile = assetProfile(run);
+      const views = {
+        summary: [
+          ["Documentation", profile.doc],
+          ["Owners", profile.owner],
+          ["Decision basis", run.reason],
+          ["URN", run.urn, true]
+        ],
+        columns: profile.columns.map(([name, detail]) => [name, detail, true]),
+        lineage: profile.lineage.map((item, index) => [`Lineage ${index + 1}`, item]),
+        quality: profile.quality.map((item, index) => [`Quality check ${index + 1}`, item]),
+        governance: profile.governance.map((item, index) => [`Governance ${index + 1}`, item])
+      };
+      document.querySelectorAll(".tab").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.view === embeddedView);
+      });
+      document.getElementById("embeddedMetadata").innerHTML = views[embeddedView]
+        .map(([title, body, code]) => `
+          <div class="metadata-box">
+            <strong>${escapeHtml(title)}</strong>
+            ${code ? `<code>${escapeHtml(body)}</code>` : `<span>${escapeHtml(body)}</span>`}
+          </div>
+        `)
+        .join("");
+    }
+
+    function remediationFor(run) {
+      if (run.decision === "allowed") {
+        return [
+          ["Keep certificate current", "Re-evaluate this asset when DataHub ownership, lineage, assertions, incidents, or freshness metadata changes."],
+          ["Use as agent context", "Expose the Predicate Certificate to the agent approval flow so the agent receives the allowed action list, not raw blanket access."]
+        ];
+      }
+      const profile = assetProfile(run);
+      const assetMaps = {
+        fct_users_created: {
+          "assertions.present": ["Add signup quality assertions", "Create DataHub assertions for user_id not null, user_id unique per reporting day, daily signup row count within expected range, and freshness under the signup SLA."],
+          "readiness_score >= 92.0": ["Lift readiness above 92", "The fastest path is adding the signup assertions because description, owner, glossary, lineage, and column lineage are already present."],
+          "confidence >= 88.0": ["Raise confidence above 88", "Use DataHub assertion results as the evidence source, not a README note or manual claim, then rerun Predicate on fct_users_created."]
+        },
+        fct_users_deleted: {
+          "assertions.present": ["Add deletion quality assertions", "Create assertions for deleted_at not null, deleted_at inside the reporting day, deletion count anomaly threshold, and deleted users not reappearing in active-user outputs."],
+          "readiness_score >= 92.0": ["Lift readiness above 92", "Prioritize deletion-specific assertions because this table can affect privacy, churn, and lifecycle reporting."],
+          "confidence >= 88.0": ["Raise confidence above 88", "Back the deletion checks with DataHub assertion run history so the decision is auditable."]
+        },
+        SampleKafkaDataset: {
+          "assertions.present": ["Add stream quality assertions", "Create checks for schema compatibility, consumer lag below threshold, payload parse failure rate, and topic freshness."],
+          "readiness_score >= 92.0": ["Lift readiness above 92", "Kafka assets need stream-specific assertions before autonomous action, even when ownership and lineage exist."],
+          "confidence >= 88.0": ["Raise confidence above 88", "Use current Kafka/schema-registry checks as evidence instead of static topic documentation."]
+        },
+        customer_lifetime_value: {
+          "glossary.present": ["Attach finance glossary terms", "Add approved terms: Customer Lifetime Value, Net Revenue Retention, Billing Account, Churn Probability, and Prediction Date."],
+          "column_lineage.present": ["Complete CLV column lineage", "Map customer_id from CRM account identity, predicted_lifetime_value from billing, renewals, churn model, and discount adjustments, and prediction_date from the scoring job."],
+          "assertions.present": ["Resolve and add finance assertions", "Fix the gross ARR vs net revenue conflict, then add assertions for non-negative CLV, USD currency normalization, prediction date freshness, and model version present."],
+          "freshness.present": ["Repair finance freshness", "Refresh the CLV scoring job or mark the asset stale until prediction_date is inside the finance production SLA."],
+          "readiness_score >= 95.0": ["Meet finance readiness threshold", "Finance production policy requires 95 because autonomous actions can affect executive metrics and customer prioritization."],
+          "confidence >= 93.0": ["Meet finance confidence threshold", "Resolve contradictory revenue definitions and stale freshness before trusting this asset for autonomous agent action."]
+        }
+      };
+      const fallback = {
+        "assertions.present": ["Add specific quality assertions", `Create assertions for ${profile.columns.map(([name]) => name).join(", ")} plus row count, freshness, and domain-specific invariants.`],
+        "column_lineage.present": ["Complete column lineage", `Map lineage for ${profile.columns.map(([name]) => name).join(", ")} from source through downstream consumers.`],
+        "glossary.present": ["Attach approved glossary terms", `Add approved business terms that define ${run.asset} and its key columns.`],
+        "freshness.present": ["Repair freshness evidence", "Refresh the asset or update SLA evidence so the timestamp is inside the policy window."],
+        "readiness_score >= 92.0": ["Raise readiness score", "Repair the highest-severity metadata gaps, then rerun Predicate."],
+        "readiness_score >= 95.0": ["Meet stricter readiness threshold", "High-risk policy requires stronger metadata proof before autonomous action."],
+        "confidence >= 88.0": ["Raise confidence", "Use stronger DataHub-backed evidence sources rather than manual notes."],
+        "confidence >= 93.0": ["Raise confidence", "Resolve stale or contradictory evidence before trusting the metadata."]
+      };
+      const map = assetMaps[run.asset] || fallback;
+      return run.failed.map((term) => map[term] || fallback[term] || [term, "Repair this failed predicate term and rerun Predicate."]);
+    }
+
+    function primaryRepair(run) {
+      return remediationFor(run)[0] || ["Monitor certificate", "No immediate repair needed."];
+    }
+
+    function renderMiniQueue(run) {
+      const queue = remediationFor(run).slice(0, 3);
+      document.getElementById("miniRepairQueue").innerHTML = queue
+        .map(([title]) => `<li>${escapeHtml(title)}</li>`)
+        .join("");
+    }
+
+    function renderWorkbench(run) {
+      const [repairTitle, repairBody] = primaryRepair(run);
+      const blocked = run.decision !== "allowed";
+      const status = document.getElementById("workbenchStatus");
+      status.className = "pill " + run.decision;
+      status.textContent = run.decision;
+      document.getElementById("riskSummary").textContent = blocked ? "Do not let the agent act yet" : "Action is certified";
+      document.getElementById("riskDetail").textContent = blocked
+        ? run.reason
+        : "Predicate found enough metadata proof for the selected action under the active policy.";
+      document.getElementById("ownerTask").textContent = blocked
+        ? "Assign the remediation task to the data owner or platform steward responsible for this asset."
+        : "Keep the owner attached so future metadata changes have an escalation path.";
+      document.getElementById("repairSummary").textContent = repairTitle;
+      document.getElementById("repairDetail").textContent = repairBody;
+      document.getElementById("rerunDetail").textContent = blocked
+        ? "After the repair lands in DataHub, rerun Predicate against the same URN and compare the capability diff."
+        : "Use the certificate in the agent workflow and rerun when DataHub emits a metadata change.";
+    }
+
+    function renderDrawer(run) {
+      document.getElementById("drawerTitle").textContent = run.asset;
+      document.getElementById("drawerDecision").innerHTML = `
+        <h3>${run.decision === "allowed" ? "Certified action" : "Blocked action"}</h3>
+        <p>${escapeHtml(run.reason)}</p>
+      `;
+      document.getElementById("drawerRepairs").innerHTML = remediationFor(run)
+        .map(([title, body]) => `
+          <div class="drawer-section">
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(body)}</p>
+          </div>
+        `)
+        .join("");
+      document.getElementById("drawerAfterRepair").textContent = run.decision === "allowed"
+        ? "No repair is required. The certificate can be attached to the agent approval flow."
+        : "The expected result is a higher readiness score, stronger confidence, and a capability diff showing which AI actions changed from blocked to allowed.";
+    }
+
+    function renderRemediation(run) {
+      document.getElementById("remediationList").innerHTML = remediationFor(run)
+        .map(([title, body]) => `<div class="remediation-item"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`)
+        .join("");
+    }
+
+    function renderCapabilityMatrix(run) {
+      const rows = [
+        ["Answer business questions", run.decision === "allowed" ? "allowed" : "allowed", "Low-risk read-only use can proceed when basic ownership/glossary evidence exists."],
+        ["Generate executive metrics", run.decision === "allowed" ? "allowed" : "blocked", run.decision === "allowed" ? "Required evidence is certified." : "Needs assertions, freshness, and stronger readiness."],
+        ["Autonomous agent action", run.decision, run.decision === "allowed" ? "All required evidence is present." : "Blocked by failed predicate terms."]
+      ];
+      document.getElementById("capabilityMatrix").innerHTML = rows.map(([action, decision, why]) => `
+        <tr>
+          <td>${escapeHtml(action)}</td>
+          <td><span class="pill ${decision}">${escapeHtml(decision)}</span></td>
+          <td>${escapeHtml(why)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderDiff(run) {
+      const before = run.decision === "allowed"
+        ? ["Autonomous agent action allowed", "No blocking gaps"]
+        : ["Autonomous agent action blocked", ...run.failed.slice(0, 3)];
+      const after = run.decision === "allowed"
+        ? ["Certificate remains valid until metadata changes", "Continue monitoring freshness and incidents"]
+        : ["Assertions repaired", "Freshness restored", "Capability can be re-evaluated"];
+      renderList("beforeDiff", before, "No before state.");
+      renderList("afterDiff", after, "No after state.");
+    }
+
+    function renderTimeline(run) {
+      const steps = run.decision === "allowed"
+        ? [
+          ["10:00", "Predicate evaluates DataHub metadata."],
+          ["10:01", "All required evidence is present."],
+          ["10:02", "Certificate allows the selected AI action."]
+        ]
+        : [
+          ["10:00", "Predicate evaluates DataHub metadata."],
+          ["10:01", "Failed predicate terms are detected."],
+          ["10:02", "Autonomous action is blocked."],
+          ["Next", "Data team repairs metadata and reruns Predicate."]
+        ];
+      document.getElementById("trustTimeline").innerHTML = steps.map(([time, text]) => `
+        <div class="timeline-step"><time>${escapeHtml(time)}</time><div>${escapeHtml(text)}</div></div>
+      `).join("");
+    }
+
+    function render() {
+      const run = runs[selected];
+      renderAssetControls();
+      document.getElementById("assetName").textContent = run.asset;
+      document.getElementById("assetUrn").textContent = run.urn;
+      document.getElementById("embeddedAssetName").textContent = run.asset;
+      renderEmbeddedMetadata(run);
+      document.getElementById("embeddedDecision").textContent = run.decision;
+      document.getElementById("embeddedDecision").style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
+      document.getElementById("embeddedReason").textContent = run.reason;
+      document.getElementById("embeddedScore").textContent = formatMetric(run.readiness);
+      document.getElementById("embeddedConfidence").textContent = formatMetric(run.confidence);
+      document.getElementById("decisionText").textContent = run.decision;
+      document.getElementById("decisionText").style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
+      const pill = document.getElementById("decisionPill");
+      pill.className = "pill " + run.decision;
+      pill.textContent = run.decision;
+      document.getElementById("scoreText").textContent = formatMetric(run.readiness);
+      document.getElementById("confidenceText").textContent = formatMetric(run.confidence);
+      document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
+      document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
+      const prettyPredicate = JSON.stringify(run.predicate, null, 2)
+        .replace(/ && /g, " &&\\n    ");
+      document.getElementById("predicateBlock").textContent = prettyPredicate;
+      document.getElementById("whyText").textContent = run.decision === "allowed"
+        ? "The metadata is strong enough for the selected AI action to proceed."
+        : "The asset has useful metadata, but the policy found missing proof before allowing autonomous action.";
+      document.getElementById("nextText").textContent = run.decision === "allowed"
+        ? "Use the certificate as evidence in the agent workflow."
+        : primaryRepair(run)[1];
+      renderList("failedTerms", run.failed, "None. The selected action is certified.");
+      renderList("evidenceList", run.evidence, "No supporting evidence found.");
+      renderList("plainEnglish", [
+        run.reason,
+        run.decision === "allowed" ? "The AI action can proceed under the active enterprise policy." : "The AI action should be stopped until the missing terms are fixed.",
+        "The same result is available to humans in this console and to automation as JSON."
+      ], "");
+      renderRemediation(run);
+      renderMiniQueue(run);
+      renderWorkbench(run);
+      renderDrawer(run);
+      renderCapabilityMatrix(run);
+      renderDiff(run);
+      renderTimeline(run);
+    }
+
+    async function loadLiveRuns() {
+      const params = new URLSearchParams(window.location.search);
+      const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
+      const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
+      if (window.location.protocol === "file:" && !apiBase) {
+        return;
+      }
+      try {
+        const response = await fetch(endpoint, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("API unavailable");
+        }
+        const payload = await response.json();
+        if (Array.isArray(payload.runs) && payload.runs.length) {
+          runs = payload.runs;
+          selected = 0;
+          document.getElementById("environmentTitle").textContent = apiBase ? "Public demo: live API" : "Local demo: live API";
+          document.getElementById("environmentProof").textContent = apiBase ? "API proof: sanitized fixture backend" : "Live proof: local DataHub GraphQL";
+          document.getElementById("dataMode").textContent = apiBase ? "Mode: public API fixture" : "Mode: live local API";
+          render();
+        }
+      } catch (error) {
+        document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
+      }
+    }
+
+    assetSelect.addEventListener("change", (event) => {
+      selected = Number(event.target.value);
+      render();
+    });
+    capabilitySelect.addEventListener("change", render);
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        embeddedView = tab.dataset.view;
+        render();
+      });
+    });
+    openRemediationDrawer.addEventListener("click", () => {
+      remediationDrawer.classList.add("open");
+    });
+    closeRemediationDrawer.addEventListener("click", () => {
+      remediationDrawer.classList.remove("open");
+    });
+    remediationDrawer.addEventListener("click", (event) => {
+      if (event.target === remediationDrawer) {
+        remediationDrawer.classList.remove("open");
+      }
+    });
+    render();
+    loadLiveRuns();
+  </script>
+</body>
+</html>

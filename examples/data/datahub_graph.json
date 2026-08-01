@@ -1,0 +1,48 @@
+{
+  "entities": {
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+      "type": "dataset",
+      "description": {"text": "Daily production revenue metric.", "confidence": 0.95},
+      "ownership": {"owners": ["urn:li:corpuser:finance_owner"], "confidence": 1.0},
+      "glossary": {"terms": ["Revenue", "Booking"], "confidence": 0.95},
+      "domain": {"name": "Finance", "confidence": 0.9},
+      "tags": {"values": ["pii-free", "production"], "confidence": 0.9},
+      "lineage": {"upstreams": ["raw.orders"], "confidence": 0.9},
+      "column_lineage": {"complete": true, "mapped_columns": 12, "confidence": 0.9},
+      "assertions": {"passing": 6, "failing": 0, "confidence": 0.95},
+      "incidents": {"open": 0, "confidence": 0.9},
+      "freshness": {"minutes_late": 0, "confidence": 0.95},
+      "usage": {"weekly_users": 44, "confidence": 0.8},
+      "dashboards": {"count": 11, "confidence": 0.9},
+      "charts": {"count": 24, "confidence": 0.9},
+      "ml_models": {"count": 2, "confidence": 0.85},
+      "downstream_consumers": {"count": 16, "confidence": 0.9},
+      "policy": {"profile": "enterprise-ai", "confidence": 1.0},
+      "upstreams": ["urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.orders,PROD)"],
+      "downstreams": []
+    },
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.orders,PROD)": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.orders,PROD)",
+      "type": "dataset",
+      "description": {"text": "Raw orders landing table.", "confidence": 0.8},
+      "ownership": {"owners": ["urn:li:corpuser:data_platform"], "confidence": 0.9},
+      "glossary": {"terms": ["Order"], "incomplete": true, "confidence": 0.7},
+      "domain": {"name": "Commerce", "confidence": 0.8},
+      "tags": {"values": ["raw"], "confidence": 0.7},
+      "lineage": {"confidence": 0.8},
+      "column_lineage": {"incomplete": true, "confidence": 0.5},
+      "assertions": {"passing": 3, "failing": 0, "confidence": 0.85},
+      "incidents": {"open": 0, "confidence": 0.9},
+      "freshness": {"minutes_late": 180, "stale": true, "confidence": 0.6},
+      "usage": {"weekly_users": 12, "confidence": 0.6},
+      "dashboards": {"count": 2, "confidence": 0.7},
+      "charts": {"count": 4, "confidence": 0.7},
+      "ml_models": {"count": 0, "confidence": 0.7},
+      "downstream_consumers": {"count": 1, "confidence": 0.7},
+      "policy": {"profile": "enterprise-ai", "confidence": 0.8},
+      "upstreams": [],
+      "downstreams": ["urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)"]
+    }
+  }
+}

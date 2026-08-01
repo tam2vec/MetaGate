@@ -1,0 +1,33 @@
+{
+  "mode": "verified non-production write-back receipt",
+  "writeback_performed": false,
+  "reason": "No deployment-specific DataHub mutation was configured in this local demo.",
+  "safe_default": "read-only",
+  "target": {
+    "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+    "capability": "autonomous-agent-action",
+    "policy": "enterprise-ai"
+  },
+  "would_write": {
+    "aspect": "predicateCertificate",
+    "decision": "blocked",
+    "readiness_score": 91.22,
+    "confidence": 86.25,
+    "failed_terms": [
+      "assertions.present",
+      "readiness_score >= 92.0",
+      "confidence >= 88.0"
+    ],
+    "remediation_task": {
+      "title": "Add assertion evidence before autonomous AI action",
+      "severity": "high",
+      "body": "Predicate blocked autonomous-agent-action because assertion evidence is missing and the asset is below enterprise policy thresholds."
+    }
+  },
+  "enable_live_writeback_only_when": [
+    "The DataHub deployment has a tested certificate mutation.",
+    "DATAHUB_CERTIFICATE_MUTATION is set to that mutation document.",
+    "DATAHUB_TASK_MUTATION is set only if remediation task creation is supported.",
+    "The target namespace is non-production or explicitly approved."
+  ]
+}

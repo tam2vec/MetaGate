@@ -1,0 +1,17 @@
+{
+  "source": "representative local event sequence",
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.revenue,PROD)",
+  "trigger": "Freshness assertion repaired",
+  "previous_score": 61.0,
+  "current_score": 84.0,
+  "score_delta": 23.0,
+  "newly_certified": ["trust-kpi", "generate-financial-summary"],
+  "newly_blocked": [],
+  "resolved_gaps": ["freshness evidence is stale."],
+  "what_changed": {
+    "metadata_update": ["Freshness assertion restored"],
+    "unlocked": ["Trust KPI", "Generate financial summary"],
+    "still_blocked": ["Rename column", "Approve schema migration"],
+    "trust_status": "Blocked -> Partially certified"
+  }
+}

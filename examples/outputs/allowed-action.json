@@ -1,0 +1,14 @@
+{
+  "source": "local DataHub quickstart seeded with sample metadata",
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+  "capability": "autonomous-agent-action",
+  "allowed": true,
+  "reason": "Capability is certified by the active policy.",
+  "action_predicate": {
+    "action": "autonomous-agent-action",
+    "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+    "result": true,
+    "failed_terms": [],
+    "decision": "allowed"
+  }
+}

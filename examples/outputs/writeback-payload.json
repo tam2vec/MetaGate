@@ -1,0 +1,10 @@
+{
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "aspect": "predicateCertificate",
+  "readiness_score": 98.31,
+  "confidence": 96.62,
+  "active_policy": "enterprise-ai",
+  "certified_capabilities": ["answer-business-questions", "generate-executive-metrics"],
+  "blocked_capabilities": ["rename-column"],
+  "remediation_tasks": [{"title": "Complete column lineage", "severity": "high"}]
+}

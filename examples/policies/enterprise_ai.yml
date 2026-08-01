@@ -1,0 +1,30 @@
+name: enterprise-ai
+minimum_score: 82
+graph_propagation: 0.2
+evidence_weights:
+  ownership: 1.0
+  glossary: 0.9
+  lineage: 1.1
+  assertions: 1.3
+  incidents: 1.1
+  freshness: 1.0
+  usage: 0.7
+  policy: 1.2
+stale_after_days:
+  freshness: 2
+  assertions: 14
+  incidents: 30
+  usage: 30
+capabilities:
+  - name: answer-business-questions
+    minimum_score: 78
+    minimum_confidence: 75
+    required_evidence: [ownership, glossary, freshness, policy]
+  - name: generate-executive-metrics
+    minimum_score: 84
+    minimum_confidence: 80
+    required_evidence: [ownership, glossary, lineage, assertions, freshness, policy]
+  - name: autonomous-agent-action
+    minimum_score: 92
+    minimum_confidence: 88
+    required_evidence: [ownership, glossary, lineage, assertions, incidents, freshness, usage, policy]

@@ -1,0 +1,12 @@
+name: low-risk-discovery
+minimum_score: 55
+graph_propagation: 0.1
+capabilities:
+  - name: explain-asset
+    minimum_score: 55
+    minimum_confidence: 55
+    required_evidence: [description, ownership]
+  - name: trace-lineage
+    minimum_score: 60
+    minimum_confidence: 60
+    required_evidence: [lineage]

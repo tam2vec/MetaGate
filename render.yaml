@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: predicate-review-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/runs
+    envVars:
+      - key: PREDICATE_DEMO_MODE
+        value: fixture
+      - key: DATAHUB_GRAPHQL_URL
+        value: ""

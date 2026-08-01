@@ -1,0 +1,205 @@
+{
+  "confidence": 84.94,
+  "decisions": [
+    {
+      "affected_gaps": [
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "glossary evidence is incomplete."
+          ],
+          "evidence_kind": "glossary",
+          "message": "glossary evidence is incomplete.",
+          "recommendation": "Complete partial glossary evidence: Attach approved glossary terms for core business concepts used by this asset.",
+          "severity": "medium",
+          "type": "incomplete"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "assertions evidence is contradictory."
+          ],
+          "evidence_kind": "assertions",
+          "message": "assertions evidence is contradictory.",
+          "recommendation": "Resolve conflicting assertions sources, pick the authoritative DataHub value, then rerun certification.",
+          "severity": "high",
+          "type": "contradictory"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "freshness evidence is stale."
+          ],
+          "evidence_kind": "freshness",
+          "message": "freshness evidence is stale.",
+          "recommendation": "Refresh stale freshness evidence and verify the update timestamp is inside the policy window.",
+          "severity": "medium",
+          "type": "stale"
+        }
+      ],
+      "capability": "trust-kpi",
+      "decision": "blocked",
+      "policy_thresholds": {
+        "confidence": 84.94,
+        "score": 71.47
+      },
+      "reasons": [
+        "Missing required evidence: glossary, freshness, assertions",
+        "Readiness score below 88.0",
+        "Confidence below 88.0"
+      ]
+    },
+    {
+      "affected_gaps": [
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "glossary evidence is incomplete."
+          ],
+          "evidence_kind": "glossary",
+          "message": "glossary evidence is incomplete.",
+          "recommendation": "Complete partial glossary evidence: Attach approved glossary terms for core business concepts used by this asset.",
+          "severity": "medium",
+          "type": "incomplete"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "assertions evidence is contradictory."
+          ],
+          "evidence_kind": "assertions",
+          "message": "assertions evidence is contradictory.",
+          "recommendation": "Resolve conflicting assertions sources, pick the authoritative DataHub value, then rerun certification.",
+          "severity": "high",
+          "type": "contradictory"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "freshness evidence is stale."
+          ],
+          "evidence_kind": "freshness",
+          "message": "freshness evidence is stale.",
+          "recommendation": "Refresh stale freshness evidence and verify the update timestamp is inside the policy window.",
+          "severity": "medium",
+          "type": "stale"
+        }
+      ],
+      "capability": "generate-financial-summary",
+      "decision": "blocked",
+      "policy_thresholds": {
+        "confidence": 84.94,
+        "score": 71.47
+      },
+      "reasons": [
+        "Missing required evidence: glossary, assertions, freshness",
+        "Readiness score below 92.0",
+        "Confidence below 92.0"
+      ]
+    },
+    {
+      "affected_gaps": [
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "glossary evidence is incomplete."
+          ],
+          "evidence_kind": "glossary",
+          "message": "glossary evidence is incomplete.",
+          "recommendation": "Complete partial glossary evidence: Attach approved glossary terms for core business concepts used by this asset.",
+          "severity": "medium",
+          "type": "incomplete"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action"
+          ],
+          "evidence": [
+            "column_lineage evidence is incomplete."
+          ],
+          "evidence_kind": "column_lineage",
+          "message": "column_lineage evidence is incomplete.",
+          "recommendation": "Complete partial column_lineage evidence: Map column-level lineage for fields the agent may summarize, transform, or modify.",
+          "severity": "medium",
+          "type": "incomplete"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "assertions evidence is contradictory."
+          ],
+          "evidence_kind": "assertions",
+          "message": "assertions evidence is contradictory.",
+          "recommendation": "Resolve conflicting assertions sources, pick the authoritative DataHub value, then rerun certification.",
+          "severity": "high",
+          "type": "contradictory"
+        },
+        {
+          "blocks": [
+            "autonomous-agent-action",
+            "generate-financial-summary",
+            "trust-kpi"
+          ],
+          "evidence": [
+            "freshness evidence is stale."
+          ],
+          "evidence_kind": "freshness",
+          "message": "freshness evidence is stale.",
+          "recommendation": "Refresh stale freshness evidence and verify the update timestamp is inside the policy window.",
+          "severity": "medium",
+          "type": "stale"
+        }
+      ],
+      "capability": "autonomous-agent-action",
+      "decision": "blocked",
+      "policy_thresholds": {
+        "confidence": 84.94,
+        "score": 71.47
+      },
+      "reasons": [
+        "Missing required evidence: glossary, column_lineage, assertions, freshness",
+        "Readiness score below 95.0",
+        "Confidence below 93.0"
+      ]
+    }
+  ],
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
+  "graph": {
+    "connected_assets": 4,
+    "evidence_signals": 16
+  },
+  "policy": "finance-production-v2",
+  "readiness_score": 71.47
+}

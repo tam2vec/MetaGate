@@ -1,0 +1,16 @@
+{
+  "source": "bundled local DataHub-shaped fixture",
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "policy": "enterprise-ai",
+  "readiness_score": 98.31,
+  "confidence": 96.62,
+  "connected_assets": 2,
+  "evidence_signals": 16,
+  "certified_capabilities": [
+    "answer-business-questions",
+    "generate-executive-metrics",
+    "autonomous-agent-action"
+  ],
+  "blocked_capabilities": [],
+  "valid_until": "A relevant DataHub metadata graph change"
+}

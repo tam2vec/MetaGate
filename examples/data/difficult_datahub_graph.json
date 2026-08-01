@@ -1,0 +1,222 @@
+{
+  "entities": {
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
+      "type": "dataset",
+      "description": {
+        "text": "Customer lifetime value table used for finance forecasting and executive reporting.",
+        "confidence": 0.9
+      },
+      "ownership": {
+        "owners": [],
+        "confidence": 0.2
+      },
+      "glossary": {
+        "terms": ["Customer", "Revenue"],
+        "incomplete": true,
+        "confidence": 0.55
+      },
+      "domain": {
+        "name": "Finance",
+        "confidence": 0.8
+      },
+      "tags": {
+        "values": ["production", "restricted"],
+        "confidence": 0.8
+      },
+      "lineage": {
+        "upstreams": [
+          "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.customer_events,PROD)",
+          "urn:li:dataset:(urn:li:dataPlatform:snowflake,ml.customer_scores,PROD)"
+        ],
+        "confidence": 0.7
+      },
+      "column_lineage": {
+        "incomplete": true,
+        "mapped_columns": 4,
+        "confidence": 0.45
+      },
+      "assertions": {
+        "passing": 1,
+        "failing": 2,
+        "contradictory": true,
+        "confidence": 0.35
+      },
+      "incidents": {
+        "open": 2,
+        "confidence": 0.95
+      },
+      "freshness": {
+        "minutes_late": 2880,
+        "stale": true,
+        "confidence": 0.5
+      },
+      "usage": {
+        "weekly_users": 91,
+        "confidence": 0.65
+      },
+      "dashboards": {
+        "count": 7,
+        "confidence": 0.85
+      },
+      "charts": {
+        "count": 18,
+        "confidence": 0.85
+      },
+      "ml_models": {
+        "count": 3,
+        "confidence": 0.7
+      },
+      "downstream_consumers": {
+        "count": 23,
+        "confidence": 0.7
+      },
+      "policy": {
+        "profile": "finance-production",
+        "confidence": 0.9
+      },
+      "upstreams": [
+        "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.customer_events,PROD)",
+        "urn:li:dataset:(urn:li:dataPlatform:snowflake,ml.customer_scores,PROD)"
+      ],
+      "downstreams": [
+        "urn:li:dashboard:(looker,finance-executive-forecast)"
+      ]
+    },
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.customer_events,PROD)": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.customer_events,PROD)",
+      "type": "dataset",
+      "description": {
+        "text": "Raw customer event landing table.",
+        "confidence": 0.6
+      },
+      "ownership": {
+        "owners": ["urn:li:corpuser:data_platform"],
+        "confidence": 0.8
+      },
+      "glossary": {
+        "terms": [],
+        "confidence": 0.2
+      },
+      "lineage": {
+        "confidence": 0.4
+      },
+      "column_lineage": {
+        "incomplete": true,
+        "confidence": 0.35
+      },
+      "assertions": {
+        "passing": 0,
+        "failing": 1,
+        "confidence": 0.4
+      },
+      "incidents": {
+        "open": 1,
+        "confidence": 0.8
+      },
+      "freshness": {
+        "minutes_late": 720,
+        "stale": true,
+        "confidence": 0.45
+      },
+      "usage": {
+        "weekly_users": 9,
+        "confidence": 0.5
+      },
+      "policy": {
+        "profile": "finance-production",
+        "confidence": 0.7
+      },
+      "upstreams": [],
+      "downstreams": [
+        "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)"
+      ]
+    },
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,ml.customer_scores,PROD)": {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,ml.customer_scores,PROD)",
+      "type": "dataset",
+      "description": {
+        "text": "ML customer scoring features.",
+        "confidence": 0.7
+      },
+      "ownership": {
+        "owners": ["urn:li:corpuser:ml_platform"],
+        "confidence": 0.8
+      },
+      "glossary": {
+        "terms": ["Customer Score"],
+        "confidence": 0.55
+      },
+      "lineage": {
+        "confidence": 0.45
+      },
+      "column_lineage": {
+        "incomplete": true,
+        "confidence": 0.4
+      },
+      "assertions": {
+        "passing": 2,
+        "failing": 0,
+        "confidence": 0.65
+      },
+      "incidents": {
+        "open": 0,
+        "confidence": 0.9
+      },
+      "freshness": {
+        "minutes_late": 240,
+        "stale": true,
+        "confidence": 0.5
+      },
+      "usage": {
+        "weekly_users": 18,
+        "confidence": 0.6
+      },
+      "policy": {
+        "profile": "finance-production",
+        "confidence": 0.8
+      },
+      "upstreams": [],
+      "downstreams": [
+        "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)"
+      ]
+    },
+    "urn:li:dashboard:(looker,finance-executive-forecast)": {
+      "urn": "urn:li:dashboard:(looker,finance-executive-forecast)",
+      "type": "dashboard",
+      "description": {
+        "text": "Executive finance forecast dashboard.",
+        "confidence": 0.8
+      },
+      "ownership": {
+        "owners": ["urn:li:corpuser:finance_owner"],
+        "confidence": 0.9
+      },
+      "glossary": {
+        "terms": ["Forecast", "Revenue"],
+        "confidence": 0.8
+      },
+      "assertions": {
+        "passing": 0,
+        "confidence": 0.4
+      },
+      "incidents": {
+        "open": 1,
+        "confidence": 0.85
+      },
+      "freshness": {
+        "minutes_late": 1440,
+        "stale": true,
+        "confidence": 0.4
+      },
+      "policy": {
+        "profile": "finance-production",
+        "confidence": 0.8
+      },
+      "upstreams": [
+        "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)"
+      ],
+      "downstreams": []
+    }
+  }
+}

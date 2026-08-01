@@ -1,0 +1,24 @@
+{
+  "asset": "fct_users_created",
+  "capability": "autonomous-agent-action",
+  "before": {
+    "decision": "blocked",
+    "readiness_score": 91.22,
+    "confidence": 86.25,
+    "failed_terms": [
+      "assertions.present",
+      "readiness_score >= policy.minimum_score",
+      "confidence >= policy.minimum_confidence"
+    ],
+    "reason": "Missing required evidence: assertions"
+  },
+  "metadata_repair": {
+    "system": "DataHub",
+    "change": "Add assertion evidence for the dataset before allowing autonomous action."
+  },
+  "after": {
+    "decision": "allowed",
+    "failed_terms": [],
+    "reason": "Required action predicate terms are satisfied."
+  }
+}

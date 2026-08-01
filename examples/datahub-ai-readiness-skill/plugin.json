@@ -1,0 +1,13 @@
+{
+  "name": "datahub-ai-readiness",
+  "version": "0.1.0",
+  "description": "Packaged prototype DataHub Skill for Predicate AI-readiness certification.",
+  "entrypoint": "context_gradient.skill:certify",
+  "capabilities": [
+    "datahub.graph.read",
+    "datahub.assertions.write",
+    "datahub.tasks.write",
+    "ai-readiness.certify",
+    "predicate.evaluate"
+  ]
+}

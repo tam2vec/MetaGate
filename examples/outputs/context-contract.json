@@ -1,0 +1,10 @@
+{
+  "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+  "policy": "enterprise-ai",
+  "allowed_capabilities": ["answer-business-questions", "generate-executive-metrics"],
+  "blocked_capabilities": ["rename-column"],
+  "verified_claims": ["ownership evidence is present and current.", "freshness evidence is present and current."],
+  "forbidden_claims": ["Do not claim rename-column is safe."],
+  "required_escalations": [{"capability": "rename-column", "reason": "Column lineage is not certified."}],
+  "valid_until_event": "Any relevant DataHub metadata graph change"
+}

@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Predicate for DataHub",
+  "version": "0.1.0",
+  "description": "Automatically shows Predicate allow/block decisions on local DataHub asset pages.",
+  "permissions": [],
+  "host_permissions": [
+    "http://localhost:9002/*",
+    "http://127.0.0.1:9002/*",
+    "http://127.0.0.1:8765/*",
+    "http://localhost:8765/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:9002/*",
+        "http://127.0.0.1:9002/*"
+      ],
+      "js": ["predicate-datahub-panel.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

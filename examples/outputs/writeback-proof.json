@@ -1,0 +1,13 @@
+{
+  "mode": "safe demonstration",
+  "read_only_default": true,
+  "writeback_enabled_by": [
+    "DATAHUB_CERTIFICATE_MUTATION",
+    "DATAHUB_TASK_MUTATION"
+  ],
+  "payload_shape": {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
+    "certificate": "{... Predicate Certificate JSON ...}"
+  },
+  "safety_note": "Predicate performs no live DataHub write unless deployment-supported mutation documents are explicitly configured."
+}

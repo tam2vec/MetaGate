@@ -1,0 +1,25 @@
+name: finance-production-v2
+minimum_score: 88
+graph_propagation: 0.25
+evidence_weights:
+  assertions: 1.5
+  freshness: 1.4
+  column_lineage: 1.4
+  downstream_consumers: 1.2
+stale_after_days:
+  freshness: 1
+  assertions: 7
+  usage: 14
+capabilities:
+  - name: trust-kpi
+    minimum_score: 88
+    minimum_confidence: 88
+    required_evidence: [description, ownership, glossary, freshness, assertions, downstream_consumers]
+  - name: generate-financial-summary
+    minimum_score: 92
+    minimum_confidence: 92
+    required_evidence: [description, ownership, glossary, lineage, assertions, freshness, policy]
+  - name: autonomous-agent-action
+    minimum_score: 95
+    minimum_confidence: 93
+    required_evidence: [description, ownership, glossary, lineage, column_lineage, assertions, incidents, freshness, usage, downstream_consumers, policy]

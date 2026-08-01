@@ -1,0 +1,3 @@
+asset_urn,platform,capability,human_label,labeler_role,label_reason,expected_failed_terms,notes
+urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD),hive,autonomous-agent-action,blocked,data_steward,missing assertions,assertions.present,local sample row
+urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD),hive,autonomous-agent-action,allowed,data_steward,required evidence present,,local sample row

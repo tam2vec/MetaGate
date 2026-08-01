@@ -1538,12 +1538,21 @@
         usage: "no current usage evidence was found",
         policy: "the governing policy evidence could not be verified"
       };
+      const assertionReasons = {
+        fct_users_created: "no assertion proves daily signup counts are within range or that user IDs are valid",
+        fct_users_deleted: "no assertion proves deletions are authorized, counted correctly, or absent from active-user outputs",
+        SampleKafkaDataset: "no assertion proves the stream is complete, ordered, or free of delivery breaks",
+        customer_lifetime_value: "the finance assertions are missing or contradictory for currency, non-negative value, and revenue definition"
+      };
       document.getElementById("evidenceChart").innerHTML = kinds.map((kind) => {
         const incidentFailure = kind === "incidents" && [...failed].some((term) => term.includes("incidents"));
         const isFailed = failed.has(`${kind}.present`) || incidentFailure;
         const width = isFailed ? 28 : 100;
+        const reason = kind === "assertions" && assertionReasons[run.asset]
+          ? assertionReasons[run.asset]
+          : failureReasons[kind];
         const explanation = isFailed
-          ? `${explanations[kind]} Low because ${failureReasons[kind]}.`
+          ? `${explanations[kind]} Low because ${reason}.`
           : `${explanations[kind]} Present because DataHub returned current evidence.`;
         return `<div class="evidence-row" tabindex="0" data-explanation="${escapeHtml(explanation)}"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
       }).join("");

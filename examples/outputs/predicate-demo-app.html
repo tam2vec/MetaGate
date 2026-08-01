@@ -175,6 +175,16 @@
       font: inherit;
       font-size: 12px;
     }
+    .request-button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .request-button:disabled { opacity: .55; cursor: wait; }
     .environment strong {
       display: block;
       font-size: 14px;
@@ -1086,6 +1096,7 @@
                 <option value="generate-executive-metrics">Generate executive metrics</option>
                 <option value="answer-business-questions">Answer business questions</option>
               </select>
+              <button id="requestAction" class="request-button" type="button">Request AI action</button>
             </div>
           </div>
 
@@ -1347,6 +1358,7 @@
     const assetList = document.getElementById("assetList");
     const assetSelect = document.getElementById("assetSelect");
     const capabilitySelect = document.getElementById("capabilitySelect");
+    const requestAction = document.getElementById("requestAction");
     const remediationDrawer = document.getElementById("remediationDrawer");
     const openRemediationDrawer = document.getElementById("openRemediationDrawer");
     const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
@@ -1799,6 +1811,8 @@
         return;
       }
       document.getElementById("dataUpdate").textContent = "Checking selected capability...";
+      requestAction.disabled = true;
+      requestAction.textContent = "Checking...";
       const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
       try {
         const response = await fetch(endpoint, { cache: "no-store" });
@@ -1809,6 +1823,8 @@
       } catch (error) {
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
       }
+      requestAction.disabled = false;
+      requestAction.textContent = "Request AI action";
     }
 
     async function loadLiveRuns() {
@@ -1859,7 +1875,10 @@
       selected = Number(event.target.value);
       render();
     });
-    capabilitySelect.addEventListener("change", (event) => loadCapabilityDecision(event.target.value));
+    capabilitySelect.addEventListener("change", () => {
+      document.getElementById("dataUpdate").textContent = "Action selected. Click Request AI action to evaluate it.";
+    });
+    requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         embeddedView = tab.dataset.view;

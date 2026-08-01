@@ -96,8 +96,13 @@
     panel.id = PANEL_ID;
     panel.innerHTML = `
       <div class="predicate-card">
-        <div class="predicate-kicker">Predicate</div>
-        <h2>AI action check</h2>
+        <div class="predicate-heading">
+          <div>
+            <div class="predicate-kicker">Predicate</div>
+            <h2>AI action check</h2>
+          </div>
+          <button class="predicate-close" type="button" aria-label="Close Predicate panel" title="Close Predicate panel">&times;</button>
+        </div>
         <div class="predicate-status">Evaluating DataHub metadata...</div>
         <div class="predicate-body"></div>
       </div>
@@ -126,10 +131,32 @@
         text-transform: uppercase;
         font-weight: 800;
       }
+      #${PANEL_ID} .predicate-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
       #${PANEL_ID} h2 {
         margin: 3px 0 12px;
         font-size: 20px;
         letter-spacing: 0;
+      }
+      #${PANEL_ID} .predicate-close {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border: 1px solid #dce3ee;
+        border-radius: 8px;
+        background: #fff;
+        color: #617086;
+        cursor: pointer;
+        font-size: 24px;
+        line-height: 1;
+      }
+      #${PANEL_ID} .predicate-close:hover {
+        background: #f5f7fb;
+        color: #172033;
       }
       #${PANEL_ID} .predicate-status {
         border: 1px solid #dce3ee;
@@ -224,6 +251,11 @@
     document.documentElement.appendChild(style);
     document.body.appendChild(panel);
     panel.dataset.urn = urn;
+    panel.querySelector(".predicate-close").addEventListener("click", () => {
+      panel.dataset.dismissed = "true";
+      panel.remove();
+      window.__predicateDismissedUrl = location.href;
+    });
     return panel;
   }
 
@@ -258,6 +290,11 @@
   async function evaluateCurrentAsset() {
     const urn = extractUrn();
     if (!urn) {
+      document.getElementById(PANEL_ID)?.remove();
+      window.__predicateDismissedUrl = null;
+      return;
+    }
+    if (window.__predicateDismissedUrl === location.href) {
       return;
     }
     let panel = document.getElementById(PANEL_ID);
@@ -285,6 +322,7 @@
   setInterval(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
+      window.__predicateDismissedUrl = null;
       evaluateCurrentAsset();
     }
   }, 800);

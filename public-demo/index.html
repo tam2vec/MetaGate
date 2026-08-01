@@ -198,7 +198,19 @@
       line-height: 1.35;
       min-height: 16px;
     }
-    .control-status.result {
+    .action-result {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue);
+      border-radius: 6px;
+      background: var(--soft);
+      color: var(--ink);
+      padding: 9px 12px;
+      margin: -4px 0 16px;
+      font-size: 13px;
+      line-height: 1.35;
+      min-height: 18px;
+    }
+    .action-result.result {
       color: var(--ink);
       font-weight: 700;
     }
@@ -1160,9 +1172,9 @@
                 </select>
                 <button id="requestAction" class="request-button" type="button">Request AI action</button>
               </div>
-              <p id="actionResult" class="control-status result">Ready. Choose an action and request a decision.</p>
             </div>
           </div>
+          <div id="actionResult" class="action-result result">Ready. Choose an action and request a decision.</div>
 
           <div class="bars">
             <div class="bar-card">

@@ -183,6 +183,8 @@
       padding: 9px 12px;
       cursor: pointer;
       font-weight: 750;
+      min-width: 190px;
+      white-space: nowrap;
     }
     .request-button:disabled { opacity: .55; cursor: wait; }
     .action-row {
@@ -2004,15 +2006,15 @@
 
     assetSelect.addEventListener("change", (event) => {
       selected = Number(event.target.value);
-      requestAction.textContent = "Request AI action";
+      requestAction.textContent = "Check selected action";
       render();
       const assetName = runs[selected] ? runs[selected].asset : "the selected asset";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       document.getElementById("dataUpdate").textContent = `Asset changed to ${assetName}.`;
       document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
     });
-    capabilitySelect.addEventListener("change", () => {
-      requestAction.textContent = "Request AI action";
+      capabilitySelect.addEventListener("change", () => {
+      requestAction.textContent = "Check selected action";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       const assetName = runs[selected] ? runs[selected].asset : "this asset";
       document.getElementById("dataUpdate").textContent = `Action changed for ${assetName}.`;

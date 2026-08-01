@@ -657,7 +657,7 @@
       align-items: center;
       margin: 8px 0;
       font-size: 12px;
-      cursor: help;
+      cursor: default;
     }
     .evidence-row::after {
       content: attr(data-explanation);
@@ -1504,23 +1504,23 @@
       const kinds = ["ownership", "glossary", "lineage", "column_lineage", "assertions", "freshness", "incidents", "usage", "policy"];
       const failed = new Set(run.failed || []);
       const explanations = {
-        ownership: "A named owner means someone is accountable for fixing metadata or approving use.",
-        glossary: "Definitions help the AI understand what the asset and its metrics actually mean.",
-        lineage: "Lineage shows where the data came from and who could be affected by using it.",
-        column_lineage: "Column-level lineage explains where important fields came from, not just the table.",
-        assertions: "Assertions are checks that prove the data meets expected rules, such as valid counts or values.",
-        freshness: "Freshness tells us whether the data is current enough for this decision.",
-        incidents: "Open incidents lower trust because known problems may still affect the asset.",
-        usage: "Usage shows whether this asset is actively relied on by people or downstream systems.",
-        policy: "Policy evidence records which governance rules were used to make this decision."
+        ownership: "Owner: who is accountable for fixing or approving this asset.",
+        glossary: "Glossary: what the asset and its metrics mean in plain language.",
+        lineage: "Lineage: where the data came from and what depends on it.",
+        column_lineage: "Column lineage: where important fields came from, not just the table.",
+        assertions: "Assertions: checks proving the data meets expected rules.",
+        freshness: "Freshness: whether the data is current enough for this decision.",
+        incidents: "Incidents: whether known problems could still affect the asset.",
+        usage: "Usage: whether people or systems actively rely on this asset.",
+        policy: "Policy: which governance rules were used for this decision."
       };
       document.getElementById("evidenceChart").innerHTML = kinds.map((kind) => {
         const incidentFailure = kind === "incidents" && [...failed].some((term) => term.includes("incidents"));
         const isFailed = failed.has(`${kind}.present`) || incidentFailure;
         const width = isFailed ? 28 : 100;
         const explanation = isFailed
-          ? `${explanations[kind]} Predicate could not verify it for this asset.`
-          : explanations[kind];
+          ? `${explanations[kind]} Not verified for this asset.`
+          : `${explanations[kind]} Present and verified.`;
         return `<div class="evidence-row" tabindex="0" data-explanation="${escapeHtml(explanation)}"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
       }).join("");
     }

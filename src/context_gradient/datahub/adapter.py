@@ -281,6 +281,9 @@ class GraphQLDataHubClient:
         dashboards = (raw.get("dashboards") or {}).get("relationships", [])
         charts = (raw.get("charts") or {}).get("relationships", [])
         models = (raw.get("mlModels") or {}).get("relationships", [])
+        incident_data = raw.get("incidents")
+        incident_items = (incident_data or {}).get("incidents", [])
+        fine_grained_lineage = raw.get("fineGrainedLineages") or {}
         return {
             "urn": raw.get("urn", urn), "type": raw.get("type", "dataset"),
             "description": {"text": (raw.get("editableProperties") or {}).get("description", "")},
@@ -289,12 +292,14 @@ class GraphQLDataHubClient:
             "domain": {"urn": domains} if domains else {},
             "tags": {"values": [item for item in tags if item]},
             "lineage": {"upstreams": [item for item in upstreams if item]},
-            "column_lineage": {"mappings": raw.get("fineGrainedLineages", {}).get("fineGrainedLineages", [])},
+            "column_lineage": {"mappings": fine_grained_lineage.get("fineGrainedLineages", [])},
             "assertions": {
                 "count": len((raw.get("assertions") or {}).get("assertions", [])),
                 "present": bool((raw.get("assertions") or {}).get("assertions", [])),
             },
-            "incidents": {"open": len((raw.get("incidents") or {}).get("incidents", [])), "present": True},
+            # An absent incidents aspect means DataHub gave us no incident
+            # evidence. It must not be silently upgraded to "zero incidents".
+            "incidents": {"open": len(incident_items), "present": incident_data is not None},
             "usage": raw.get("usageStats") or {},
             "freshness": raw.get("freshness") or raw_properties.get("context_gradient.freshness") or {},
             "policy": raw.get("policy") or raw_properties.get("context_gradient.policy") or {},

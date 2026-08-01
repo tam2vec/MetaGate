@@ -38,6 +38,15 @@ class QualityTest(unittest.TestCase):
             client.get_entity(URN)
             self.assertEqual(request.call_args.args[0], client.query)
 
+    def test_missing_incidents_are_not_treated_as_zero_open_incidents(self):
+        client = type("Client", (), {
+            "get_entity": lambda _self, _urn: {"urn": URN},
+            "get_neighbors": lambda _self, _urn: [],
+        })()
+        bundle = DataHubEvidenceExtractor(client).bundle(URN)
+        incidents = next(item for item in bundle.entity.evidence if item.kind == EvidenceKind.INCIDENTS)
+        self.assertFalse(incidents.present)
+
     def test_writeback_returns_verified_receipt_and_scan_time(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

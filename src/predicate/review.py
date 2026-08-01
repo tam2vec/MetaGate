@@ -171,6 +171,11 @@ class ReviewState:
             "ready": readiness["status"] == "ready",
             "health": health["status"],
             "checked_urns": urns,
+            "writeback": {
+                "configured": bool(os.environ.get("DATAHUB_CERTIFICATE_MUTATION")),
+                "verified_readback_configured": bool(os.environ.get("DATAHUB_CERTIFICATE_QUERY")),
+                "mode": "explicit-and-verified" if os.environ.get("DATAHUB_CERTIFICATE_MUTATION") and os.environ.get("DATAHUB_CERTIFICATE_QUERY") else "read-only",
+            },
         }
 
 

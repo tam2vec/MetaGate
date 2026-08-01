@@ -44,10 +44,22 @@ through `DATAHUB_ENTITY_QUERY` or the `GraphQLDataHubClient(query=...)` API.
 
 ## Write-back validation
 
-Use a non-production namespace first. Configure only the mutation documents
-supported by the deployment, verify the returned certificate on the asset, and
-confirm remediation tasks are idempotent. Use a separate least-privilege token
-for write-back and keep evaluation tokens read-only.
+Use a non-production namespace first. The repository now includes a command that
+requires both a mutation document and a read-back query:
+
+```bash
+PYTHONPATH=src python3 scripts/writeback_datahub.py \
+  "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)" \
+  --policy examples/policies/finance-production.yml \
+  --mutation-file examples/datahub-preflight-action/writeback-mutation.example.graphql \
+  --verify-query-file examples/datahub-preflight-action/verify-contract.example.graphql \
+  --yes
+```
+
+The example mutation is a template, not a universal promise: replace it with
+the mutation supported by your DataHub version. The command will not report
+success unless the read-back query returns a value. Use a separate
+least-privilege token for write-back and keep evaluation tokens read-only.
 
 ## Evidence to capture
 

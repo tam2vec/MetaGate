@@ -1,0 +1,9 @@
+query ReadPredicateContract($urn: String!) {
+  entity(urn: $urn) {
+    urn
+    properties {
+      key
+      value
+    }
+  }
+}

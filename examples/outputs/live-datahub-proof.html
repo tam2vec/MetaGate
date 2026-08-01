@@ -1733,7 +1733,8 @@
           const liveMode = status && status.mode === "live-datahub-api";
           document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
           document.getElementById("environmentProof").textContent = liveMode ? "Proof: Predicate reads DataHub GraphQL" : "Proof: sanitized fixture backend";
-          document.getElementById("dataMode").textContent = liveMode ? "Mode: live DataHub API" : "Mode: public API fixture";
+          const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
+          document.getElementById("dataMode").textContent = `${liveMode ? "Mode: live DataHub API" : "Mode: public API fixture"} - Write-back: ${writebackMode}`;
           render();
         }
       } catch (error) {

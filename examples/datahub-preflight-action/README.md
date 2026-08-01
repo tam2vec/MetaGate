@@ -19,6 +19,11 @@ dataset is ready for a specific AI use before the workflow proceeds.
 
 - `action-contract.json`: request/response contract.
 - `context-contract-aspect.json`: custom aspect shape for DataHub write-back.
+- `writeback-mutation.example.graphql`: deployment-specific mutation template.
+- `verify-contract.example.graphql`: read-after-write verification template.
+
+The working command is `scripts/writeback_datahub.py`. It refuses to report
+success unless the contract can be read back from DataHub.
 
 ## Production Claim
 

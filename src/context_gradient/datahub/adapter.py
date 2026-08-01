@@ -163,8 +163,11 @@ class DataHubWriteback:
             tasks_created += 1
         receipt = {"urn": urn, "certificate_written": True, "tasks_requested": tasks_created}
         reader = getattr(self.client, "get_written_certificate", None)
-        if reader and reader(urn) is None:
+        if not reader:
+            raise RuntimeError("Write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY.")
+        if reader(urn) is None:
             raise RuntimeError(f"DataHub write-back could not be verified for {urn}")
+        receipt["verified_readback"] = True
         return receipt
 
 
@@ -244,6 +247,16 @@ class GraphQLDataHubClient:
         mutation = os.environ.get("DATAHUB_TASK_MUTATION")
         if mutation:
             self._request(mutation, {"urn": urn, "title": title, "body": body})
+
+    def get_written_certificate(self, urn: str) -> Dict[str, Any] | None:
+        query = os.environ.get("DATAHUB_CERTIFICATE_QUERY")
+        if not query:
+            return None
+        data = self._request(query, {"urn": urn})
+        value = data.get("entity") or data.get("dataset") or data.get("aiContextContract")
+        if isinstance(value, dict):
+            return value
+        return value if value else None
 
     def _request(self, query: str, variables: Dict[str, Any]) -> Dict[str, Any]:
         headers = {"Content-Type": "application/json"}

@@ -30,9 +30,8 @@ examples/benchmark/synthetic-reviewer-labels.csv
 ## Example
 
 ```text
-i would block it. i can see what the table is and who owns it, but i do not see
-proof that the signup numbers are actually checked. letting an agent act on
-that feels like asking for a confident mistake.
+needs to be blocked. ai should not work on it because there is no proof that the
+number of people signing up is correct.
 ```
 
 That is better than:
@@ -46,18 +45,17 @@ because it explains the human risk, not just the failed field.
 ## More Human Examples
 
 ```text
-nope. deleted users is not a casual table. before an agent does anything here,
-i would want proof that the dates, counts, and user states are being checked
-properly.
+i think it should be blocked because deleted-user data is important, and there
+needs to be a check that the users were deleted for the right reason before
+running ai on it.
 ```
 
 ```text
-for a basic explanation, yes. the agent can say what this table is for. but i
-would not let it recommend actions or change anything based on it yet.
+allowed as long as ai only explains the table and does not provide
+recommendations.
 ```
 
 ```text
-hard block. this is money-adjacent, and the definitions are not clean enough.
-if people disagree on what the number means, an agent should not be making
-decisions from it.
+since money is involved, it needs to be checked properly and should be blocked
+for now.
 ```

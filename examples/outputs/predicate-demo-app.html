@@ -1741,11 +1741,15 @@
     }
 
     async function loadLiveRuns() {
+      refreshData.disabled = true;
+      refreshData.textContent = "Checking DataHub...";
       const params = new URLSearchParams(window.location.search);
       const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
       const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
       if (window.location.protocol === "file:" && !apiBase) {
         document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
+        refreshData.disabled = false;
+        refreshData.textContent = "Refresh DataHub check";
         return;
       }
       try {
@@ -1768,11 +1772,14 @@
             ? "Live: refresh this page after a new DataHub evaluation."
             : "Fixture: this page updates only when the API fixture changes.";
           render();
+          document.getElementById("dataUpdate").textContent = `${liveMode ? "Live DataHub check complete" : "Fixture check complete"} - Last checked: ${new Date().toLocaleTimeString()}`;
         }
       } catch (error) {
         document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
-        document.getElementById("dataUpdate").textContent = "Start once: ./scripts/start_predicate_review.sh, then refresh this page.";
+        document.getElementById("dataUpdate").textContent = "Predicate API unavailable. Start once: ./scripts/start_predicate_review.sh, then refresh this page.";
       }
+      refreshData.disabled = false;
+      refreshData.textContent = "Refresh DataHub check";
     }
 
     assetSelect.addEventListener("change", (event) => {

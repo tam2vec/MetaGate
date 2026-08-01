@@ -175,6 +175,25 @@
       font: inherit;
       font-size: 12px;
     }
+    .asset-lookup {
+      margin-top: 12px;
+      max-width: 760px;
+    }
+    .asset-lookup label { margin-bottom: 5px; }
+    .asset-lookup-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+    .asset-lookup input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+    }
     .request-button {
       border: 0;
       border-radius: 6px;
@@ -901,6 +920,42 @@
       margin: 0 0 10px;
       font-size: 16px;
     }
+    .review-actions {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .review-actions button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 7px 10px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+    }
+    .review-actions button.selected {
+      border-color: var(--blue);
+      background: #eaf1ff;
+      color: var(--blue);
+      font-weight: 750;
+    }
+    .review-note {
+      width: 100%;
+      min-height: 62px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      font: inherit;
+      font-size: 12px;
+    }
+    .review-saved {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
     .remediation-list {
       display: grid;
       gap: 10px;
@@ -1037,8 +1092,8 @@
         <button class="nav-item" type="button" data-target="full-review">Decision Details</button>
         <button class="nav-item" type="button" data-target="remediation-plan">Policy Checks</button>
         <button class="nav-item" type="button" data-target="evidence-section">DataHub Evidence</button>
-        <button class="nav-item" type="button" data-target="writeback-section">Write-back Queue</button>
-        <button class="nav-item" type="button" data-target="security-section">Security & RBAC</button>
+        <button class="nav-item" type="button" data-target="writeback-section">Decision Diff</button>
+        <button class="nav-item" type="button" data-target="security-section">Security Model</button>
       </div>
       <div>
         <div class="nav-label">Proof</div>
@@ -1057,6 +1112,13 @@
           <h1>Predicate Review</h1>
           <p class="subtitle">A clear go/no-go check before AI uses a dataset. Public mode is a demo; local mode reads DataHub.</p>
           <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
+          <div class="asset-lookup">
+            <label for="urnInput">Check another DataHub asset</label>
+            <div class="asset-lookup-row">
+              <input id="urnInput" type="text" placeholder="Paste a dataset URN" autocomplete="off">
+              <button id="evaluateAsset" class="refresh-button" type="button">Check asset</button>
+            </div>
+          </div>
         </div>
         <div class="environment">
           <strong id="environmentTitle">Public static visual demo</strong>
@@ -1219,7 +1281,7 @@
 
           <div class="two-col">
             <div>
-              <h3 class="section-title">Action predicate</h3>
+              <h3 class="section-title">Rule being checked</h3>
               <pre id="predicateBlock" class="predicate"></pre>
             </div>
             <div>
@@ -1270,9 +1332,20 @@
             </section>
 
             <section id="security-section" class="feature-card">
-              <h3>Trust Timeline</h3>
-              <p class="timeline-note">A short audit trail showing how Predicate moved from DataHub evidence to the current decision and what happens next.</p>
+              <h3>Decision History</h3>
+              <p class="timeline-note">Checks made during this review session, plus the next step.</p>
               <div id="trustTimeline" class="timeline"></div>
+            </section>
+
+            <section class="feature-card" id="human-review">
+              <h3>Human review</h3>
+              <p class="quiet-note">Record whether this decision looks right. Saved in this browser for the current asset and action.</p>
+              <div class="review-actions">
+                <button id="reviewAgree" type="button">Looks right</button>
+                <button id="reviewDisagree" type="button">Needs review</button>
+              </div>
+              <textarea id="reviewNote" class="review-note" placeholder="Optional note"></textarea>
+              <p id="reviewSaved" class="review-saved">No review recorded yet.</p>
             </section>
 
             <section class="feature-card">
@@ -1452,6 +1525,8 @@
     const openRemediationDrawer = document.getElementById("openRemediationDrawer");
     const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
     const refreshData = document.getElementById("refreshData");
+    const urnInput = document.getElementById("urnInput");
+    const evaluateAsset = document.getElementById("evaluateAsset");
     document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
       item.addEventListener("click", () => {
         const target = document.getElementById(item.dataset.target);
@@ -1471,6 +1546,27 @@
       const thresholds = run.action_thresholds || capabilityThresholds[run.capability] || capabilityThresholds[capabilitySelect.value];
       document.getElementById("readinessContext").textContent = thresholds ? `(action needs ${thresholds.score}+)` : "";
       document.getElementById("confidenceContext").textContent = thresholds ? `(action needs ${thresholds.confidence}+)` : "";
+    }
+
+    function reviewKey(run) {
+      return `predicate-review:${run.urn}:${run.capability}`;
+    }
+
+    function renderHumanReview(run) {
+      const saved = JSON.parse(localStorage.getItem(reviewKey(run)) || "null");
+      document.getElementById("reviewAgree").classList.toggle("selected", saved && saved.verdict === "agree");
+      document.getElementById("reviewDisagree").classList.toggle("selected", saved && saved.verdict === "disagree");
+      document.getElementById("reviewNote").value = saved && saved.note ? saved.note : "";
+      document.getElementById("reviewSaved").textContent = saved
+        ? `Saved ${saved.verdict === "agree" ? "Looks right" : "Needs review"} in this browser.`
+        : "No review recorded yet.";
+    }
+
+    function saveHumanReview(verdict) {
+      const run = runs[selected];
+      const note = document.getElementById("reviewNote").value.trim();
+      localStorage.setItem(reviewKey(run), JSON.stringify({ verdict, note, savedAt: new Date().toISOString() }));
+      renderHumanReview(run);
     }
 
     function formatMetric(value) {
@@ -1547,6 +1643,7 @@
     function renderEvidenceChart(run) {
       const kinds = ["ownership", "glossary", "lineage", "column_lineage", "assertions", "freshness", "incidents", "usage", "policy"];
       const failed = new Set(run.failed || []);
+      const gaps = Array.isArray(run.gaps) ? run.gaps : [];
       const explanations = {
         ownership: "Owner: who is accountable for fixing or approving this asset.",
         glossary: "Glossary: what the asset and its metrics mean in plain language.",
@@ -1582,8 +1679,12 @@
         const reason = kind === "assertions" && assertionReasons[run.asset]
           ? assertionReasons[run.asset]
           : failureReasons[kind];
+        const dataHubGap = gaps.find((gap) => gap.evidence_kind === kind);
+        const preciseReason = dataHubGap && (dataHubGap.message || dataHubGap.recommendation)
+          ? dataHubGap.message || dataHubGap.recommendation
+          : reason;
         const explanation = isFailed
-          ? `${explanations[kind]} Low because ${reason}.`
+          ? `${explanations[kind]} Low because ${preciseReason}.`
           : `${explanations[kind]} Present because DataHub returned current evidence.`;
         return `<div class="evidence-row" tabindex="0" data-explanation="${escapeHtml(explanation)}"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
       }).join("");
@@ -1875,17 +1976,19 @@
     }
 
     function renderTimeline(run) {
-      const steps = run.decision === "allowed"
+      const recordedHistory = Array.isArray(run.history) ? run.history : [];
+      const steps = recordedHistory.length
+        ? recordedHistory.map((event) => [
+          new Date(event.evaluated_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          `${event.capability}: ${event.decision.toUpperCase()} - ${event.reason}`
+        ])
+        : run.decision === "allowed"
         ? [
-          ["10:00", "DataHub metadata change is detected for this asset."],
-          ["10:01", "Predicate checks owner, glossary, lineage, assertions, freshness, incidents, usage, and policy."],
-          ["10:02", "All required predicate terms pass for the selected action."],
-          ["10:03", "Certificate allows the action until the evidence changes."]
+          ["Now", "This decision is from the current DataHub evaluation."],
+          ["Next", "Predicate will recheck it when the asset is refreshed."]
         ]
         : [
-          ["10:00", "DataHub metadata change is detected for this asset."],
-          ["10:01", "Predicate checks the requested AI action against the active policy."],
-          ["10:02", `Trust is revoked because ${run.failed.slice(0, 2).join(" and ")} failed.`],
+          ["Now", `This decision is from the current DataHub evaluation. ${run.failed.slice(0, 2).join(" and ")} failed.`],
           ["Next", "Data owner completes the repair plan in DataHub."],
           ["After", "Predicate reruns on the same URN and updates the capability diff."]
         ];
@@ -1947,6 +2050,7 @@
       renderCapabilityMatrix(run);
       renderDiff(run);
       renderTimeline(run);
+      renderHumanReview(run);
     }
 
     function renderDecisionOnly(run) {
@@ -1986,6 +2090,7 @@
       renderCapabilityMatrix(run);
       renderDiff(run);
       renderTimeline(run);
+      renderHumanReview(run);
     }
 
     async function loadCapabilityDecision(capability) {
@@ -2021,6 +2126,39 @@
       }
       requestAction.disabled = false;
       if (requestAction.textContent === "Checking...") requestAction.textContent = "Request AI action";
+    }
+
+    async function evaluateNewAsset() {
+      const urn = urnInput.value.trim();
+      if (!urn || !activeApiBase) {
+        document.getElementById("actionResult").textContent = "Paste a DataHub dataset URN while the review API is connected.";
+        return;
+      }
+      evaluateAsset.disabled = true;
+      evaluateAsset.textContent = "Checking...";
+      document.getElementById("actionResult").textContent = `Reading ${urn} from DataHub...`;
+      try {
+        const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(urn)}&capability=${encodeURIComponent(capabilitySelect.value)}`;
+        const response = await fetch(endpoint, { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        const existing = runs.findIndex((item) => item.urn === urn);
+        if (existing >= 0) {
+          runs[existing] = payload;
+          selected = existing;
+        } else {
+          runs.push(payload);
+          selected = runs.length - 1;
+        }
+        render();
+        document.getElementById("actionResult").textContent = `Checked ${payload.asset}: ${payload.decision.toUpperCase()}.`;
+        urnInput.value = "";
+      } catch (error) {
+        document.getElementById("actionResult").textContent = friendlyApiError(error);
+      } finally {
+        evaluateAsset.disabled = false;
+        evaluateAsset.textContent = "Check asset";
+      }
     }
 
     async function loadLiveRuns() {
@@ -2061,7 +2199,10 @@
             ? "Live: refresh this page after a new DataHub evaluation."
             : "Fixture: this page updates only when the API fixture changes.";
           render();
-          document.getElementById("dataUpdate").textContent = `${liveMode ? "Live DataHub check complete" : "Fixture check complete"} - Last checked: ${new Date().toLocaleTimeString()}`;
+          const errors = Array.isArray(payload.errors) ? payload.errors : [];
+          document.getElementById("dataUpdate").textContent = errors.length
+            ? `${errors.length} asset check${errors.length === 1 ? "" : "s"} failed - see the DataHub status. Last checked: ${new Date().toLocaleTimeString()}`
+            : `${liveMode ? "Live DataHub check complete" : "Fixture check complete"} - Last checked: ${new Date().toLocaleTimeString()}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action and request a fresh decision.";
         }
       } catch (error) {
@@ -2090,6 +2231,19 @@
       document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
     });
     requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
+    evaluateAsset.addEventListener("click", evaluateNewAsset);
+    document.getElementById("reviewAgree").addEventListener("click", () => saveHumanReview("agree"));
+    document.getElementById("reviewDisagree").addEventListener("click", () => saveHumanReview("disagree"));
+    document.getElementById("reviewNote").addEventListener("blur", () => {
+      const saved = JSON.parse(localStorage.getItem(reviewKey(runs[selected])) || "null");
+      if (saved) {
+        saved.note = document.getElementById("reviewNote").value.trim();
+        localStorage.setItem(reviewKey(runs[selected]), JSON.stringify(saved));
+      }
+    });
+    urnInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") evaluateNewAsset();
+    });
     document.querySelectorAll(".tab").forEach((tab) => {
       tab.addEventListener("click", () => {
         embeddedView = tab.dataset.view;

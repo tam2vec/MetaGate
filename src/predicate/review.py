@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import time
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -71,6 +72,7 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
         "readiness_score": certificate.get("readiness_score"),
         "policy": certificate.get("metadata", {}).get("policy"),
         "evidence": decision.get("evidence", []),
+        "gaps": certificate.get("gaps", []),
         "failed": decision.get("action_predicate", {}).get("failed_terms", []),
         "action_predicate": decision.get("action_predicate", {}),
         "predicate": decision.get("action_predicate", {}),
@@ -124,6 +126,8 @@ class ReviewState:
             self.client,
             cache=JsonCache(ROOT / ".context-gradient/review-cache.json"),
         )
+        self.history: dict[str, list[dict]] = {}
+        self.last_errors: list[dict] = []
 
     def evaluate(self, urn: str, capability: str, *, refresh: bool = False) -> dict:
         if refresh:
@@ -137,14 +141,28 @@ class ReviewState:
             capability,
             decision["allowed"],
         )
-        return _decision_to_run(certificate, decision, self.policy)
+        run = _decision_to_run(certificate, decision, self.policy)
+        event = {
+            "decision_id": f"pred-{int(time.time() * 1000)}",
+            "evaluated_at": datetime.now(timezone.utc).isoformat(),
+            "decision": run["decision"],
+            "capability": capability,
+            "reason": run["reason"],
+        }
+        self.history.setdefault(urn, []).append(event)
+        run["decision_id"] = event["decision_id"]
+        run["evaluated_at"] = event["evaluated_at"]
+        run["history"] = self.history[urn][-10:]
+        return run
 
     def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
         live_runs = []
+        self.last_errors = []
         for urn in urns:
             try:
                 live_runs.append(self.evaluate(urn, capability, refresh=refresh))
-            except Exception:
+            except Exception as error:
+                self.last_errors.append({"urn": urn, "error": str(error)})
                 continue
         if live_runs:
             return live_runs
@@ -192,6 +210,7 @@ class ReviewState:
                 "verified_readback_configured": bool(os.environ.get("DATAHUB_CERTIFICATE_QUERY")),
                 "mode": "explicit-and-verified" if os.environ.get("DATAHUB_CERTIFICATE_MUTATION") and os.environ.get("DATAHUB_CERTIFICATE_QUERY") else "read-only",
             },
+            "evaluation_errors": self.last_errors,
         }
 
 
@@ -240,6 +259,7 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                     {
                         "source": "live-api" if not state.datahub_file else "fixture-api",
                         "runs": state.runs(urns, capability, refresh=refresh),
+                        "errors": state.last_errors,
                     }
                 )
                 return

@@ -249,7 +249,7 @@
       }
     `;
     document.documentElement.appendChild(style);
-    document.body.appendChild(panel);
+    (document.body || document.documentElement).appendChild(panel);
     panel.dataset.urn = urn;
     panel.querySelector(".predicate-close").addEventListener("click", () => {
       panel.dataset.dismissed = "true";
@@ -331,6 +331,9 @@
 
   window.addEventListener("popstate", handleUrlChange);
   window.addEventListener("hashchange", handleUrlChange);
+  // DataHub can update its router without emitting a history event. A short
+  // URL-only check keeps navigation cleanup immediate without polling scores.
+  setInterval(handleUrlChange, 50);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       window.__predicateDismissedUrl = null;

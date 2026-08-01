@@ -40,6 +40,19 @@ target DataHub version and custom aspect setup.
 5. Run write-back.
 6. Reopen the same DataHub asset URN and verify the certificate or task appears.
 
+Receipt-only demo command:
+
+```bash
+predicate \
+  "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
+  --policy examples/policies/enterprise_ai.yml \
+  --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --writeback-file examples/outputs/writeback-receipt.json
+```
+
+This writes a local receipt without requiring a DataHub mutation. Treat it as
+proof of the payload contract, not proof of a live DataHub UI mutation.
+
 ## Demo artifacts
 
 - `examples/outputs/writeback-payload.json`: representative certificate body.

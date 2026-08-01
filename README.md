@@ -43,9 +43,10 @@ DataHub GraphQL plus the Predicate CLI/API.
 ## One Command
 
 ```bash
+python3 -m pip install -e ".[datahub]"
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
 
-PYTHONPATH=src python3 -m predicate.cli \
+predicate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -89,7 +90,7 @@ For a harder run, see [Difficult DataHub Run](docs/difficult-datahub-run.md).
 ## Local Review App
 
 ```bash
-PYTHONPATH=src:. python3 scripts/serve_review.py \
+predicate-review \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
   --policy examples/policies/enterprise_ai.yml
 ```
@@ -125,6 +126,7 @@ Real in this MVP:
 - Browser extension prototype that detects DataHub asset URNs
 - Dockerized review API path
 - Safe write-back payloads and receipts
+- Installed commands: `predicate` and `predicate-review`
 - Tests, curated benchmark, contribution guide, release notes, and docs
 
 Prototype or future integration:
@@ -150,6 +152,16 @@ Prototype or future integration:
 - Readiness diffs and trust timeline
 - Audit logging
 - YAML policy profiles
+
+## Security Model
+
+Predicate is designed to be safe by default:
+
+- read-only evaluation unless write-back mutations are explicitly configured
+- DataHub token stays server-side in local/private deployments
+- public demo uses sanitized fixture data, never a private DataHub token
+- write-back is deployment-owned and gated by approved GraphQL mutation documents
+- recommended production flow separates requester, reviewer, and metadata owner
 
 ## SDK
 

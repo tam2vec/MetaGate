@@ -10,7 +10,7 @@ Make sure local DataHub is running, then run:
 ```bash
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
 
-PYTHONPATH=src python3 scripts/serve_review.py \
+predicate-review \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
   --policy examples/policies/enterprise_ai.yml
 ```
@@ -39,7 +39,7 @@ http://127.0.0.1:8765/api/evaluate?urn=urn:li:dataset:(urn:li:dataPlatform:hive,
 ## Use fixture mode if DataHub is unavailable
 
 ```bash
-PYTHONPATH=src python3 scripts/serve_review.py \
+predicate-review \
   --datahub-file examples/data/datahub_graph.json \
   --policy examples/policies/enterprise_ai.yml \
   --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)"

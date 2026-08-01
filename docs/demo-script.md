@@ -57,7 +57,7 @@ Run:
 ```bash
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
 
-PYTHONPATH=src python3 -m predicate.cli \
+predicate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -84,7 +84,7 @@ Screen: terminal.
 Run:
 
 ```bash
-PYTHONPATH=src python3 -m predicate.cli \
+predicate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -178,7 +178,7 @@ Use this backup line:
 Backup command:
 
 ```bash
-PYTHONPATH=src python3 -m predicate.cli \
+predicate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-file examples/data/datahub_graph.json \

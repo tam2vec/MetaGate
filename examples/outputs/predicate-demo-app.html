@@ -900,6 +900,7 @@
         <div class="nav-item">Policy Checks</div>
         <div class="nav-item">DataHub Evidence</div>
         <div class="nav-item">Write-back Queue</div>
+        <div class="nav-item">Security & RBAC</div>
       </div>
       <div>
         <div class="nav-label">Proof</div>
@@ -921,7 +922,7 @@
         <div class="environment">
           <strong id="environmentTitle">Public static visual demo</strong>
           <span id="environmentProof">Live proof: local DataHub GraphQL</span>
-          <span>Review API: scripts/serve_review.py</span>
+          <span>Review API: predicate-review</span>
           <span id="dataMode">Mode: recorded proof data</span>
         </div>
       </div>
@@ -1110,7 +1111,7 @@
                   <strong>Before repair</strong>
                   <ul id="beforeDiff"></ul>
                 </div>
-                <div class="diff-arrow">"†’</div>
+                <div class="diff-arrow">-></div>
                 <div class="diff-side">
                   <strong>After repair</strong>
                   <ul id="afterDiff"></ul>
@@ -1121,6 +1122,16 @@
             <section class="feature-card">
               <h3>Trust Timeline</h3>
               <div id="trustTimeline" class="timeline"></div>
+            </section>
+
+            <section class="feature-card">
+              <h3>Security & RBAC</h3>
+              <div class="remediation-list">
+                <div class="remediation-item"><strong>Read-only default</strong><span>Predicate evaluates DataHub metadata without sending mutations unless write-back is explicitly configured.</span></div>
+                <div class="remediation-item"><strong>Server-side token</strong><span>DataHub tokens stay in the private Predicate API, not in the public page or browser panel.</span></div>
+                <div class="remediation-item"><strong>Separated roles</strong><span>Requester asks for an AI action, Predicate evaluates policy, metadata owner repairs evidence, approver enables write-back.</span></div>
+                <div class="remediation-item"><strong>Mutation gate</strong><span>Live write-back requires deployment-approved GraphQL mutation documents.</span></div>
+              </div>
             </section>
           </div>
         </section>

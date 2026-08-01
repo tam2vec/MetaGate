@@ -22,4 +22,4 @@ To connect a public fixture-backed API without editing the file, open:
 https://your-netlify-site.netlify.app/?api=https://your-predicate-api.onrender.com
 ```
 
-For the local DataHub-backed UI, run `scripts/serve_review.py`.
+For the local DataHub-backed UI, run `predicate-review`.

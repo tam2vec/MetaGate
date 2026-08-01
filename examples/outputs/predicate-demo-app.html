@@ -185,6 +185,19 @@
       font-weight: 750;
     }
     .request-button:disabled { opacity: .55; cursor: wait; }
+    .action-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+    }
+    .control-status {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      min-height: 16px;
+    }
     .environment strong {
       display: block;
       font-size: 14px;
@@ -1040,7 +1053,7 @@
         <div class="workbench-head">
           <div>
             <h2>Action Workbench</h2>
-            <p>Predicate should not stop at """allowed""" or """blocked.""" This queue turns the decision into assigned repairs and a rerun path.</p>
+            <p>This turns the decision into a clear next step: act, repair the metadata, or ask for review.</p>
           </div>
           <span id="workbenchStatus" class="pill blocked">blocked</span>
         </div>
@@ -1091,12 +1104,15 @@
             </div>
             <div>
               <label for="capabilitySelect">Requested AI action</label>
-              <select id="capabilitySelect">
-                <option value="autonomous-agent-action">Autonomous agent action</option>
-                <option value="generate-executive-metrics">Generate executive metrics</option>
-                <option value="answer-business-questions">Answer business questions</option>
-              </select>
-              <button id="requestAction" class="request-button" type="button">Request AI action</button>
+              <div class="action-row">
+                <select id="capabilitySelect">
+                  <option value="autonomous-agent-action">Autonomous agent action</option>
+                  <option value="generate-executive-metrics">Generate executive metrics</option>
+                  <option value="answer-business-questions">Answer business questions</option>
+                </select>
+                <button id="requestAction" class="request-button" type="button">Request AI action</button>
+              </div>
+              <p id="actionResult" class="control-status">Ready. Choose an action and request a decision.</p>
             </div>
           </div>
 
@@ -1806,11 +1822,15 @@
 
     async function loadCapabilityDecision(capability) {
       const run = runs[selected];
+      const actionResult = document.getElementById("actionResult");
+      const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       if (!run || !activeApiBase) {
         document.getElementById("dataUpdate").textContent = "Select a live API-backed review to re-evaluate capabilities.";
+        actionResult.textContent = "This page is not connected to a Predicate API yet.";
         return;
       }
       document.getElementById("dataUpdate").textContent = "Checking selected capability...";
+      actionResult.textContent = `Checking ${actionName} against ${run.name}...`;
       requestAction.disabled = true;
       requestAction.textContent = "Checking...";
       const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
@@ -1820,8 +1840,10 @@
         runs[selected] = await response.json();
         render();
         document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
+        actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
       } catch (error) {
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
+        actionResult.textContent = "Request failed. Make sure the local review server is running, then try again.";
       }
       requestAction.disabled = false;
       requestAction.textContent = "Request AI action";
@@ -1862,6 +1884,7 @@
             : "Fixture: this page updates only when the API fixture changes.";
           render();
           document.getElementById("dataUpdate").textContent = `${liveMode ? "Live DataHub check complete" : "Fixture check complete"} - Last checked: ${new Date().toLocaleTimeString()}`;
+          document.getElementById("actionResult").textContent = "Ready. Choose an action and request a fresh decision.";
         }
       } catch (error) {
         document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
@@ -1877,6 +1900,7 @@
     });
     capabilitySelect.addEventListener("change", () => {
       document.getElementById("dataUpdate").textContent = "Action selected. Click Request AI action to evaluate it.";
+      document.getElementById("actionResult").textContent = "Ready. Click Request AI action to check this capability.";
     });
     requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
     document.querySelectorAll(".tab").forEach((tab) => {

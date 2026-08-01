@@ -1538,13 +1538,24 @@
         usage: "Usage: whether people or systems actively rely on this asset.",
         policy: "Policy: which governance rules were used for this decision."
       };
+      const failureReasons = {
+        ownership: "no accountable DataHub owner was found",
+        glossary: "the asset has no verified business definition",
+        lineage: "the upstream or downstream path could not be verified",
+        column_lineage: "important field-level origins are incomplete",
+        assertions: "no DataHub assertion result was found for this asset",
+        freshness: "the asset is outside its freshness requirement",
+        incidents: "an open incident is affecting trust in the asset",
+        usage: "no current usage evidence was found",
+        policy: "the governing policy evidence could not be verified"
+      };
       document.getElementById("evidenceChart").innerHTML = kinds.map((kind) => {
         const incidentFailure = kind === "incidents" && [...failed].some((term) => term.includes("incidents"));
         const isFailed = failed.has(`${kind}.present`) || incidentFailure;
         const width = isFailed ? 28 : 100;
         const explanation = isFailed
-          ? `${explanations[kind]} Not verified for this asset.`
-          : `${explanations[kind]} Present and verified.`;
+          ? `${explanations[kind]} Low because ${failureReasons[kind]}.`
+          : `${explanations[kind]} Present because DataHub returned current evidence.`;
         return `<div class="evidence-row" tabindex="0" data-explanation="${escapeHtml(explanation)}"><strong>${kind.replace("_", " ")}</strong><div class="evidence-track"><div class="evidence-fill${isFailed ? " failed" : ""}" style="width:${width}%"></div></div><span class="evidence-label">${isFailed ? "needs proof" : "present"}</span></div>`;
       }).join("");
     }

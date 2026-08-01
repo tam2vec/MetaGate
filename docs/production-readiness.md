@@ -9,6 +9,7 @@ private deployment.
 - `predicate-review` installed API/review server
 - `/healthz` process/config health endpoint
 - `/readyz` decision-readiness endpoint
+- `/api/status` machine-readable product, mode, and data-source status
 - Docker `HEALTHCHECK`
 - Render health check configured against `/healthz`
 - startup validation for policy path and data source
@@ -52,6 +53,10 @@ Before claiming production deployment:
 - [ ] audit logs retained
 - [ ] external labels expanded beyond demo set
 - [ ] one private DataHub dataset family validated end to end
+
+For a hosted demo, open `/api/status` to verify whether the page is using a
+sanitized fixture API or a live DataHub GraphQL API. The page should never imply
+that a fixture is a private DataHub deployment.
 
 ## Honest Claim
 

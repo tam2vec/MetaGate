@@ -1720,6 +1720,8 @@
         return;
       }
       try {
+        const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
+        const status = statusResponse.ok ? await statusResponse.json() : null;
         const response = await fetch(endpoint, { cache: "no-store" });
         if (!response.ok) {
           throw new Error("API unavailable");
@@ -1728,9 +1730,10 @@
         if (Array.isArray(payload.runs) && payload.runs.length) {
           runs = payload.runs;
           selected = 0;
-          document.getElementById("environmentTitle").textContent = apiBase ? "Public API fixture demo" : "Local live API demo";
-          document.getElementById("environmentProof").textContent = apiBase ? "API proof: sanitized fixture backend" : "Live proof: local DataHub GraphQL";
-          document.getElementById("dataMode").textContent = apiBase ? "Mode: public API fixture" : "Mode: live local API";
+          const liveMode = status && status.mode === "live-datahub-api";
+          document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
+          document.getElementById("environmentProof").textContent = liveMode ? "Proof: Predicate reads DataHub GraphQL" : "Proof: sanitized fixture backend";
+          document.getElementById("dataMode").textContent = liveMode ? "Mode: live DataHub API" : "Mode: public API fixture";
           render();
         }
       } catch (error) {

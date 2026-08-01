@@ -43,3 +43,20 @@ class ReviewServerTest(unittest.TestCase):
         )
         self.assertEqual(readiness["status"], "ready")
         self.assertEqual(readiness["runs_returned"], 1)
+
+    def test_review_server_status_explains_fixture_mode(self):
+        state = ReviewState(
+            "examples/policies/enterprise_ai.yml",
+            datahub_url=None,
+            datahub_file="examples/data/datahub_graph.json",
+        )
+
+        status = state.status(
+            ["urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)"],
+            "autonomous-agent-action",
+        )
+
+        self.assertEqual(status["product"], "Predicate")
+        self.assertEqual(status["mode"], "fixture-api")
+        self.assertEqual(status["data_source"], "local fixture")
+        self.assertTrue(status["ready"])

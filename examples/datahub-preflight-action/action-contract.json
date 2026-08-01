@@ -1,5 +1,5 @@
 {
-  "name": "Context Gradient Preflight",
+  "name": "Predicate Preflight",
   "trigger": "Request AI Readiness",
   "request": {
     "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",

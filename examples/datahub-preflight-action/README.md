@@ -1,10 +1,9 @@
-# Context Gradient Preflight
+# Predicate Preflight
 
 This folder sketches the native DataHub action/plugin path.
 
-In the hackathon repo, the product is named Predicate. The production action can
-be presented as **Context Gradient Preflight**: a DataHub-native gate that
-checks whether a dataset is ready for AI use.
+Predicate Preflight is the intended DataHub-native gate: it checks whether a
+dataset is ready for a specific AI use before the workflow proceeds.
 
 ## User Flow
 
@@ -25,7 +24,7 @@ checks whether a dataset is ready for AI use.
 
 Use:
 
-> Context Gradient Preflight is the intended native DataHub action. The
+> Predicate Preflight is the intended native DataHub action. The
 > hackathon proof uses the same contract through the CLI, local review API, and
 > browser extension prototype.
 

@@ -73,11 +73,11 @@ Example result:
   Docker path, tests, and curated benchmark.
 - It is read-only by default; write-back is explicit and deployment-gated.
 
-## Production Path: Context Gradient Preflight
+## Production Path: Predicate Preflight
 
 The tight production story is:
 
-> Predicate is the engine behind a native DataHub preflight gate. Before an AI
+> Predicate is a DataHub preflight gate. Before an AI
 > workflow touches a dataset, it checks whether the metadata is decision-ready,
 > writes a governed Context Contract back into DataHub, and either constrains
 > the agent or blocks it with an auditable reason.
@@ -86,7 +86,7 @@ Proof layers:
 
 | Layer | Artifact |
 | --- | --- |
-| DataHub preflight action | [Context Gradient Preflight](examples/datahub-preflight-action/README.md) |
+| DataHub preflight action | [Predicate Preflight](examples/datahub-preflight-action/README.md) |
 | Context Contract write-back shape | [AI Context Contract aspect](examples/datahub-preflight-action/context-contract-aspect.json) |
 | Private deployment adapter | [Private Deployment Adapter](docs/private-deployment-adapter.md) |
 | Unsafe-answer benchmark framing | [Unsafe-Answer Reduction Benchmark](docs/unsafe-answer-reduction-benchmark.md) |
@@ -126,7 +126,7 @@ PYTHONPATH=src:. python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 scripts/evaluate_benchmark.py
 ```
 
-- 18 automated tests passing
+- 20 automated tests passing
 - 30/30 curated policy conformance checks passing
 - 0 unexpected allows
 - 0 unexpected blocks

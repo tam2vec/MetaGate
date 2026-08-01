@@ -156,6 +156,23 @@ class ReviewState:
             "recorded_fallback": self.allow_recorded_fallback,
         }
 
+    def status(self, urns: list[str], capability: str) -> dict:
+        """Return a judge-friendly, machine-readable explanation of this server."""
+        health = self.health()
+        readiness = self.ready(urns, capability)
+        return {
+            "product": "Predicate",
+            "service": "Predicate Review",
+            "mode": "fixture-api" if self.datahub_file else "live-datahub-api",
+            "data_source": "local fixture" if self.datahub_file else "DataHub GraphQL",
+            "policy": self.policy_path,
+            "capability": capability,
+            "recorded_fallback_enabled": self.allow_recorded_fallback,
+            "ready": readiness["status"] == "ready",
+            "health": health["status"],
+            "checked_urns": urns,
+        }
+
 
 def make_handler(state: ReviewState, urns: list[str], capability: str, cors_origin: str = "*"):
     class Handler(BaseHTTPRequestHandler):
@@ -186,6 +203,9 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
             if parsed.path == "/readyz":
                 readiness = state.ready(urns, capability)
                 self._json(readiness, 200 if readiness["status"] == "ready" else 503)
+                return
+            if parsed.path == "/api/status":
+                self._json(state.status(urns, capability))
                 return
             if parsed.path in {"/", "/review"}:
                 self._html()

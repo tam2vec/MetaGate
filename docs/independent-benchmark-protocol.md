@@ -6,6 +6,9 @@ contradictory metadata states.
 
 For an external benchmark, use independently labeled assets.
 
+For the exact message to send reviewers, see
+[External Benchmark Request](external-benchmark-request.md).
+
 ## Label file
 
 Start with:

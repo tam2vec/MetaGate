@@ -179,6 +179,7 @@ print(certificate.as_dict())
 - [Policy catalog](docs/policy-catalog.md)
 - [Write-back safety](docs/writeback-safety.md)
 - [Independent benchmark protocol](docs/independent-benchmark-protocol.md)
+- [External benchmark request](docs/external-benchmark-request.md)
 - [Screenshots checklist](docs/screenshots-checklist.md)
 
 ## DataHub Version Notes

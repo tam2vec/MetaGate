@@ -1,197 +1,187 @@
 # Three-Minute Demo Script
 
-Use a real DataHub deployment for the final recording. The bundled fixture is
-only a rehearsal path and must be described as local rehearsal evidence.
+This script is written for a judge who has never seen Predicate.
 
-## Screen setup
+## Setup
 
-- Browser tab 1: DataHub asset page for the demo dataset.
-- Browser tab 2: `examples/outputs/predicate-demo-app.html`.
-- Browser tab 3: repository `README.md`.
-- Terminal tab 1: Predicate CLI.
-- Terminal tab 2: benchmark command/result.
-- Finder or editor: `examples/outputs/` for backup artifacts.
+Open these before recording:
 
-## 0:00-0:20: Problem
+- DataHub asset page for `fct_users_created`
+- Predicate public page or local review app
+- Terminal in the Predicate repo
+- README on GitHub
+
+Keep the language honest:
+
+> The public page is a sanitized demo. The real proof path is local/private
+> DataHub GraphQL plus the Predicate CLI/API.
+
+## 0:00-0:20 - The Problem
 
 Screen: DataHub asset page.
 
-Narration:
+Say:
 
-“Enterprise AI agents can already query metadata catalogs. The missing control
-is knowing whether the metadata is complete enough to trust an agent with a
-specific action. Reading a dashboard is different from renaming a production
-revenue column.”
+> Companies spent years adding metadata for people: owners, glossary terms,
+> lineage, quality checks, freshness, incidents, and policies. Now AI agents are
+> being asked to act on that same data. The missing question is simple: is the
+> metadata good enough to let the agent act?
 
-## 0:20-0:40: Product
+## 0:20-0:45 - The Product
 
-Screen: Predicate Review page, then repository README.
+Screen: Predicate README, then Predicate Review.
 
-Narration:
+Say:
 
-“Predicate is an AI admission controller for metadata. It does not make AI
-smarter. It determines when AI is allowed to act by turning DataHub evidence
-into go/no-go decisions.”
+> Predicate is an AI admission controller for DataHub. It turns metadata into a
+> deterministic action check. No metadata proof, no AI action.
 
-Show the embedded DataHub-style panel first. Say:
-
-“In the product experience, users should not read terminal JSON. The compact
-Predicate panel appears beside the DataHub asset. If they need proof, they open
-the full review.”
-
-Command to show:
-
-```bash
-predicate \
-  "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
-  --policy examples/policies/enterprise_ai.yml \
-  --datahub-url "$DATAHUB_GRAPHQL_URL"
-```
-
-## 0:40-1:15: Block a risky action
-
-Screen: terminal result for a risky capability request.
-
-Command to show:
-
-```bash
-predicate \
-  "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
-  --policy examples/policies/enterprise_ai.yml \
-  --datahub-url "$DATAHUB_GRAPHQL_URL" \
-  --request-capability autonomous-agent-action
-```
-
-Narration:
-
-“Here the agent asks for autonomous action. Predicate blocks it. The decision is
-deterministic: the certificate is not just a score, it names the missing or
-stale evidence, the policy requirement, and the capabilities still allowed.”
-
-Action predicate to show:
+Show this idea:
 
 ```json
 {
   "action": "autonomous-agent-action",
-  "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+  "predicate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
   "result": false,
   "failed_terms": ["assertions.present"],
   "decision": "blocked"
 }
 ```
 
-Show:
+## 0:45-1:15 - Live DataHub Decision
 
-- `allowed: false`
-- blocked capability
-- evidence gaps
-- downstream or policy risk
+Screen: terminal.
 
-## 1:15-1:45: Explain the decision
-
-Screen: Predicate Review full section, then explainability output.
-
-Command to show:
+Run:
 
 ```bash
-predicate \
-  "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
+export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
+
+PYTHONPATH=src python3 -m predicate.cli \
+  "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
-  --explain
+  --request-capability autonomous-agent-action
 ```
 
-Narration:
+Say:
 
-“This is the evidence-to-policy-to-decision path. The system checks ownership,
-glossary terms, lineage, assertions, freshness, incidents, usage, and policy
-tags. It then certifies safe capabilities and blocks the rest.”
+> This is reading the local DataHub GraphQL endpoint. Predicate blocks
+> autonomous action on this asset because assertions are missing and the score
+> and confidence are below policy thresholds.
 
-## 1:45-2:15: Repair metadata
+Point to:
 
-Screen: Predicate Review page showing one blocked asset and one allowed asset.
+- `allowed: false`
+- same DataHub URN
+- missing assertions
+- readiness/confidence thresholds
 
-Narration:
+## 1:15-1:45 - Same Policy, Different Asset
 
-“The demo shows the before and after shape: one DataHub asset is blocked because
-assertions are missing, while another asset with the required evidence is
-allowed. Predicate treats this as a metadata problem, not a prompt problem.”
+Screen: terminal.
 
-Evidence to show:
-
-- same DataHub asset URN
-- blocked reason
-- allowed comparison asset
-
-## 2:15-2:40: Reassess automatically
-
-Screen: second CLI run, visual review, and readiness diff.
-
-Command to show:
+Run:
 
 ```bash
-predicate \
+PYTHONPATH=src python3 -m predicate.cli \
   "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
   --request-capability autonomous-agent-action
 ```
 
-Narration:
+Say:
 
-“The scanner recomputes the affected asset and emits a readiness diff. The
-important result is not that every action becomes allowed. The result is that
-the allowed actions change only when the underlying evidence changes.”
+> Predicate is not just a blocker. Under the same policy, this asset is allowed
+> because the required evidence is present. The point is controlled action, not
+> blanket denial.
 
-Show:
+## 1:45-2:15 - Human Review Experience
 
-- before certificate
-- after certificate
-- readiness diff
-- updated context contract
-- write-back receipt or confirmation if enabled
+Screen: Predicate Review page.
 
-## 2:40-3:00: Close with proof
+Say:
 
-Screen: benchmark result, README, DataHub embed prototype, contribution bundle.
+> The terminal output is for automation. The product experience is this review
+> surface: the basic decision appears beside the DataHub asset, and the full
+> review explains the failed terms, remediation plan, capability matrix, trust
+> timeline, and write-back queue.
 
-Command to show:
+Click:
+
+- blocked `fct_users_created`
+- remediation drawer
+- capability matrix
+- trust timeline
+
+Say:
+
+> This is where Predicate becomes operational. It does not say """add metadata."""
+> It says which checks to add, why they matter, and what should unlock after the
+> repair.
+
+## 2:15-2:35 - Stress Case
+
+Screen: Predicate Review finance asset or difficult run docs.
+
+Say:
+
+> For a harder case, Predicate includes a finance-critical asset. It blocks
+> autonomous action because glossary terms are incomplete, column lineage is
+> incomplete, assertions conflict, freshness is stale, and finance policy has
+> stricter thresholds.
+
+Point to:
+
+- `customer_lifetime_value`
+- finance glossary terms
+- column lineage repairs
+- stale freshness
+- stricter score threshold
+
+## 2:35-2:50 - Engineering Proof
+
+Screen: terminal.
+
+Run:
 
 ```bash
+PYTHONPATH=src:. python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 scripts/evaluate_benchmark.py
 ```
 
-Narration:
+Say:
 
-“The SDK is installable, policy-driven, and prepared as a DataHub contribution.
-The curated 30-case conformance suite passes with no unexpected allows or
-blocks. That is engineering validation of the policy behavior, not a production
-accuracy claim. The product path is DataHub asset, embedded Predicate panel,
-full review, certificate, remediation, and optional write-back.”
+> The repository has automated tests and a 30-case curated conformance suite
+> covering ready, missing, stale, incomplete, and contradictory metadata states.
+> This validates policy behavior; it is not a production accuracy claim.
 
-## Backup plan if live validation fails
+## 2:50-3:00 - Close
 
-Say this plainly:
+Screen: README proof links.
 
-“The live DataHub endpoint is unavailable in this recording, so I am switching
-to the bundled DataHub-shaped fixture. This proves the SDK behavior and output
-format, while the live validation checklist records exactly what must be
-captured against a deployment.”
+Say:
 
-Backup commands:
+> Predicate gives AI agents a metadata-backed permission layer. The output is
+> simple: allowed or blocked. The proof is explicit: which predicate terms passed,
+> which failed, who needs to repair them, and when the action can be rerun.
+
+## If Something Breaks
+
+Use this backup line:
+
+> The live DataHub endpoint is unavailable in this recording, so I am switching
+> to the bundled DataHub-shaped fixture. That proves the Predicate engine and
+> output contract; the local DataHub runbook shows the live GraphQL path.
+
+Backup command:
 
 ```bash
-predicate \
+PYTHONPATH=src python3 -m predicate.cli \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-file examples/data/datahub_graph.json \
+  --request-capability autonomous-agent-action \
   --explain
-
-predicate \
-  "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
-  --policy examples/policies/enterprise_ai.yml \
-  --datahub-file examples/data/datahub_graph.json \
-  --request-capability autonomous-agent-action
-
-PYTHONPATH=src python3 scripts/evaluate_benchmark.py
 ```

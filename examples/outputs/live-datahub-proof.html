@@ -910,16 +910,16 @@
         <div class="nav-label">Assets</div>
         <div id="assetList" class="asset-list"></div>
       </div>
-      <div class="sidebar-note">This hosted page is sanitized static proof of the intended embedded experience. The local review server can load decisions from a live DataHub GraphQL run.</div>
+      <div class="sidebar-note">Public mode uses sanitized fixture data. Local mode can call Predicate against a real DataHub GraphQL endpoint and render the same review surface.</div>
     </aside>
     <main>
       <div class="topbar">
         <div>
           <h1>Predicate Review</h1>
-          <p class="subtitle">Sanitized demo of the intended DataHub embedded experience. The real proof path is local DataHub, Predicate CLI/API, allowed or blocked decisions, and the live local review server.</p>
+          <p class="subtitle">A product review surface for DataHub-backed AI action checks. Public mode is sanitized; local mode reads DataHub GraphQL and renders the same allowed or blocked decision path.</p>
         </div>
         <div class="environment">
-          <strong id="environmentTitle">Public demo: static proof</strong>
+          <strong id="environmentTitle">Public static visual demo</strong>
           <span id="environmentProof">Live proof: local DataHub GraphQL</span>
           <span>Review API: scripts/serve_review.py</span>
           <span id="dataMode">Mode: recorded proof data</span>
@@ -927,7 +927,7 @@
       </div>
 
       <section class="scoreboard" aria-label="Proof metrics">
-        <div class="metric"><strong>4</strong><span>local DataHub assets evaluated</span></div>
+        <div class="metric"><strong>5</strong><span>assets shown, including local DataHub proof and finance stress case</span></div>
         <div class="metric"><strong>1</strong><span>finance stress-test asset</span></div>
         <div class="metric"><strong>1</strong><span>allowed autonomous action</span></div>
         <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
@@ -939,7 +939,7 @@
             <div class="platform-icon">Hive</div>
             <div>
               <h2 id="embeddedAssetName"></h2>
-              <div class="datahub-meta">Dataset · PROD · prototype DataHub asset page</div>
+              <div class="datahub-meta">Dataset - PROD - prototype DataHub asset page</div>
             </div>
           </div>
           <div class="tabs">
@@ -972,9 +972,9 @@
             <ol id="miniRepairQueue"></ol>
           </div>
           <div class="panel-actions">
-            <button id="openRemediationDrawer" class="review-link" type="button">Open Remediation Drawer</button>
+            <button id="openRemediationDrawer" class="review-link" type="button">Create Repair Plan</button>
           </div>
-          <p class="review-caption">In the intended embedded flow, the asset page shows the basic decision immediately. Predicate opens when the user needs the repair plan, capability matrix, and audit trail.</p>
+          <p class="review-caption">The intended embedded flow is automatic: DataHub asset page, Predicate reads the URN, Predicate API checks policy, then the side panel shows the decision and repair path.</p>
         </aside>
       </section>
 
@@ -982,7 +982,7 @@
         <div class="workbench-head">
           <div>
             <h2>Action Workbench</h2>
-            <p>Predicate should not stop at “allowed” or “blocked.” This queue turns the decision into assigned repairs and a rerun path.</p>
+            <p>Predicate should not stop at """allowed""" or """blocked.""" This queue turns the decision into assigned repairs and a rerun path.</p>
           </div>
           <span id="workbenchStatus" class="pill blocked">blocked</span>
         </div>
@@ -1090,7 +1090,7 @@
             <section class="feature-card">
               <h3>Remediation Plan</h3>
               <div id="remediationList" class="remediation-list"></div>
-              <p class="quiet-note">Enterprise remediation should be specific: add quality assertions, repair stale freshness, complete column lineage, verify ownership, then rerun Predicate.</p>
+              <p class="quiet-note">The repair plan names concrete metadata changes, expected owner actions, and what should unlock after Predicate reruns.</p>
             </section>
 
             <section class="feature-card">
@@ -1110,7 +1110,7 @@
                   <strong>Before repair</strong>
                   <ul id="beforeDiff"></ul>
                 </div>
-                <div class="diff-arrow">→</div>
+                <div class="diff-arrow">"��</div>
                 <div class="diff-side">
                   <strong>After repair</strong>
                   <ul id="afterDiff"></ul>
@@ -1634,15 +1634,17 @@
     function renderTimeline(run) {
       const steps = run.decision === "allowed"
         ? [
-          ["10:00", "Predicate evaluates DataHub metadata."],
-          ["10:01", "All required evidence is present."],
-          ["10:02", "Certificate allows the selected AI action."]
+          ["10:00", "DataHub metadata change is detected for this asset."],
+          ["10:01", "Predicate checks owner, glossary, lineage, assertions, freshness, incidents, usage, and policy."],
+          ["10:02", "All required predicate terms pass for the selected action."],
+          ["10:03", "Certificate allows the action until the evidence changes."]
         ]
         : [
-          ["10:00", "Predicate evaluates DataHub metadata."],
-          ["10:01", "Failed predicate terms are detected."],
-          ["10:02", "Autonomous action is blocked."],
-          ["Next", "Data team repairs metadata and reruns Predicate."]
+          ["10:00", "DataHub metadata change is detected for this asset."],
+          ["10:01", "Predicate checks the requested AI action against the active policy."],
+          ["10:02", `Trust is revoked because ${run.failed.slice(0, 2).join(" and ")} failed.`],
+          ["Next", "Data owner completes the repair plan in DataHub."],
+          ["After", "Predicate reruns on the same URN and updates the capability diff."]
         ];
       document.getElementById("trustTimeline").innerHTML = steps.map(([time, text]) => `
         <div class="timeline-step"><time>${escapeHtml(time)}</time><div>${escapeHtml(text)}</div></div>
@@ -1715,7 +1717,7 @@
         if (Array.isArray(payload.runs) && payload.runs.length) {
           runs = payload.runs;
           selected = 0;
-          document.getElementById("environmentTitle").textContent = apiBase ? "Public demo: live API" : "Local demo: live API";
+          document.getElementById("environmentTitle").textContent = apiBase ? "Public API fixture demo" : "Local live API demo";
           document.getElementById("environmentProof").textContent = apiBase ? "API proof: sanitized fixture backend" : "Live proof: local DataHub GraphQL";
           document.getElementById("dataMode").textContent = apiBase ? "Mode: public API fixture" : "Mode: live local API";
           render();

@@ -1,9 +1,9 @@
 {
   "agreement_rate": 1.0,
   "claim_boundary": "Independent label agreement only applies to the supplied reviewer-labeled cases. It is not a production accuracy claim.",
-  "completed_labels": 8,
+  "completed_labels": 10,
   "disagreement_urns": [],
   "disagreements": 0,
   "label_file": "examples/benchmark/external-reviewer-labels.csv",
-  "matches": 8
+  "matches": 10
 }

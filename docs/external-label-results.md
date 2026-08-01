@@ -1,14 +1,14 @@
 # External Label Results
 
-Two reviewers labeled 8 Predicate decisions across the local DataHub demo
+Two reviewers labeled 10 Predicate decisions across the local DataHub demo
 assets.
 
 ## Result
 
 ```json
 {
-  "completed_labels": 8,
-  "matches": 8,
+  "completed_labels": 10,
+  "matches": 10,
   "disagreements": 0,
   "agreement_rate": 1.0
 }
@@ -18,7 +18,7 @@ assets.
 
 Use:
 
-> Two reviewers labeled 8 demo decisions. Predicate matched all 8 labels on
+> Two reviewers labeled 10 demo decisions. Predicate matched all 10 labels on
 > this small review set. This is early external agreement, not a production
 > accuracy claim.
 

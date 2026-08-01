@@ -7,3 +7,5 @@ asset_urn,platform,capability,predicate_decision,human_decision,human_agrees,lab
 "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,autonomous-agent-action,blocked,blocked,yes,person_2,blockd cause risky to delete data.
 "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,autonomous-agent-action,allowed,allowed,yes,person_2,allowed cause theres enough info provided.
 "urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,answer-business-questions,allowed,allowed,yes,person_2,allowed as long as ai only explains and doesnt provide recommn.
+"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,autonomous-agent-action,blocked,blocked,yes,person_1,since money is involved it needs to checked and hence be blocked
+"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,generate-executive-metrics,blocked,blocked,yes,person_2,blocked cause it shows up on the metric and is risky

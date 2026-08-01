@@ -63,3 +63,8 @@ predicate \
   --datahub-file examples/data/difficult_datahub_graph.json \
   --request-capability autonomous-agent-action
 ```
+
+When you have access to a real private DataHub, replace the fixture with the
+read-only validator in [Live DataHub Validation](live-datahub-validation.md).
+That is the strongest test available without exposing an organization’s
+metadata or credentials in this repository.

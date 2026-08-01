@@ -13,6 +13,21 @@ Real DataHub entity -> metadata retrieval -> multi-hop traversal
 
 ## Read-only certification
 
+For a repeatable check across multiple private assets, use the included
+read-only validator. It never sends a mutation and never prints the token:
+
+```bash
+export DATAHUB_GRAPHQL_URL="https://datahub.example/api/graphql"
+export DATAHUB_TOKEN="<read-only-token>"
+
+PYTHONPATH=src python3 scripts/validate_private_datahub.py \
+  --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)" \
+  --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.revenue,PROD)"
+```
+
+The output is the private-deployment proof artifact: the exact URN, decision,
+readiness, confidence, evidence count, and reason for each asset.
+
 ```bash
 export DATAHUB_GRAPHQL_URL=https://datahub.example/api/graphql
 export DATAHUB_TOKEN="<read-only-token>"

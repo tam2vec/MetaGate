@@ -287,7 +287,7 @@
     status.textContent = message;
   }
 
-  async function evaluateCurrentAsset() {
+  async function evaluateCurrentAsset(force = false) {
     const urn = extractUrn();
     if (!urn) {
       document.getElementById(PANEL_ID)?.remove();
@@ -298,13 +298,15 @@
       return;
     }
     let panel = document.getElementById(PANEL_ID);
-    if (panel && panel.dataset.urn === urn) {
+    if (panel && panel.dataset.urn === urn && !force) {
       return;
     }
-    if (panel) {
-      panel.remove();
+    if (!panel || panel.dataset.urn !== urn) {
+      if (panel) {
+        panel.remove();
+      }
+      panel = buildPanel(urn);
     }
-    panel = buildPanel(urn);
     try {
       const url = `${API_BASE}/api/evaluate?urn=${encodeURIComponent(urn)}&capability=${encodeURIComponent(CAPABILITY)}`;
       const response = await fetch(url, { cache: "no-store" });
@@ -329,6 +331,13 @@
 
   window.addEventListener("popstate", handleUrlChange);
   window.addEventListener("hashchange", handleUrlChange);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      window.__predicateDismissedUrl = null;
+      return;
+    }
+    evaluateCurrentAsset(true);
+  });
   for (const method of ["pushState", "replaceState"]) {
     const original = history[method];
     history[method] = function (...args) {
@@ -337,4 +346,5 @@
       return result;
     };
   }
+  setInterval(() => evaluateCurrentAsset(true), 5000);
 })();

@@ -38,7 +38,7 @@ class SeededDataHub:
 
     def payload(self, urn):
         entity = dict(self.entities[urn])
-        entity["assertions"] = {"assertions": [{"urn": "urn:li:assertion:freshness"}]} if self.assertion_passing else {"assertions": []}
+        entity["assertions"] = {"assertions": [{"urn": "urn:li:assertion:freshness", "result": {"status": "SUCCESS"}}]} if self.assertion_passing else {"assertions": []}
         return {"data": {"entity": entity}}
 
 

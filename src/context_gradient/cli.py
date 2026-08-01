@@ -10,6 +10,7 @@ from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.scanner import BackgroundScanner
 from context_gradient.sdk.cache import JsonCache
 from context_gradient.sdk.admission import admit_capability
+from context_gradient.sdk.assessment import required_evidence_for_action
 from context_gradient.sdk.reports import explain_certificate
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.history import ReadinessHistory
@@ -31,7 +32,13 @@ def _action_predicate(certificate: dict, policy, capability: str, allowed: bool)
         (item for item in policy.capability_policies if item.name == capability),
         None,
     )
-    expression = _predicate_expression(capability_policy.required_evidence if capability_policy else [])
+    profile_required = certificate.get("metadata", {}).get("assessment", {}).get("required_evidence", [])
+    required = required_evidence_for_action(
+        capability_policy.required_evidence if capability_policy else [],
+        profile_required,
+        capability,
+    )
+    expression = _predicate_expression(required)
     failed_terms = []
     for gap in certificate.get("gaps", []):
         if capability in gap.get("blocks", []):

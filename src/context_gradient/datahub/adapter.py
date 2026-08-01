@@ -91,12 +91,13 @@ class DataHubEvidenceExtractor:
         ]
 
     def _evidence(self, kind: EvidenceKind, value: Any) -> EvidenceItem:
-        details = value if isinstance(value, dict) else {"value": value}
+        details = dict(value) if isinstance(value, dict) else {"value": value}
         observed_at = details.get("observed_at")
         if isinstance(observed_at, str):
             observed_time = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
         else:
             observed_time = datetime.now(timezone.utc)
+            details["_observed_at_inferred"] = True
         explicit_present = details.get("present")
         def has_content(candidate: Any) -> bool:
             if candidate is None:
@@ -307,6 +308,11 @@ class GraphQLDataHubClient:
         incident_data = raw.get("incidents")
         incident_items = (incident_data or {}).get("incidents", [])
         fine_grained_lineage = raw.get("fineGrainedLineages") or {}
+        assertion_items = (raw.get("assertions") or {}).get("assertions", [])
+        assertion_has_results = any(
+            isinstance(item, dict) and any(key in item for key in ("result", "latestResult", "status", "runEvents"))
+            for item in assertion_items
+        )
         return {
             "urn": raw.get("urn", urn), "type": raw.get("type", "dataset"),
             "description": {"text": (raw.get("editableProperties") or {}).get("description", "")},
@@ -314,11 +320,17 @@ class GraphQLDataHubClient:
             "glossary": {"terms": [item for item in terms if item]},
             "domain": {"urn": domains} if domains else {},
             "tags": {"values": [item for item in tags if item]},
-            "lineage": {"upstreams": [item for item in upstreams if item]},
+            "lineage": {
+                "upstreams": [item for item in upstreams if item],
+                "downstreams": [item for item in downstreams if item],
+            },
             "column_lineage": {"mappings": fine_grained_lineage.get("fineGrainedLineages", [])},
             "assertions": {
-                "count": len((raw.get("assertions") or {}).get("assertions", [])),
-                "present": bool((raw.get("assertions") or {}).get("assertions", [])),
+                "count": len(assertion_items),
+                "present": bool(assertion_items),
+                # Assertion URNs prove that checks exist, but not that their
+                # latest result is readable. Keep that distinction explicit.
+                "incomplete": bool(assertion_items) and not assertion_has_results,
             },
             # An absent incidents aspect means DataHub gave us no incident
             # evidence. It must not be silently upgraded to "zero incidents".

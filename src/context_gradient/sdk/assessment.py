@@ -129,9 +129,9 @@ def evidence_facts(bundle: EvidenceBundle) -> Dict[str, Any]:
         "glossary_terms": _fact_value(glossary, ("terms", "term_urns"), []),
         "lineage": {
             "upstream_count": len(_fact_value(lineage, ("upstreams",), []) or []),
-            "downstream_count": len(bundle.entity.downstreams),
+            "downstream_count": len(_fact_value(lineage, ("downstreams",), []) or bundle.entity.downstreams),
             "upstreams": _fact_value(lineage, ("upstreams",), []),
-            "downstreams": bundle.entity.downstreams,
+            "downstreams": _fact_value(lineage, ("downstreams",), []) or bundle.entity.downstreams,
         },
         "column_lineage": {
             "mapping_count": _fact_value(columns, ("mapped_columns", "mapping_count"), len(_fact_value(columns, ("mappings",), []) or [])),
@@ -179,3 +179,11 @@ def assessment(bundle: EvidenceBundle) -> Dict[str, Any]:
         "guidance": profile["guidance"],
         "facts": evidence_facts(bundle),
     }
+
+
+def required_evidence_for_action(policy_required: Iterable[EvidenceKind], profile_required: Iterable[str], capability: str) -> list[EvidenceKind]:
+    """Apply stricter dataset-type checks to high-impact actions."""
+    required = set(policy_required)
+    if capability in {"generate-executive-metrics", "autonomous-agent-action"}:
+        required.update(EvidenceKind(kind) for kind in profile_required)
+    return sorted(required, key=lambda item: item.value)

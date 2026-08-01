@@ -65,6 +65,29 @@ class QualityTest(unittest.TestCase):
             item = next(item for item in bundle.entity.evidence if item.kind == kind)
             self.assertFalse(item.present, kind.value)
 
+    def test_downstream_only_lineage_counts_as_lineage(self):
+        extractor = DataHubEvidenceExtractor(None)
+        entity = extractor._node(GraphQLDataHubClient("http://invalid")._normalize({
+            "urn": "urn:li:dataset:test",
+            "upstreamLineage": {"upstreams": []},
+            "downstreamLineage": {"downstreams": [{"entity": {"urn": "urn:li:dataset:downstream"}}]},
+            "assertions": {"assertions": []},
+            "incidents": {"incidents": []},
+        }, "urn:li:dataset:test"))
+        lineage = next(item for item in entity.evidence if item.kind == EvidenceKind.LINEAGE)
+        self.assertTrue(lineage.present)
+
+    def test_assertion_urn_without_latest_result_is_incomplete(self):
+        extractor = DataHubEvidenceExtractor(None)
+        entity = extractor._node(GraphQLDataHubClient("http://invalid")._normalize({
+            "urn": "urn:li:dataset:test",
+            "assertions": {"assertions": [{"urn": "urn:li:assertion:test"}]},
+            "incidents": {"incidents": []},
+        }, "urn:li:dataset:test"))
+        assertions = next(item for item in entity.evidence if item.kind == EvidenceKind.ASSERTIONS)
+        self.assertTrue(assertions.present)
+        self.assertFalse(assertions.complete)
+
     def test_writeback_returns_verified_receipt_and_scan_time(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

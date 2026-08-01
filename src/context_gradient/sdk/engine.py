@@ -27,8 +27,10 @@ class ReadinessEngine:
         propagated_score = self._propagate(score, bundle)
         confidence = self._confidence(evidence, bundle)
         gaps = self._gaps(evidence)
-        capabilities = self._capabilities(propagated_score, confidence, evidence)
-        gaps = self._attach_gap_blocks(gaps, capabilities)
+        profile = assessment(bundle)
+        profile_required = profile["required_evidence"]
+        capabilities = self._capabilities(propagated_score, confidence, evidence, profile_required)
+        gaps = self._attach_gap_blocks(gaps, capabilities, profile_required)
         allowed = [cap.capability for cap in capabilities if cap.certified]
         blocked = [cap.capability for cap in capabilities if not cap.certified]
         recommendations = self._recommendations(gaps, capabilities)
@@ -60,9 +62,9 @@ class ReadinessEngine:
                 "policy": self.policy.name,
                 "evidence_signals": len(evidence),
                 "connected_assets": len(bundle.neighbors) + 1,
-                "graph_coverage": round(min(100.0, confidence), 2),
+                "graph_coverage": score_trace["graph_coverage"],
                 "score_trace": score_trace,
-                "assessment": assessment(bundle),
+                "assessment": profile,
             },
         )
 
@@ -291,7 +293,7 @@ class ReadinessEngine:
         return claims
 
     def _attach_gap_blocks(
-        self, gaps: List[ReadinessGap], capabilities: List[CapabilityCertification]
+        self, gaps: List[ReadinessGap], capabilities: List[CapabilityCertification], profile_required: List[str]
     ) -> List[ReadinessGap]:
         blocked = {cap.capability for cap in capabilities if not cap.certified}
         return [
@@ -306,14 +308,18 @@ class ReadinessEngine:
                     cap.name
                     for cap in self.policy.capability_policies
                     if not next(item for item in capabilities if item.capability == cap.name).certified
-                    and gap.evidence_kind in cap.required_evidence
+                    and (
+                        gap.evidence_kind in cap.required_evidence
+                        or (cap.name in {"generate-executive-metrics", "autonomous-agent-action"}
+                            and gap.evidence_kind.value in profile_required)
+                    )
                 ) or sorted(blocked),
             )
             for gap in gaps
         ]
 
     def _capabilities(
-        self, score: float, confidence: float, evidence: List[EvidenceItem]
+        self, score: float, confidence: float, evidence: List[EvidenceItem], profile_required: List[str]
     ) -> List[CapabilityCertification]:
         present: Set[EvidenceKind] = {
             item.kind
@@ -322,7 +328,10 @@ class ReadinessEngine:
         }
         certifications = []
         for policy in self.policy.capability_policies:
-            missing = [kind.value for kind in policy.required_evidence if kind not in present]
+            required = set(policy.required_evidence)
+            if policy.name in {"generate-executive-metrics", "autonomous-agent-action"}:
+                required.update(EvidenceKind(kind) for kind in profile_required)
+            missing = [kind.value for kind in sorted(required, key=lambda item: item.value) if kind not in present]
             certified = (
                 score >= policy.minimum_score
                 and confidence >= policy.minimum_confidence

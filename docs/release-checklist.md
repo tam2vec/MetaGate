@@ -2,12 +2,13 @@
 
 ## Pre-release
 
-- [ ] Confirm `pyproject.toml` version is `0.1.0`.
-- [ ] Confirm `CHANGELOG.md` has a `0.1.0` section.
-- [ ] Run `pytest`.
-- [ ] Run `PYTHONPATH=src python3 scripts/evaluate_benchmark.py`.
+- [x] Confirm `pyproject.toml` version is `0.1.0`.
+- [x] Confirm `CHANGELOG.md` has a `0.1.0` section.
+- [x] Run `PYTHONPATH=src:. python3 -m unittest discover -s tests -v`.
+- [x] Run `PYTHONPATH=src python3 scripts/evaluate_benchmark.py`.
+- [x] Confirm no credentials or customer metadata are present.
 - [ ] Review README links and images on GitHub.
-- [ ] Confirm no credentials or customer metadata are present.
+- [ ] Confirm GitHub Actions is green.
 - [ ] Tag the release candidate as `v0.1.0`.
 
 ## Release notes draft
@@ -29,11 +30,17 @@ Highlights:
 - Includes configurable YAML policy profiles.
 - Includes an installable CLI and Python SDK.
 - Includes a DataHub Skill/plugin reference in `examples/datahub-ai-readiness-skill`.
+- Includes an automatic browser extension prototype for local DataHub asset
+  pages.
+- Includes a live local review API and Docker/Render path for a public
+  fixture-backed API demo.
+- Includes issue templates and good-first-issue guidance for contributors.
 - Includes a 30-case curated benchmark across ready, missing, stale,
   incomplete, and contradictory metadata states.
 
 Validation:
 
+- Automated tests: 18/18 passing.
 - Curated conformance checks: 30/30 passing.
 - Unexpected allows: 0 in the curated checks.
 - Unexpected blocks: 0 in the curated checks.

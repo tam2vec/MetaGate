@@ -142,6 +142,7 @@ Judges may review the repository without running it. The fastest path is:
 - [Devpost submission draft](docs/devpost-submission-draft.md)
 - [Judge proof](docs/judge-proof.md)
 - [3-minute demo script](docs/demo-script.md)
+- [Good first issues](GOOD_FIRST_ISSUES.md)
 - [Submission checklist](docs/submission-checklist.md)
 - [Screenshots checklist](docs/screenshots-checklist.md)
 - [Release checklist and v0.1.0 notes](docs/release-checklist.md)

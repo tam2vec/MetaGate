@@ -771,6 +771,9 @@
     .fact span { display: block; margin-top: 4px; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
     .assessment-panel details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
     .assessment-panel summary { cursor: pointer; color: var(--blue); font-weight: 800; font-size: 13px; }
+    .advanced-detail { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
+    .advanced-detail summary { cursor: pointer; color: var(--blue); font-size: 13px; font-weight: 800; }
+    .proof-details { margin-bottom: 2px; }
     .profile-check { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #edf1f7; font-size: 12px; }
     .profile-check:last-child { border-bottom: 0; }
     .profile-check strong { min-width: 94px; }
@@ -956,6 +959,24 @@
       gap: 16px;
       margin-top: 16px;
     }
+    .advanced-feature-block {
+      margin-top: 16px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .advanced-feature-block > summary {
+      cursor: pointer;
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 800;
+      list-style-position: inside;
+    }
+    .advanced-feature-block[open] > summary {
+      margin-bottom: 12px;
+    }
+    .compact-remediation {
+      margin-top: 16px;
+    }
     .feature-card {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -1016,6 +1037,17 @@
     .remediation-item strong {
       display: block;
       margin-bottom: 4px;
+    }
+    .repair-number {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: #fff1cc;
+      color: var(--yellow);
+      font-size: 12px;
     }
     .remediation-item span {
       color: var(--muted);
@@ -1151,13 +1183,13 @@
         <div class="nav-label">Assets</div>
         <div id="assetList" class="asset-list"></div>
       </div>
-      <div class="sidebar-note">Public mode uses sanitized fixture data. Local mode can call Predicate against a real DataHub GraphQL endpoint and render the same review surface.</div>
+      <div class="sidebar-note">Local mode reads DataHub. Public mode uses safe demo data.</div>
     </aside>
     <main>
       <div class="topbar">
         <div>
           <h1>Predicate Review</h1>
-          <p class="subtitle">A clear go/no-go check before AI uses a dataset. Public mode is a demo; local mode reads DataHub.</p>
+          <p class="subtitle">A quick go/no-go check before AI uses a dataset.</p>
           <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
           <div class="asset-lookup">
             <label for="urnInput">Check another DataHub asset</label>
@@ -1169,11 +1201,11 @@
         </div>
         <div class="environment">
           <strong id="environmentTitle">Public static visual demo</strong>
-          <span id="environmentProof">Live proof: local DataHub GraphQL</span>
-          <span>Review API: predicate-review</span>
+          <span id="environmentProof">Source: local DataHub</span>
+          <span>Review: Predicate API</span>
           <span id="dataMode">Mode: recorded proof data</span>
-          <span id="dataUpdate">Updates when this page is connected to a Predicate API.</span>
-          <span id="actionResult" class="action-log">Ready for an AI action request.</span>
+          <span id="dataUpdate">Waiting for a live check.</span>
+          <span id="actionResult" class="action-log">Ready.</span>
         </div>
       </div>
 
@@ -1233,7 +1265,7 @@
         <div class="workbench-head">
           <div>
             <h2>Action Workbench</h2>
-            <p>This turns the decision into a clear next step: act, repair the metadata, or ask for review.</p>
+            <p>See the risk, owner, fix, and rerun step.</p>
           </div>
           <span id="workbenchStatus" class="pill blocked">blocked</span>
         </div>
@@ -1308,7 +1340,6 @@
           <div class="insight-grid">
             <div class="insight"><strong>Why this matters</strong><p id="whyText"></p></div>
             <div class="insight"><strong>Next human action</strong><p id="nextText"></p></div>
-            <div class="insight"><strong>Where it shows up</strong><p>DataHub panel, approval workflow, CLI, CI, or write-back certificate.</p></div>
           </div>
 
           <div id="evidence-section" class="two-col">
@@ -1347,8 +1378,10 @@
 
           <div class="two-col">
             <div>
-              <h3 class="section-title">Rule being checked</h3>
-              <pre id="predicateBlock" class="predicate"></pre>
+              <details class="advanced-detail">
+                <summary>Show decision rule</summary>
+                <pre id="predicateBlock" class="predicate"></pre>
+              </details>
             </div>
             <div>
               <h3 class="section-title">Readable decision</h3>
@@ -1359,19 +1392,24 @@
             </div>
           </div>
 
-          <div class="proof-strip">
-            <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>Predicate gathers metadata like ownership, lineage, glossary terms, incidents, freshness, usage, and assertions.</p></div>
-            <div class="proof-step"><span>2</span><strong>Evaluate policy</strong><p>The requested action is checked against explicit metadata-backed terms.</p></div>
-            <div class="proof-step"><span>3</span><strong>Return decision</strong><p>The result is visible here for humans and available as JSON for agents or CI.</p></div>
-          </div>
+          <details class="advanced-detail proof-details">
+            <summary>How Predicate reaches this decision</summary>
+            <div class="proof-strip">
+              <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>Predicate gathers ownership, lineage, definitions, quality, freshness, usage, and assertion evidence.</p></div>
+              <div class="proof-step"><span>2</span><strong>Apply policy</strong><p>The requested action is checked against explicit metadata-backed terms.</p></div>
+              <div class="proof-step"><span>3</span><strong>Return decision</strong><p>The result is available here for humans and as JSON for agents or CI.</p></div>
+            </div>
+          </details>
 
-          <div id="remediation-plan" class="product-grid">
-            <section class="feature-card">
-              <h3>Remediation Plan</h3>
+          <section id="remediation-plan" class="feature-card compact-remediation">
+              <h3>What to fix next</h3>
               <div id="remediationList" class="remediation-list"></div>
-              <p class="quiet-note">The repair plan names concrete metadata changes, expected owner actions, and what should unlock after Predicate reruns.</p>
-            </section>
+              <p class="quiet-note">Fix these in DataHub. Then rerun the check.</p>
+          </section>
 
+          <details class="advanced-feature-block">
+            <summary>More proof and audit details</summary>
+            <div class="product-grid">
             <section class="feature-card">
               <h3>Capability Matrix</h3>
               <table class="matrix">
@@ -1423,7 +1461,8 @@
                 <div class="remediation-item"><strong>Mutation gate</strong><span>Live write-back requires deployment-approved GraphQL mutation documents.</span></div>
               </div>
             </section>
-          </div>
+            </div>
+          </details>
         </section>
       </div>
     </main>
@@ -1450,7 +1489,7 @@
   <script>
     const PUBLIC_API_BASE = "";
 
-    let runs = [
+    const recordedRuns = [
       {
         asset: "SampleHiveDataset",
         urn: "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
@@ -1582,6 +1621,30 @@
         }
       }
     ];
+
+    let runs = recordedRuns;
+    const initialApiParams = new URLSearchParams(window.location.search);
+    const initialApiBase = (initialApiParams.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
+    const liveApiExpected = Boolean(initialApiBase || window.location.protocol !== "file:");
+    if (liveApiExpected) {
+      runs = recordedRuns.map((run) => ({
+        ...run,
+        allowed: false,
+        decision: "checking",
+        readiness: null,
+        confidence: null,
+        reason: "Checking live DataHub evidence...",
+        evidence: [],
+        failed: [],
+        predicate: {
+          action: run.capability,
+          predicate: "Live evaluation in progress.",
+          result: false,
+          failed_terms: [],
+          decision: "checking"
+        }
+      }));
+    }
 
     const assetList = document.getElementById("assetList");
     const assetSelect = document.getElementById("assetSelect");
@@ -2004,7 +2067,15 @@
         "confidence >= 93.0": ["Raise confidence", "Resolve stale or contradictory evidence before trusting the metadata."]
       };
       const map = assetMaps[run.asset] || fallback;
-      return run.failed.map((term) => map[term] || fallback[term] || [term, "Repair this failed predicate term and rerun Predicate."]);
+      const evidenceFailures = run.failed.filter((term) => !term.startsWith("readiness_score") && !term.startsWith("confidence"));
+      const repairs = evidenceFailures.map((term) => map[term] || fallback[term] || [term, "Repair this evidence in DataHub, then rerun Predicate."]);
+      if (!repairs.length && run.decision !== "allowed") {
+        repairs.push(["Review the blocked action", "The metadata is not strong enough for this action under the active policy. Ask the data owner to verify the evidence, then rerun Predicate."]);
+      }
+      if (repairs.length && run.decision !== "allowed") {
+        repairs.push(["Rerun this exact check", "After the DataHub changes are visible, rerun the same asset and action. Predicate will recalculate the score and show what changed."]);
+      }
+      return repairs;
     }
 
     function primaryRepair(run) {
@@ -2059,7 +2130,8 @@
 
     function renderRemediation(run) {
       document.getElementById("remediationList").innerHTML = remediationFor(run)
-        .map(([title, body]) => `<div class="remediation-item"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`)
+        .slice(0, 4)
+        .map(([title, body], index) => `<div class="remediation-item"><strong><span class="repair-number">${index + 1}</span>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`)
         .join("");
     }
 
@@ -2241,7 +2313,7 @@
         decisionHero.classList.remove("updated");
         void decisionHero.offsetWidth;
         decisionHero.classList.add("updated");
-        document.getElementById("dataUpdate").textContent = `Capability check complete - Last checked: ${new Date().toLocaleTimeString()}`;
+        document.getElementById("dataUpdate").textContent = `Checked at ${new Date().toLocaleTimeString()}`;
         actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
         requestAction.textContent = `Checked: ${runs[selected].decision.toUpperCase()}`;
       } catch (error) {
@@ -2285,7 +2357,7 @@
       }
     }
 
-    async function loadLiveRuns() {
+    async function loadLiveRuns(forceRefresh = false) {
       refreshData.disabled = true;
       refreshData.textContent = "Checking DataHub...";
       const params = new URLSearchParams(window.location.search);
@@ -2302,7 +2374,7 @@
       try {
         const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
         const status = statusResponse.ok ? await statusResponse.json() : null;
-        const response = await fetch(refreshEndpoint, { cache: "no-store" });
+        const response = await fetch(forceRefresh ? refreshEndpoint : endpoint, { cache: "no-store" });
         if (!response.ok) {
           const detail = await response.text().catch(() => "");
           throw new Error(detail || `Predicate returned HTTP ${response.status}`);
@@ -2316,20 +2388,27 @@
           selected = 0;
           const liveMode = status && status.mode === "live-datahub-api";
           document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
-          document.getElementById("environmentProof").textContent = liveMode ? "Proof: Predicate reads DataHub GraphQL" : "Proof: sanitized fixture backend";
+          document.getElementById("environmentProof").textContent = liveMode ? "Source: live DataHub" : "Source: demo fixture";
           const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
           document.getElementById("dataMode").textContent = `${liveMode ? "Mode: live DataHub API" : "Mode: public API fixture"} - Write-back: ${writebackMode}`;
           document.getElementById("dataUpdate").textContent = liveMode
-            ? "Live: refresh this page after a new DataHub evaluation."
-            : "Fixture: this page updates only when the API fixture changes.";
+            ? "Live DataHub. Refresh after changes."
+            : "Demo data. Changes only when the fixture changes.";
           render();
           const errors = Array.isArray(payload.errors) ? payload.errors : [];
           document.getElementById("dataUpdate").textContent = errors.length
-            ? `${errors.length} asset check${errors.length === 1 ? "" : "s"} failed - see the DataHub status. Last checked: ${new Date().toLocaleTimeString()}`
-            : `${liveMode ? "Live DataHub check complete" : "Fixture check complete"} - Last checked: ${new Date().toLocaleTimeString()}`;
-          document.getElementById("actionResult").textContent = "Ready. Choose an action and request a fresh decision.";
+            ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.`
+            : `${liveMode ? "Live check complete" : "Demo check complete"} at ${new Date().toLocaleTimeString()}`;
+          document.getElementById("actionResult").textContent = "Ready. Choose an action.";
+          if (!forceRefresh && liveMode) {
+            document.getElementById("dataUpdate").textContent = "Live result loaded. Updating in background...";
+            window.setTimeout(() => loadLiveRuns(true), 0);
+          }
         }
       } catch (error) {
+        runs = recordedRuns;
+        selected = 0;
+        render();
         document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
         document.getElementById("dataUpdate").textContent = friendlyApiError(error);
         document.getElementById("actionResult").textContent = friendlyApiError(error);
@@ -2345,14 +2424,14 @@
       const assetName = runs[selected] ? runs[selected].asset : "the selected asset";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       document.getElementById("dataUpdate").textContent = `Asset changed to ${assetName}.`;
-      document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
+      document.getElementById("actionResult").textContent = `Ready to check ${actionName} on ${assetName}.`;
     });
       capabilitySelect.addEventListener("change", () => {
       requestAction.textContent = "Check selected action";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       const assetName = runs[selected] ? runs[selected].asset : "this asset";
       document.getElementById("dataUpdate").textContent = `Action changed for ${assetName}.`;
-      document.getElementById("actionResult").textContent = `Now checking: ${actionName} on ${assetName}. Click Request AI action to evaluate it.`;
+      document.getElementById("actionResult").textContent = `Ready to check ${actionName} on ${assetName}.`;
     });
     requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
     evaluateAsset.addEventListener("click", evaluateNewAsset);
@@ -2385,7 +2464,7 @@
         remediationDrawer.classList.remove("open");
       }
     });
-    refreshData.addEventListener("click", loadLiveRuns);
+    refreshData.addEventListener("click", () => loadLiveRuns(true));
     render();
     loadLiveRuns();
   </script>

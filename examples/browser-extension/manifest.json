@@ -3,7 +3,11 @@
   "name": "Predicate for DataHub",
   "version": "0.1.0",
   "description": "Automatically shows Predicate allow/block decisions on local DataHub asset pages.",
-  "permissions": [],
+  "permissions": ["storage"],
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Predicate settings"
+  },
   "host_permissions": [
     "http://localhost:9002/*",
     "http://127.0.0.1:9002/*",

@@ -11,6 +11,22 @@ Real DataHub entity -> metadata retrieval -> multi-hop traversal
 -> capability change -> DataHub write-back
 ```
 
+Predicate's live evidence boundary is explicit:
+
+| Evidence | Live source | If the deployment does not expose it |
+| --- | --- | --- |
+| Assertions | Dataset assertions plus `runEvents` and latest result | `unavailable`, never an automatic pass |
+| Freshness | Freshness assertion run timestamp/result | `unavailable` unless a tested custom query supplies it |
+| Usage | Dataset usage buckets | `unavailable`, never inferred from page views |
+| Column lineage | `fineGrainedLineages` | `unavailable`, never inferred from table lineage |
+| Incidents | Dataset incidents filtered to `ACTIVE`, including status | `unavailable`, never treated as zero |
+
+The default GraphQL request is deliberately version-sensitive. If one field is
+not supported, the adapter falls back to the core asset read and preserves the
+failure reason in the evidence item. This makes a low-confidence result honest:
+it means “the deployment did not let us observe enough,” not “the asset has no
+metadata.”
+
 ## Read-only certification
 
 For a repeatable check across multiple private assets, use the included
@@ -24,6 +40,18 @@ PYTHONPATH=src python3 scripts/validate_private_datahub.py \
   --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)" \
   --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.revenue,PROD)"
 ```
+
+For a strict deployment check, fail when a required DataHub surface is not
+exposed instead of treating the run as complete:
+
+```bash
+PYTHONPATH=src python3 scripts/validate_private_datahub.py \
+  --fail-on-unavailable \
+  --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)"
+```
+
+The report includes the exact available and unavailable evidence plus the
+score trace. This uses the same adapter as the CLI and Review API.
 
 The output is the private-deployment proof artifact: the exact URN, decision,
 readiness, confidence, evidence count, and reason for each asset.
@@ -41,6 +69,57 @@ predicate \
 
 If field names differ in the deployed DataHub version, provide a tested query
 through `DATAHUB_ENTITY_QUERY` or the `GraphQLDataHubClient(query=...)` API.
+
+The schema contract test can be run without a live server, and the live check
+is opt-in locally but required in CI:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -q
+export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
+export PREDICATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
+PYTHONPATH=src python3 -m unittest tests.test_datahub_schema -v
+```
+
+The GitHub Actions job named `live DataHub schema contract` starts a clean
+DataHub quickstart, ingests its sample metadata, and runs the same test against
+`http://localhost:8080/api/graphql`. Mark that job as a required status check
+in the repository branch-protection settings before calling the main branch
+protected.
+
+## Independent labels
+
+`examples/benchmark/independent-label-template.csv` now contains 30 blank
+review templates
+covering allowed, blocked, and borderline judgments. The blank human fields
+are intentional: Predicate must not invent reviewer labels. A reviewer fills
+`human_label` with `allowed`, `blocked`, or `borderline`, adds their role and
+plain-language reason, then runs:
+
+```bash
+PYTHONPATH=src python3 scripts/evaluate_independent_labels.py \
+  --labels examples/benchmark/independent-label-template.csv \
+  --require-minimum
+```
+
+`borderline` is counted as a safety block. The report exposes the shortfall
+until all 30 cases are actually reviewed; it is not presented as an accuracy
+claim before that happens.
+
+## Persistent review history and local overrides
+
+Predicate Review stores decisions, review notes, and override records in
+`.context-gradient/review.sqlite3`. Restarting the service does not erase the
+history. Inspect it through:
+
+```text
+/api/history?urn=<url-encoded-urn>&capability=autonomous-agent-action
+/api/reviews?urn=<url-encoded-urn>&capability=autonomous-agent-action
+/api/overrides?urn=<url-encoded-urn>&capability=autonomous-agent-action
+```
+
+Only `steward` and `admin` roles may submit an override, and every override
+needs an actor and a reason. The local role header is a demo enforcement layer;
+production deployments should map it to DataHub authentication and policy.
 
 ## Write-back validation
 

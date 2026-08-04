@@ -8,4 +8,6 @@ services:
       - key: PREDICATE_DEMO_MODE
         value: fixture
       - key: DATAHUB_GRAPHQL_URL
-        value: ""
+        sync: false
+      - key: DATAHUB_TOKEN
+        sync: false

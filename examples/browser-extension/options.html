@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Predicate settings</title>
+  <style>
+    body { font: 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; margin: 32px; max-width: 620px; }
+    label { display: block; font-weight: 700; margin: 20px 0 8px; }
+    input { width: 100%; box-sizing: border-box; padding: 11px; border: 1px solid #cfd8e8; border-radius: 8px; font: inherit; }
+    button { margin-top: 22px; padding: 11px 16px; border: 0; border-radius: 8px; background: #315fd8; color: #fff; font-weight: 800; cursor: pointer; }
+    #status { margin-left: 12px; color: #13824c; }
+    p { color: #617086; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Predicate for DataHub</h1>
+  <p>Choose the private Predicate review API used by the DataHub panel. The default is the local demo server.</p>
+  <label for="apiBase">Predicate API URL</label>
+  <input id="apiBase" type="url" placeholder="http://127.0.0.1:8765">
+  <button id="save" type="button">Save settings</button><span id="status" role="status"></span>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,17 +1,19 @@
-# Public API Fixture Demo
+# Public API Demo
 
-This creates a public demo where the hosted page calls a live Predicate API.
-For safety, the API uses sanitized fixture data instead of private DataHub.
+The hosted page calls the Predicate API by default. The API has two explicit
+modes: `fixture` for a safe public fallback, and `live` for a real DataHub
+deployment. It never presents fixture data as live DataHub evidence.
 
 ## Architecture
 
 ```text
 Netlify public page
-  -> public Predicate Review API
-     -> sanitized DataHub fixture JSON
+  -> Predicate API on Render
+     -> DataHub GraphQL (live mode) OR labelled fixture (fixture mode)
 ```
 
-This is live API-backed, but not connected to a private DataHub deployment.
+Render cannot reach `http://localhost:8080` on your Mac. Live hosted mode
+requires a reachable DataHub GraphQL URL and a server-side token.
 
 ## Deploy the API on Render
 
@@ -34,6 +36,29 @@ curl https://predicate-ixz0.onrender.com/api/runs
 
 You should see JSON with `runs`.
 
+## Switch Render to real DataHub
+
+Only do this after you have a reachable DataHub deployment. In Render, set:
+
+```text
+PREDICATE_DEMO_MODE=live
+DATAHUB_GRAPHQL_URL=https://your-datahub-host/api/graphql
+DATAHUB_TOKEN=<read-only-token>
+```
+
+`DATAHUB_TOKEN` is a secret environment variable. Never put it in Netlify or
+the browser URL. Redeploy Render, then verify the source before presenting it:
+
+```bash
+curl -s https://predicate-ixz0.onrender.com/api/status | python3 -m json.tool
+curl -s https://predicate-ixz0.onrender.com/api/runs | python3 -m json.tool
+```
+
+The status must say `"mode": "live-datahub-api"`, `"live_datahub": true`,
+and `"fixture_fallback_blocked": true`. The runs response must say
+`"source": "live-api"`. If it says `fixture-api`, the public demo is not
+connected to DataHub yet.
+
 ## Connect Netlify to the API
 
 There are two safe options.
@@ -46,7 +71,8 @@ Open the public page with:
 https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com
 ```
 
-This requires no code change after you know the API URL.
+The current page already uses this Render API by default; the query parameter
+is useful when testing another API.
 
 ### Option 2: Hard-code the API URL
 
@@ -62,8 +88,15 @@ Then redeploy Netlify.
 
 Use:
 
-> The public page is live API-backed using sanitized DataHub fixture data. The
-> local demo shows the same API connected to a real local DataHub quickstart.
+When Render is still in fixture mode:
+
+> The public page is API-backed and explicitly labelled fixture data. The real
+> DataHub proof runs locally against GraphQL.
+
+After the status check passes in live mode:
+
+> The public page calls Predicate on every load; Predicate reads this DataHub
+> GraphQL deployment and blocks fixture fallback.
 
 Avoid:
 
@@ -71,7 +104,8 @@ Avoid:
 
 ## Screenshot Checklist
 
-- Public page showing `Mode: public API fixture`.
+- Public page showing `Mode: live DataHub API`.
+- Render `/api/status` showing `live_datahub: true` and fixture fallback blocked.
 - Browser Network tab showing `/api/runs` from the Render API.
 - API JSON at `/api/runs`.
-- Local DataHub extension screenshot for the real DataHub-backed proof.
+- DataHub asset screenshot with the same URN as the API result.

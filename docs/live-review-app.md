@@ -30,6 +30,12 @@ The page will show:
 - failed predicate terms
 - full evidence review
 
+Local human-review decisions are persisted by the API in
+`.context-gradient/review-notes.jsonl`. `GET /api/reviews` returns saved
+records for one asset and capability, and `POST /api/reviews` appends a new
+record. A hosted static page has no private persistence service, so it uses
+browser storage until a deployment-owned database endpoint is provided.
+
 Health checks:
 
 ```text

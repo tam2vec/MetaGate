@@ -32,13 +32,15 @@ blocked with the exact missing evidence.
 
 | Proof | Link |
 | --- | --- |
-| Static visual demo | [Predicate Review](https://leafy-maamoul-4acf4b.netlify.app) |
-| API-backed public fixture demo | [Predicate Review + Render API](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) |
+| Public Predicate Review | [Open the hosted review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) |
 | Local DataHub runbook | [Live DataHub Validation](docs/live-datahub-validation.md) |
 | Browser extension prototype | [DataHub Panel Prototype](examples/browser-extension/README.md) |
+| Hackathon DataHub sources | [Load and review the provided datasets](docs/hackathon-datahub-sources.md) |
 
-The public page is intentionally sanitized. The real proof path is local/private
-DataHub GraphQL plus the Predicate CLI/API.
+The hosted page is API-backed and labels its source. In the current safe
+fixture mode it says `Mode: public API fixture`; after a reachable DataHub is
+configured on Render it says `Mode: live DataHub API`. The real proof path
+must always be verified through `/api/status`, not inferred from appearance.
 
 ## One Command
 
@@ -55,6 +57,12 @@ predicate \
 
 Evaluations are read-only by default. Live DataHub write-back requires the
 explicit `--enable-writeback` flag plus deployment-approved mutation documents.
+
+The live adapter asks DataHub for assertion run history, active incident
+status, usage buckets, fine-grained lineage, and freshness assertion results.
+When a deployment does not expose one of those fields, Predicate labels it
+`unavailable` and lowers confidence; it does not call the evidence “missing”
+or quietly reuse a recorded demo result.
 
 Example result:
 
@@ -75,6 +83,7 @@ Example result:
 - It has a local API-backed review app, browser extension prototype, CLI, SDK,
   Docker path, tests, and curated benchmark.
 - It is read-only by default; write-back is explicit and deployment-gated.
+- Review decisions, notes, and steward overrides persist locally in SQLite.
 
 ## Production Path: Predicate Preflight
 
@@ -131,6 +140,46 @@ Open `http://127.0.0.1:8765/review`.
 
 The review app shows the asset, decision, readiness, confidence, failed terms,
 remediation plan, capability matrix, audit trail, and write-back queue.
+CLI and Review use the same direct-lineage scope by default. Override both with
+the same `--max-hops` value if a deeper graph is needed.
+
+Human review notes submitted in the local Review app are appended to
+`.context-gradient/review-notes.jsonl` and can be read through `/api/reviews`.
+The hosted static demo cannot persist server-side notes, so it keeps a
+browser-local copy instead.
+
+## Evidence correctness checks
+
+Run the unit and schema-contract checks without a DataHub server:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -q
+```
+
+To run the opt-in test against the actual deployment used for the demo:
+
+```bash
+export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
+export PREDICATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
+PYTHONPATH=src python3 -m unittest tests.test_datahub_schema -v
+```
+
+The live test is skipped when `DATAHUB_GRAPHQL_URL` or
+`PREDICATE_LIVE_DATAHUB_URN` is absent. Run it with the local DataHub
+containers up; a green fixture test is not a substitute for this deployment
+check.
+
+To compare current fixture decisions with the human review file:
+
+```bash
+PYTHONPATH=src python3 scripts/evaluate_independent_labels.py \
+  --labels examples/benchmark/synthetic-reviewer-labels.csv \
+  --datahub-file examples/data/difficult_datahub_graph.json \
+  --policy examples/policies/enterprise_ai.yml
+```
+
+Rows whose asset is not in the selected graph are reported as unevaluated;
+they are never counted as agreement.
 
 ## Results
 
@@ -139,7 +188,7 @@ PYTHONPATH=src:. python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 scripts/evaluate_benchmark.py
 ```
 
-- 20 automated tests passing
+- automated tests and DataHub schema-contract checks passing
 - 30/30 curated policy conformance checks passing
 - 0 unexpected allows
 - 0 unexpected blocks

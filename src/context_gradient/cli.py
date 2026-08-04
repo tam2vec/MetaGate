@@ -5,7 +5,12 @@ import json
 from pathlib import Path
 from datetime import datetime, timezone
 
-from context_gradient.datahub.adapter import DataHubEvidenceExtractor, DataHubWriteback, GraphQLDataHubClient
+from context_gradient.datahub.adapter import (
+    DEFAULT_MAX_HOPS,
+    DataHubEvidenceExtractor,
+    DataHubWriteback,
+    GraphQLDataHubClient,
+)
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.scanner import BackgroundScanner
 from context_gradient.sdk.cache import JsonCache
@@ -100,6 +105,12 @@ def main() -> None:
     parser.add_argument("--datahub-file", help="Local DataHub fixture or exported graph JSON")
     parser.add_argument("--datahub-url", help="Live DataHub GraphQL endpoint; defaults to DATAHUB_GRAPHQL_URL")
     parser.add_argument("--cache-file", default=".context-gradient/cache.json")
+    parser.add_argument(
+        "--max-hops",
+        type=int,
+        default=DEFAULT_MAX_HOPS,
+        help="Lineage graph scope. Review uses the same default (one direct hop).",
+    )
     parser.add_argument("--history-dir", default=".context-gradient/history")
     parser.add_argument("--writeback-file", default=".context-gradient/writeback.json")
     parser.add_argument("--request-capability", help="Evaluate one agent action against the Predicate Certificate")
@@ -120,7 +131,7 @@ def main() -> None:
     policy = load_policy(args.policy)
     writeback = DataHubWriteback(client) if args.enable_writeback else None
     scanner = BackgroundScanner(
-        extractor=DataHubEvidenceExtractor(client, cache=JsonCache(args.cache_file)),
+        extractor=DataHubEvidenceExtractor(client, cache=JsonCache(args.cache_file), max_hops=args.max_hops),
         engine=ReadinessEngine(policy),
         history=ReadinessHistory(Path(args.history_dir)),
         writeback=writeback,

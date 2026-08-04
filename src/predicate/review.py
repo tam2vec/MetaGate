@@ -11,7 +11,15 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from context_gradient.cli import _action_predicate
-from context_gradient.datahub.adapter import DEFAULT_MAX_HOPS, DataHubEvidenceExtractor, GraphQLDataHubClient
+from context_gradient.datahub.adapter import DataHubEvidenceExtractor, GraphQLDataHubClient
+
+try:
+    from context_gradient.datahub.adapter import DEFAULT_MAX_HOPS
+except ImportError:
+    # Keep older deployed adapters bootable while the repository is upgraded.
+    # The next deployment must include adapter.py so live evidence semantics
+    # match the review server.
+    DEFAULT_MAX_HOPS = 1
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.sdk.admission import admit_capability
 from context_gradient.sdk.cache import JsonCache

@@ -1,3 +1,31 @@
-asset_urn,platform,capability,human_label,labeler_role,label_reason,expected_failed_terms,notes
-urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD),hive,autonomous-agent-action,blocked,data_steward,missing assertions,assertions.present,local sample row
-urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD),hive,autonomous-agent-action,allowed,data_steward,required evidence present,,local sample row
+case_id,asset_urn,platform,capability,human_label,labeler_role,label_reason,expected_failed_terms,notes
+1,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,autonomous-agent-action,,,,assertions.present,Signup count needs a passing proof check.
+2,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,autonomous-agent-action,,,,assertions.present,Deletion is consequential and needs a reason check.
+3,"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,autonomous-agent-action,,,,,Enough evidence for the action.
+4,"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,autonomous-agent-action,,,,assertions.present,Stream health needs a current check.
+5,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,autonomous-agent-action,,,,assertions.present,Money-related data needs stronger evidence.
+6,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,answer-business-questions,,,,,Explanation-only use may be acceptable.
+7,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,answer-business-questions,,,,,Explain the data without deleting it.
+8,"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,answer-business-questions,,,,,Answering a question is lower risk than acting.
+9,"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,answer-business-questions,,,,,A stream answer may be okay if it is clearly qualified.
+10,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,generate-executive-metrics,,,,assertions.present,Executive metrics need checks and definitions.
+11,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,generate-executive-metrics,,,,assertions.present,Signup totals need a reliable count assertion.
+12,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,generate-executive-metrics,,,,,Historical deletion reporting may be explain-only.
+13,"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,generate-executive-metrics,,,,,Metrics are allowed only if definitions are clear.
+14,"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,generate-executive-metrics,,,,assertions.present,Stream metrics need current health evidence.
+15,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,answer-business-questions,,,,,Explanation may be allowed without a recommendation.
+16,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",hive,autonomous-agent-action,,,,assertions.present,Agent action needs proof of the signup count.
+17,"urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",hive,autonomous-agent-action,,,,,Use this as an allowed comparison case.
+18,"urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",kafka,autonomous-agent-action,,,,assertions.present,Uncertain stream health should stop action.
+19,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",snowflake,generate-executive-metrics,,,,assertions.present,Financial reporting needs current assertion and freshness evidence.
+20,"urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",hive,autonomous-agent-action,,,,assertions.present,Deleting or changing data requires a human-confirmed reason.
+21,"urn:li:dataset:(urn:li:dataPlatform:postgres,geo.delivery_zones,PROD)",postgres,answer-business-questions,,,,,A geospatial lookup can be explain-only if ownership and definitions are clear.
+22,"urn:li:dataset:(urn:li:dataPlatform:feast,ml.churn_features,PROD)",feast,autonomous-agent-action,,,,freshness.present,Feature freshness and training-serving consistency need proof.
+23,"urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.orders_daily,PROD)",dbt,generate-executive-metrics,,,,assertions.present,Daily order metrics need current checks and a clear definition.
+24,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.monthly_close,PROD)",snowflake,autonomous-agent-action,,,,freshness.present,Month-end finance data should remain blocked when the close is stale.
+25,"urn:li:dataset:(urn:li:dataPlatform:hive,analytics.support_summary,PROD)",hive,answer-business-questions,,,,,A well-defined support summary may support explanation without autonomous changes.
+26,"urn:li:dataset:(urn:li:dataPlatform:kafka,events.checkout,PROD)",kafka,autonomous-agent-action,,,,assertions.present,Checkout events need schema compatibility and delivery health evidence.
+27,"urn:li:dataset:(urn:li:dataPlatform:snowflake,privacy.customer_email,PROD)",snowflake,answer-business-questions,,,,policy.present,Private fields need a visible access policy before an answer is considered safe.
+28,"urn:li:dataset:(urn:li:dataPlatform:bigquery,marketing.campaign_attribution,PROD)",bigquery,generate-executive-metrics,,,,column_lineage.present,Attribution metrics need column lineage to explain how credit was assigned.
+29,"urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.refunds,PROD)",snowflake,autonomous-agent-action,,,,assertions.present,Refund actions need a passing reconciliation and duplicate check.
+30,"urn:li:dataset:(urn:li:dataPlatform:postgres,operations.incident_history,PROD)",postgres,answer-business-questions,,,,incidents.open,Incident history can be explained only when current incident state is not confused with history.

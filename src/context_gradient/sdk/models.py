@@ -12,6 +12,7 @@ def utc_now() -> datetime:
 
 class GapType(str, Enum):
     MISSING = "missing"
+    UNAVAILABLE = "unavailable"
     STALE = "stale"
     INCOMPLETE = "incomplete"
     CONTRADICTORY = "contradictory"
@@ -47,6 +48,7 @@ class EvidenceItem:
     weight: float = 1.0
     observed_at: datetime = field(default_factory=utc_now)
     details: Dict[str, Any] = field(default_factory=dict)
+    available: bool = True
 
 
 @dataclass(frozen=True)

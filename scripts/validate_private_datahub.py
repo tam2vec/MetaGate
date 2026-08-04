@@ -27,6 +27,16 @@ def main() -> None:
     parser.add_argument("--policy", default="examples/policies/finance-production.yml")
     parser.add_argument("--capability", default="autonomous-agent-action")
     parser.add_argument("--urn", action="append", dest="urns", help="DataHub URN; repeat for multiple assets")
+    parser.add_argument(
+        "--fail-on-unavailable",
+        action="store_true",
+        help="Exit non-zero when DataHub does not expose an evidence surface.",
+    )
+    parser.add_argument(
+        "--fail-on-error",
+        action="store_true",
+        help="Exit non-zero when any requested asset cannot be evaluated.",
+    )
     args = parser.parse_args()
 
     client = GraphQLDataHubClient(args.datahub_url, token=os.environ.get("DATAHUB_TOKEN"))
@@ -34,22 +44,30 @@ def main() -> None:
     engine = ReadinessEngine(load_policy(args.policy))
     results = []
     for urn in args.urns or DEFAULT_URNS:
-        bundle = extractor.bundle(urn)
-        certificate = engine.certify(bundle).as_dict()
-        decision = admit_capability(certificate, args.capability).__dict__
-        results.append(
-            {
-                "asset": urn,
-                "decision": "allowed" if decision["allowed"] else "blocked",
-                "allowed": decision["allowed"],
-                "readiness": certificate.get("readiness_score"),
-                "confidence": certificate.get("confidence"),
-                "evidence_signals": len(certificate.get("evidence", [])),
-                "reason": decision["reason"],
-            }
-        )
+        try:
+            bundle = extractor.bundle(urn)
+            certificate = engine.certify(bundle).as_dict()
+            decision = admit_capability(certificate, args.capability).__dict__
+            observation = certificate.get("metadata", {}).get("datahub_observation", {})
+            results.append(
+                {
+                    "asset": urn,
+                    "status": "evaluated",
+                    "decision": "allowed" if decision["allowed"] else "blocked",
+                    "allowed": decision["allowed"],
+                    "readiness": certificate.get("readiness_score"),
+                    "confidence": certificate.get("confidence"),
+                    "evidence_signals": len(certificate.get("evidence", [])),
+                    "available_evidence": observation.get("available_evidence", []),
+                    "unavailable_evidence": observation.get("unavailable_evidence", {}),
+                    "score_trace": certificate.get("metadata", {}).get("score_trace", {}),
+                    "reason": decision["reason"],
+                }
+            )
+        except Exception as error:
+            results.append({"asset": urn, "status": "error", "error": str(error)})
 
-    print(json.dumps({
+    report = {
         "product": "Predicate",
         "mode": "private-datahub-read-only",
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
@@ -58,7 +76,12 @@ def main() -> None:
         "policy": args.policy,
         "capability": args.capability,
         "results": results,
-    }, indent=2))
+    }
+    print(json.dumps(report, indent=2))
+    if args.fail_on_unavailable and any(result.get("unavailable_evidence") for result in results):
+        raise SystemExit(2)
+    if args.fail_on_error and any(result.get("status") == "error" for result in results):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

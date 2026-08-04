@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from typing import Any, Dict, Iterable, Protocol
@@ -8,6 +9,12 @@ from urllib.request import Request, urlopen
 
 from context_gradient.sdk.models import EntityNode, EvidenceBundle, EvidenceItem, EvidenceKind
 from context_gradient.sdk.cache import JsonCache
+
+
+# CLI, Review, and the browser-facing API must assess the same graph. A single
+# hop is enough to show direct blast radius without turning every refresh into
+# a recursive crawl of the whole catalog.
+DEFAULT_MAX_HOPS = 1
 
 
 class DataHubClient(Protocol):
@@ -25,7 +32,7 @@ class DataHubClient(Protocol):
 
 
 class DataHubEvidenceExtractor:
-    def __init__(self, client: DataHubClient, cache: JsonCache | None = None, max_hops: int = 3):
+    def __init__(self, client: DataHubClient, cache: JsonCache | None = None, max_hops: int = DEFAULT_MAX_HOPS):
         self.client = client
         self.cache = cache
         self.max_hops = max(1, max_hops)
@@ -62,7 +69,21 @@ class DataHubEvidenceExtractor:
             self.cache.delete(urn)
 
     def _node(self, raw: Dict[str, Any]) -> EntityNode:
-        raw_evidence = [self._evidence(kind, raw.get(kind.value)) for kind in EvidenceKind]
+        available_kinds = set(raw.get("_available_evidence", []))
+        unavailable_reasons = raw.get("_unavailable_evidence", {})
+        availability_declared = "_available_evidence" in raw
+        raw_evidence = []
+        for kind in EvidenceKind:
+            value = raw.get(kind.value)
+            if availability_declared and kind.value not in available_kinds:
+                value = {
+                    "unavailable": True,
+                    "availability_reason": unavailable_reasons.get(
+                        kind.value,
+                        "field was not returned by the DataHub response",
+                    ),
+                }
+            raw_evidence.append(self._evidence(kind, value))
         raw_evidence = self._detect_contradictions(raw, raw_evidence)
         return EntityNode(
             urn=raw["urn"],
@@ -86,6 +107,7 @@ class DataHubEvidenceExtractor:
                 kind=item.kind, present=item.present, complete=item.complete, stale=item.stale,
                 contradictory=item.contradictory or bool(explicit.get(item.kind.value, False)) or (item.kind == EvidenceKind.GLOSSARY and lexical_conflict),
                 confidence=item.confidence, weight=item.weight, observed_at=item.observed_at, details=item.details,
+                available=item.available,
             )
             for item in evidence
         ]
@@ -103,9 +125,20 @@ class DataHubEvidenceExtractor:
             if candidate is None:
                 return False
             if isinstance(candidate, dict):
-                return bool(candidate) and any(has_content(item) for item in candidate.values())
+                evidence_fields = {
+                    key: item
+                    for key, item in candidate.items()
+                    if key not in {
+                        "confidence", "observed_at", "incomplete", "stale",
+                        "contradictory", "present", "missing", "source",
+                        "timestamp_source",
+                    }
+                }
+                return bool(evidence_fields) and any(has_content(item) for item in evidence_fields.values())
             if isinstance(candidate, (list, tuple, set)):
                 return bool(candidate)
+            if isinstance(candidate, str):
+                return bool(candidate.strip())
             return True
 
         empty_means_missing = kind in {
@@ -127,16 +160,51 @@ class DataHubEvidenceExtractor:
             if explicit_present is not None
             else has_observed_content and not details.get("missing", False)
         )
+        available = not details.get("unavailable", False)
+        if not available:
+            present = False
+        if present and "confidence" not in details:
+            details["quality_factor"] = self._infer_quality(kind, details)
         return EvidenceItem(
             kind=kind,
             present=present,
             complete=not details.get("incomplete", False),
             stale=details.get("stale", False),
             contradictory=details.get("contradictory", False),
-            confidence=float(details.get("confidence", 0.8 if present else 0.0)),
+            confidence=float(details.get("confidence", details.get("quality_factor", 0.0) if present else 0.0)),
             observed_at=observed_time,
             details=details,
+            available=available,
         )
+
+    @staticmethod
+    def _infer_quality(kind: EvidenceKind, details: Dict[str, Any]) -> float:
+        """Estimate evidence richness when a live DataHub response has no confidence field."""
+        def bounded(value: float) -> float:
+            return round(max(0.45, min(1.0, value)), 4)
+
+        if kind == EvidenceKind.DESCRIPTION:
+            text = str(details.get("text", "")).strip()
+            return bounded(0.55 + min(len(text) / 240.0, 0.45))
+        if kind == EvidenceKind.OWNERSHIP:
+            return bounded(0.7 + min(len(details.get("owners", [])) * 0.12, 0.3))
+        if kind == EvidenceKind.GLOSSARY:
+            return bounded(0.55 + min(len(details.get("terms", [])) * 0.1, 0.45))
+        if kind == EvidenceKind.LINEAGE:
+            links = len(details.get("upstreams", [])) + len(details.get("downstreams", []))
+            return bounded(0.55 + min(links * 0.09, 0.45))
+        if kind == EvidenceKind.COLUMN_LINEAGE:
+            return bounded(0.55 + min(float(details.get("mapped_columns", 0)) * 0.06, 0.45))
+        if kind == EvidenceKind.ASSERTIONS:
+            total = int(details.get("passing", 0) or 0) + int(details.get("failing", 0) or 0)
+            return bounded(0.55 + min(total * 0.06, 0.25) + (0.2 if total and not details.get("failing") else 0.0))
+        if kind == EvidenceKind.USAGE:
+            return bounded(0.6 + min(float(details.get("weekly_users", 0) or 0) / 500.0, 0.4))
+        if kind == EvidenceKind.POLICY:
+            return bounded(0.85 if details.get("profile") else 0.55)
+        if kind == EvidenceKind.FRESHNESS:
+            return bounded(0.9 if details.get("timestamp") or details.get("observed_at") else 0.6)
+        return 0.75
 
     def _bundle_to_dict(self, bundle: EvidenceBundle) -> Dict[str, Any]:
         def node(value: EntityNode) -> Dict[str, Any]:
@@ -148,6 +216,7 @@ class DataHubEvidenceExtractor:
                     "stale": item.stale, "contradictory": item.contradictory,
                     "confidence": item.confidence, "weight": item.weight,
                     "observed_at": item.observed_at.isoformat(), "details": item.details,
+                    "available": item.available,
                 } for item in value.evidence],
             }
         return {"entity": node(bundle.entity), "neighbors": {urn: node(value) for urn, value in bundle.neighbors.items()}}
@@ -161,6 +230,7 @@ class DataHubEvidenceExtractor:
                     stale=item.get("stale", False), contradictory=item.get("contradictory", False),
                     confidence=item.get("confidence", 1.0), weight=item.get("weight", 1.0),
                     observed_at=datetime.fromisoformat(item["observed_at"]), details=item.get("details", {}),
+                    available=item.get("available", True),
                 ))
             return EntityNode(urn=raw["urn"], type=raw.get("type", "dataset"), properties=raw.get("properties", {}), evidence=evidence, upstreams=raw.get("upstreams", []), downstreams=raw.get("downstreams", []))
         return EvidenceBundle(entity=node(value["entity"]), neighbors={urn: node(raw) for urn, raw in value.get("neighbors", {}).items()})
@@ -176,7 +246,15 @@ class DataHubWriteback:
                 "Live write-back is not configured. Set DATAHUB_CERTIFICATE_MUTATION "
                 "after testing an approved mutation in a non-production namespace."
             )
-        self.client.write_certificate(urn, certificate)
+        if isinstance(self.client, GraphQLDataHubClient) and not os.environ.get("DATAHUB_CERTIFICATE_QUERY"):
+            raise RuntimeError(
+                "Live write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY "
+                "before enabling the mutation. Predicate will not write without read-back verification."
+            )
+        try:
+            self.client.write_certificate(urn, certificate)
+        except Exception as error:
+            raise RuntimeError(f"DataHub write-back failed for {urn}: {error}") from error
         tasks_created = 0
         for gap in certificate.get("gaps", []):
             self.client.create_remediation_task(
@@ -189,8 +267,23 @@ class DataHubWriteback:
         reader = getattr(self.client, "get_written_certificate", None)
         if not reader:
             raise RuntimeError("Write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY.")
-        if reader(urn) is None:
+        try:
+            readback = reader(urn)
+        except Exception as error:
+            raise RuntimeError(f"DataHub write-back was sent but read-back failed for {urn}: {error}") from error
+        if readback is None:
             raise RuntimeError(f"DataHub write-back could not be verified for {urn}")
+        if isinstance(readback, dict):
+            returned_urn = readback.get("urn") or readback.get("entity_urn") or readback.get("datasetUrn")
+            if returned_urn and returned_urn != urn:
+                raise RuntimeError(f"DataHub read-back returned {returned_urn}, expected {urn}")
+            expected_decision = certificate.get("decision")
+            returned_decision = readback.get("decision") or readback.get("status")
+            if expected_decision and returned_decision and str(returned_decision).lower() != str(expected_decision).lower():
+                raise RuntimeError(
+                    f"DataHub read-back decision {returned_decision!r} does not match {expected_decision!r} for {urn}"
+                )
+            receipt["readback_fields"] = sorted(readback.keys())
         receipt["verified_readback"] = True
         return receipt
 
@@ -198,42 +291,186 @@ class DataHubWriteback:
 class GraphQLDataHubClient:
     """Configurable stdlib client for a DataHub GraphQL deployment."""
 
-    QUERY = """
-    query ContextGradientEntity($urn: String!) {
-      entity(urn: $urn) {
-        urn type
-        editableProperties { description }
-        ownership { owners { owner { urn } } }
+    CORE_QUERY = """
+    query ContextGradientCore($urn: String!) {
+      dataset(urn: $urn) {
+        urn
+        properties { description }
+        ownership {
+          owners {
+            owner {
+              ... on CorpUser { urn }
+              ... on CorpGroup { urn }
+            }
+          }
+        }
         glossaryTerms { terms { term { urn } } }
         domain { domain { urn } }
         tags { tags { tag { urn } } }
-        upstreamLineage { upstreams { entity { urn } } }
-        downstreamLineage { downstreams { entity { urn } } }
-        fineGrainedLineages { fineGrainedLineages { upstreams downstreams } }
-        assertions { assertions { urn } }
-        incidents { incidents { urn } }
-        usageStats { buckets { duration { count } } }
-        dashboards { relationships { entity { urn } } }
-        charts { relationships { entity { urn } } }
-        mlModels { relationships { entity { urn } } }
-        properties { key value }
       }
     }
     """
 
-    DATASET_FRAGMENT_QUERY = """
+    OPTIONAL_QUERIES = {
+        "ownership": """
+        query ContextGradientOwnership($urn: String!) {
+          dataset(urn: $urn) {
+            ownership {
+              owners {
+                owner {
+                  ... on CorpUser { urn username }
+                  ... on CorpGroup { urn name }
+                }
+              }
+            }
+          }
+        }
+        """,
+        "glossary": """
+        query ContextGradientGlossary($urn: String!) {
+          dataset(urn: $urn) { glossaryTerms { terms { term { urn name } } } }
+        }
+        """,
+        "domain": """
+        query ContextGradientDomain($urn: String!) {
+          dataset(urn: $urn) { domain { domain { urn name } } }
+        }
+        """,
+        "tags": """
+        query ContextGradientTags($urn: String!) {
+          dataset(urn: $urn) { tags { tags { tag { urn name } } } }
+        }
+        """,
+        "assertions": """
+        query ContextGradientAssertions($urn: String!) {
+          dataset(urn: $urn) {
+            assertions(start: 0, count: 100) {
+              assertions {
+                urn
+                info { type description }
+                runEvents(limit: 100) {
+                  total
+                  runEvents {
+                    timestampMillis
+                    status
+                    result { type actualAggValue externalUrl }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """,
+        "incidents": """
+        query ContextGradientIncidents($urn: String!) {
+          dataset(urn: $urn) {
+            incidents(state: ACTIVE, start: 0, count: 100) {
+              total
+              incidents { urn title description status { state } }
+            }
+          }
+        }
+        """,
+        "column_lineage": """
+        query ContextGradientColumnLineage($urn: String!) {
+          dataset(urn: $urn) {
+            fineGrainedLineages { fineGrainedLineages { upstreams downstreams } }
+          }
+        }
+        """,
+        "schema": """
+        query ContextGradientSchema($urn: String!) {
+          dataset(urn: $urn) {
+            schemaMetadata {
+              fields { fieldPath }
+            }
+          }
+        }
+        """,
+        "usage": """
+        query ContextGradientUsage($urn: String!) {
+          dataset(urn: $urn) { usageStats { buckets { duration { count } } } }
+        }
+        """,
+        "dashboards": """
+        query ContextGradientDashboards($urn: String!) {
+          dataset(urn: $urn) { dashboards { relationships { entity { urn } } } }
+        }
+        """,
+        "charts": """
+        query ContextGradientCharts($urn: String!) {
+          dataset(urn: $urn) { charts { relationships { entity { urn } } } }
+        }
+        """,
+        "ml_models": """
+        query ContextGradientModels($urn: String!) {
+          dataset(urn: $urn) { mlModels { relationships { entity { urn } } } }
+        }
+        """,
+    }
+
+    QUERY = """
     query ContextGradientEntity($urn: String!) {
-      entity(urn: $urn) {
+      dataset(urn: $urn) {
         urn
-        type
-        ... on Dataset {
-          editableProperties { description }
-          ownership { owners { owner { ... on CorpUser { urn } } } }
-          glossaryTerms { terms { term { urn } } }
-          domain { domain { urn } }
-          tags { tags { tag { urn } } }
-          assertions { assertions { urn } }
-          incidents { incidents { urn } }
+        properties { description }
+        ownership {
+          owners {
+            owner {
+              ... on CorpUser { urn }
+              ... on CorpGroup { urn }
+            }
+          }
+        }
+        glossaryTerms { terms { term { urn } } }
+        domain { domain { urn } }
+        tags { tags { tag { urn } } }
+        fineGrainedLineages { fineGrainedLineages { upstreams downstreams } }
+        usageStats { buckets { duration { count } } }
+        dashboards { relationships { entity { urn } } }
+        charts { relationships { entity { urn } } }
+        mlModels { relationships { entity { urn } } }
+        assertions(start: 0, count: 100) {
+          assertions {
+            urn
+            info { type description }
+            runEvents(limit: 100) {
+              total
+              runEvents {
+                timestampMillis
+                status
+                result { type actualAggValue externalUrl }
+              }
+            }
+          }
+        }
+        incidents(state: ACTIVE, start: 0, count: 100) {
+          total
+          incidents { urn title description status { state } }
+        }
+      }
+    }
+    """
+
+    # Older DataHub deployments may not expose assertion run history in the
+    # Dataset connection. This fallback still reads the asset, but marks the
+    # quality result as unavailable rather than treating an URN as a pass.
+    BASE_QUERY = """
+    query ContextGradientEntity($urn: String!) {
+      dataset(urn: $urn) {
+        urn
+        properties { description }
+      }
+    }
+    """
+
+    LINEAGE_QUERY = """
+    query ContextGradientLineage($urn: String!) {
+      scrollAcrossLineage(
+        input: { query: "*", urn: $urn, count: 100, direction: __DIRECTION__ }
+      ) {
+        searchResults {
+          entity { urn type }
         }
       }
     }
@@ -246,21 +483,104 @@ class GraphQLDataHubClient:
         self.query = query or os.environ.get("DATAHUB_ENTITY_QUERY", self.QUERY)
 
     def get_entity(self, urn: str) -> Dict[str, Any]:
-        try:
-            raw = self._request(self.query, {"urn": urn}).get("entity")
-        except RuntimeError as error:
-            if self.query == self.QUERY and "FieldUndefined" in str(error):
-                raw = self._request(self.DATASET_FRAGMENT_QUERY, {"urn": urn}).get("entity")
-            else:
-                raise
+        degraded_error = None
+        unavailable = {}
+        if self.query == self.QUERY:
+            try:
+                core = self._request(self.CORE_QUERY, {"urn": urn})
+                raw = core.get("dataset") or core.get("entity")
+            except RuntimeError as error:
+                if "FieldUndefined" in str(error):
+                    degraded_error = str(error)
+                    base = self._request(self.BASE_QUERY, {"urn": urn})
+                    raw = base.get("dataset") or base.get("entity")
+                else:
+                    raise
+            if raw:
+                # Optional aspects are deliberately isolated. A deployment
+                # that lacks usage or column lineage must not erase valid
+                # assertion or incident evidence from the same asset.
+                for kind, query in self.OPTIONAL_QUERIES.items():
+                    try:
+                        optional_response = self._request(query, {"urn": urn})
+                        optional = optional_response.get("dataset") or optional_response.get("entity") or {}
+                        if kind == "assertions":
+                            raw["assertions"] = optional.get("assertions")
+                        elif kind == "incidents":
+                            raw["incidents"] = optional.get("incidents")
+                        elif kind == "column_lineage":
+                            raw["fineGrainedLineages"] = optional.get("fineGrainedLineages")
+                        elif kind == "schema":
+                            if "schemaMetadata" in optional:
+                                raw["schemaMetadata"] = optional.get("schemaMetadata")
+                        else:
+                            field = kind if kind != "ml_models" else "mlModels"
+                            if field in optional:
+                                raw[field] = optional.get(field)
+                    except RuntimeError as error:
+                        unavailable["column_lineage" if kind == "schema" else kind] = str(error)
+        else:
+            data = self._request(self.query, {"urn": urn})
+            raw = data.get("dataset") or data.get("entity")
         if not raw:
             raise KeyError(f"DataHub entity not found: {urn}")
+        if self.query == self.QUERY:
+            raw = dict(raw)
+            if degraded_error:
+                raw["_query_degraded"] = degraded_error
+            if unavailable:
+                raw["_unavailable_evidence"] = unavailable
+            # These two reads are independent. Keeping them concurrent cuts
+            # the latency of every live entity read without changing evidence.
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                upstreams = pool.submit(self._lineage_entities, urn, "UPSTREAM")
+                downstreams = pool.submit(self._lineage_entities, urn, "DOWNSTREAM")
+                try:
+                    raw["upstreamLineage"] = {"upstreams": upstreams.result()}
+                    raw["downstreamLineage"] = {"downstreams": downstreams.result()}
+                except RuntimeError as error:
+                    raw["_lineage_unavailable"] = str(error)
+                    raw["upstreamLineage"] = {"upstreams": []}
+                    raw["downstreamLineage"] = {"downstreams": []}
         return self._normalize(raw, urn)
+
+    def _lineage_entities(self, urn: str, direction: str) -> list[Dict[str, Any]]:
+        """Read lineage through DataHub's supported search API.
+
+        DataHub 1.5 exposes lineage through scrollAcrossLineage rather than
+        upstreamLineage/downstreamLineage fields on Dataset.
+        """
+        try:
+            query = self.LINEAGE_QUERY.replace("__DIRECTION__", direction)
+            data = self._request(query, {"urn": urn})
+        except RuntimeError as error:
+            raise RuntimeError(f"DataHub lineage query failed ({direction}): {error}") from error
+        results = ((data.get("scrollAcrossLineage") or {}).get("searchResults") or [])
+        return [
+            {"entity": item.get("entity") or {}}
+            for item in results
+            if isinstance(item, dict) and item.get("entity", {}).get("urn")
+        ]
 
     def get_neighbors(self, urn: str) -> Iterable[Dict[str, Any]]:
         entity = self.get_entity(urn)
-        neighbors = set(entity.get("upstreams", []) + entity.get("downstreams", []))
-        return [self.get_entity(neighbor) for neighbor in neighbors]
+        # _normalize stores lineage under one explicit evidence object. Reading
+        # the old top-level keys here silently produced an empty graph and
+        # made every score look like an isolated-asset score.
+        lineage = entity.get("lineage") or {}
+        neighbors = sorted(set(
+            (lineage.get("upstreams") or []) + (lineage.get("downstreams") or [])
+        ))
+        if not neighbors:
+            return []
+        # Neighbor metadata is independent too. This is especially important
+        # for the review page, which evaluates several assets together.
+        with ThreadPoolExecutor(max_workers=min(8, len(neighbors))) as pool:
+            futures = {pool.submit(self.get_entity, neighbor): neighbor for neighbor in neighbors}
+            results = {}
+            for future, neighbor in futures.items():
+                results[neighbor] = future.result()
+        return [results[neighbor] for neighbor in neighbors]
 
     def write_certificate(self, urn: str, certificate: Dict[str, Any]) -> None:
         mutation = os.environ.get("DATAHUB_CERTIFICATE_MUTATION")
@@ -287,35 +607,194 @@ class GraphQLDataHubClient:
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
         request = Request(self.endpoint, data=json.dumps({"query": query, "variables": variables}).encode(), headers=headers, method="POST")
-        with urlopen(request, timeout=self.timeout) as response:
-            payload = json.loads(response.read().decode())
+        try:
+            with urlopen(request, timeout=self.timeout) as response:
+                payload = json.loads(response.read().decode())
+        except Exception as error:
+            raise RuntimeError(
+                f"DataHub GraphQL request failed at {self.endpoint}: {error}. "
+                "Confirm DataHub is running, the URL is correct, and the token has access."
+            ) from error
         if payload.get("errors"):
-            raise RuntimeError(json.dumps(payload["errors"]))
+            messages = "; ".join(str(item.get("message", item)) for item in payload["errors"])
+            raise RuntimeError(f"DataHub GraphQL rejected the query: {messages}")
         return payload.get("data", {})
 
     def _normalize(self, raw: Dict[str, Any], urn: str) -> Dict[str, Any]:
-        raw_properties = {item["key"]: item.get("value") for item in raw.get("properties", []) if item.get("key")}
+        custom_properties = raw.get("customProperties") or []
+        raw_properties = {
+            item["key"]: item.get("value")
+            for item in custom_properties
+            if isinstance(item, dict) and item.get("key")
+        }
+        def identifier(value: Any):
+            """Accept the common URN/name shapes returned by DataHub versions."""
+            if isinstance(value, str):
+                return value or None
+            if not isinstance(value, dict):
+                return None
+            return value.get("urn") or value.get("username") or value.get("name")
+
         ownership = raw.get("ownership") or {}
-        owners = [item.get("owner", {}).get("urn") for item in ownership.get("owners", [])]
-        terms = [item.get("term", {}).get("urn") for item in (raw.get("glossaryTerms") or {}).get("terms", [])]
-        domains = (raw.get("domain") or {}).get("domain", {}).get("urn")
-        tags = [item.get("tag", {}).get("urn") for item in (raw.get("tags") or {}).get("tags", [])]
-        upstreams = [item.get("entity", {}).get("urn") for item in (raw.get("upstreamLineage") or {}).get("upstreams", [])]
-        downstreams = [item.get("entity", {}).get("urn") for item in (raw.get("downstreamLineage") or {}).get("downstreams", [])]
+        owners = [
+            identifier(item.get("owner") if isinstance(item, dict) else item)
+            for item in ownership.get("owners", [])
+        ]
+        terms = [
+            identifier(item.get("term") if isinstance(item, dict) else item)
+            for item in (raw.get("glossaryTerms") or {}).get("terms", [])
+        ]
+        domain_value = (raw.get("domain") or {}).get("domain")
+        domains = identifier(domain_value)
+        tags = [
+            identifier(item.get("tag") if isinstance(item, dict) else item)
+            for item in (raw.get("tags") or {}).get("tags", [])
+        ]
+        upstreams = [
+            identifier(item.get("entity") if isinstance(item, dict) else item)
+            for item in (raw.get("upstreamLineage") or {}).get("upstreams", [])
+        ]
+        downstreams = [
+            identifier(item.get("entity") if isinstance(item, dict) else item)
+            for item in (raw.get("downstreamLineage") or {}).get("downstreams", [])
+        ]
         dashboards = (raw.get("dashboards") or {}).get("relationships", [])
         charts = (raw.get("charts") or {}).get("relationships", [])
         models = (raw.get("mlModels") or {}).get("relationships", [])
         incident_data = raw.get("incidents")
         incident_items = (incident_data or {}).get("incidents", [])
         fine_grained_lineage = raw.get("fineGrainedLineages") or {}
-        assertion_items = (raw.get("assertions") or {}).get("assertions", [])
-        assertion_has_results = any(
-            isinstance(item, dict) and any(key in item for key in ("result", "latestResult", "status", "runEvents"))
-            for item in assertion_items
+        schema_metadata = raw.get("schemaMetadata") or {}
+        schema_fields = [
+            item.get("fieldPath")
+            for item in schema_metadata.get("fields", [])
+            if isinstance(item, dict) and item.get("fieldPath")
+        ]
+        assertion_data = raw.get("assertions")
+        assertion_items = (assertion_data or {}).get("assertions", [])
+        latest_results = []
+        assertions_without_results = []
+        for item in assertion_items:
+            if not isinstance(item, dict):
+                continue
+            events = [
+                event for event in ((item.get("runEvents") or {}).get("runEvents") or [])
+                if isinstance(event, dict)
+            ]
+            if events:
+                latest = max(events, key=lambda event: int(event.get("timestampMillis") or 0))
+                latest_results.append(latest)
+            elif any(key in item for key in ("result", "latestResult", "status")):
+                latest_results.append(item.get("result") or item.get("latestResult") or {"status": item.get("status")})
+            else:
+                assertions_without_results.append(item.get("urn", "unknown assertion"))
+        latest_statuses = [
+            str(event.get("status", "")).upper()
+            or str((event.get("result") or {}).get("type", "")).upper()
+            for event in latest_results
+        ]
+        passing_statuses = {"SUCCESS", "COMPLETE", "PASS"}
+        failing_statuses = {"FAILURE", "FAIL", "ERROR"}
+        latest_passing = sum(status in passing_statuses for status in latest_statuses)
+        latest_failing = sum(status in failing_statuses for status in latest_statuses)
+        latest_unknown = len(latest_statuses) - latest_passing - latest_failing
+        assertion_has_results = bool(assertion_items) and not assertions_without_results and latest_unknown == 0
+        freshness_results = []
+        for item in assertion_items:
+            if not isinstance(item, dict) or str((item.get("info") or {}).get("type", "")).upper() != "FRESHNESS":
+                continue
+            events = (item.get("runEvents") or {}).get("runEvents") or []
+            latest = max(events, key=lambda candidate: int(candidate.get("timestampMillis") or 0), default=None)
+            if latest:
+                freshness_results.append(latest)
+            elif any(key in item for key in ("result", "latestResult", "status")):
+                freshness_results.append(item.get("result") or item.get("latestResult") or {"status": item.get("status")})
+        mapped_fields = set()
+        for mapping in fine_grained_lineage.get("fineGrainedLineages", []) or []:
+            if not isinstance(mapping, dict):
+                continue
+            for side in ("upstreams", "downstreams"):
+                values = mapping.get(side) or []
+                for value in values:
+                    if isinstance(value, str):
+                        mapped_fields.add(value)
+                    elif isinstance(value, dict) and value.get("fieldPath"):
+                        mapped_fields.add(value["fieldPath"])
+        missing_columns = sorted(set(schema_fields) - mapped_fields)
+        column_lineage_coverage = (
+            len(set(schema_fields) & mapped_fields) / len(set(schema_fields))
+            if schema_fields else 0.0
         )
+        available_evidence = [
+            kind for kind, source in (
+                ("description", "properties"),
+                ("ownership", "ownership"),
+                ("glossary", "glossaryTerms"),
+                ("domain", "domain"),
+                ("tags", "tags"),
+            ) if source in raw
+        ]
+        if "_lineage_unavailable" not in raw and "upstreamLineage" in raw and "downstreamLineage" in raw:
+            available_evidence.append("lineage")
+        if assertion_data is not None and not raw.get("_query_degraded"):
+            available_evidence.append("assertions")
+        if "incidents" in raw and not raw.get("_query_degraded"):
+            available_evidence.append("incidents")
+        if freshness_results and not raw.get("_query_degraded"):
+            available_evidence.append("freshness")
+        optional_sources = {
+            "freshness": "freshness",
+            "usageStats": "usage",
+            "policy": "policy",
+            "dashboards": "dashboards",
+            "charts": "charts",
+            "mlModels": "ml_models",
+        }
+        available_evidence.extend(
+            normalized for source, normalized in optional_sources.items() if source in raw
+        )
+        if "fineGrainedLineages" in raw and "schemaMetadata" in raw:
+            available_evidence.append("column_lineage")
+        unavailable = dict(raw.get("_unavailable_evidence") or {})
+        if raw.get("_query_degraded"):
+            unavailable["assertions"] = raw["_query_degraded"]
+            unavailable["incidents"] = raw["_query_degraded"]
+        if raw.get("_lineage_unavailable"):
+            unavailable["lineage"] = raw["_lineage_unavailable"]
+        # A field omitted from a custom or deployment-specific query is an
+        # observation gap, not proof that the asset lacks that metadata.
+        expected_sources = {
+            "description": "properties",
+            "ownership": "ownership",
+            "glossary": "glossaryTerms",
+            "domain": "domain",
+            "tags": "tags",
+            "freshness": "freshness",
+            "usage": "usageStats",
+            "policy": "policy",
+        }
+        for kind, source in expected_sources.items():
+            if source not in raw and kind not in available_evidence:
+                unavailable.setdefault(kind, f"{source} was not returned by the DataHub GraphQL response")
+        for kind in ("column_lineage", "freshness", "usage"):
+            if kind not in available_evidence:
+                unavailable.setdefault(kind, "field was not returned by the DataHub GraphQL response")
+        observation = {
+            "source": "DataHub GraphQL",
+            "available_evidence": sorted(set(available_evidence)),
+            "unavailable_evidence": unavailable,
+            "returned_fields": sorted(raw.keys()),
+        }
+        usage_stats = raw.get("usageStats") or {}
+        usage_buckets = usage_stats.get("buckets") or [] if isinstance(usage_stats, dict) else []
         return {
             "urn": raw.get("urn", urn), "type": raw.get("type", "dataset"),
-            "description": {"text": (raw.get("editableProperties") or {}).get("description", "")},
+            "description": {
+                "text": (
+                    (raw.get("editableProperties") or {}).get("description")
+                    or (raw.get("properties") or {}).get("description", "")
+                )
+            },
             "ownership": {"owners": [item for item in owners if item]},
             "glossary": {"terms": [item for item in terms if item]},
             "domain": {"urn": domains} if domains else {},
@@ -324,25 +803,76 @@ class GraphQLDataHubClient:
                 "upstreams": [item for item in upstreams if item],
                 "downstreams": [item for item in downstreams if item],
             },
-            "column_lineage": {"mappings": fine_grained_lineage.get("fineGrainedLineages", [])},
+            "column_lineage": {
+                "mappings": fine_grained_lineage.get("fineGrainedLineages", []),
+                "total_columns": len(set(schema_fields)),
+                "mapped_columns": len(set(schema_fields) & mapped_fields),
+                "missing_columns": missing_columns,
+                "coverage": round(column_lineage_coverage, 4),
+                "complete": bool(schema_fields) and not missing_columns,
+            },
             "assertions": {
                 "count": len(assertion_items),
                 "present": bool(assertion_items),
-                # Assertion URNs prove that checks exist, but not that their
-                # latest result is readable. Keep that distinction explicit.
+                "names": [item.get("urn") for item in assertion_items if isinstance(item, dict)],
+                "latest_results": latest_results,
+                "passing": latest_passing,
+                "failing": latest_failing,
+                "unknown": latest_unknown,
+                "missing_results": assertions_without_results,
+                "latest_all_passing": bool(assertion_items) and latest_passing == len(assertion_items),
                 "incomplete": bool(assertion_items) and not assertion_has_results,
+                "contradictory": latest_failing > 0,
             },
-            # An absent incidents aspect means DataHub gave us no incident
-            # evidence. It must not be silently upgraded to "zero incidents".
-            "incidents": {"open": len(incident_items), "present": incident_data is not None},
-            "usage": raw.get("usageStats") or {},
-            "freshness": raw.get("freshness") or raw_properties.get("context_gradient.freshness") or {},
+            # The live query requests ACTIVE incidents. A returned empty list
+            # therefore means zero active incidents; a missing/failed field is
+            # represented as unavailable instead.
+            "incidents": {
+                "open": len(incident_items),
+                "present": incident_data is not None,
+                "items": incident_items,
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "timestamp_source": "DataHub query observation time",
+            },
+            "usage": dict(usage_stats, **{
+                # A query timestamp proves that the query ran, not that usage
+                # telemetry was returned. Empty buckets stay missing.
+                "present": bool(usage_buckets),
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "timestamp_source": "DataHub query observation time",
+            }),
+            "freshness": raw.get("freshness") or raw_properties.get("context_gradient.freshness") or (
+                {
+                    "timestamp": max(
+                        (event.get("timestampMillis", 0) for event in freshness_results),
+                        default=None,
+                    ),
+                    "observed_at": datetime.fromtimestamp(
+                        max((event.get("timestampMillis", 0) for event in freshness_results), default=0) / 1000,
+                        timezone.utc,
+                    ).isoformat(),
+                    "passed": all(
+                        str(event.get("status", "")).upper() in {"SUCCESS", "COMPLETE"}
+                        or str((event.get("result") or {}).get("type", "")).upper() in {"SUCCESS", "PASS"}
+                        for event in freshness_results
+                    ),
+                    "stale": not all(
+                        str(event.get("status", "")).upper() in {"SUCCESS", "COMPLETE"}
+                        or str((event.get("result") or {}).get("type", "")).upper() in {"SUCCESS", "PASS"}
+                        for event in freshness_results
+                    ),
+                    "source": "DataHub assertion runEvents",
+                }
+                if freshness_results else {}
+            ),
             "policy": raw.get("policy") or raw_properties.get("context_gradient.policy") or {},
             "dashboards": {"urns": [item.get("entity", {}).get("urn") for item in dashboards]},
             "charts": {"urns": [item.get("entity", {}).get("urn") for item in charts]},
             "ml_models": {"urns": [item.get("entity", {}).get("urn") for item in models]},
             "downstream_consumers": {"count": len(dashboards) + len(charts) + len(models)},
-            "properties": raw_properties,
+            "properties": {**raw_properties, "_datahub_observation": observation},
             "upstreams": [item for item in upstreams if item],
             "downstreams": [item for item in downstreams if item],
+            "_available_evidence": available_evidence,
+            "_unavailable_evidence": unavailable,
         }

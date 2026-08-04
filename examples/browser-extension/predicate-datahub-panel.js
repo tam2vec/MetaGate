@@ -1,7 +1,13 @@
 (function () {
-  const API_BASE = "http://127.0.0.1:8765";
+  const DEFAULT_API_BASE = "http://127.0.0.1:8765";
   const CAPABILITY = "autonomous-agent-action";
   const PANEL_ID = "predicate-datahub-auto-panel";
+
+  async function apiBase() {
+    if (!globalThis.chrome?.storage?.sync) return DEFAULT_API_BASE;
+    const settings = await new Promise((resolve) => chrome.storage.sync.get({ apiBase: DEFAULT_API_BASE }, resolve));
+    return String(settings.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
+  }
 
   function extractUrn() {
     const match = window.location.pathname.match(/\/dataset\/([^/]+)/);
@@ -118,6 +124,10 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         color: #172033;
       }
+      #${PANEL_ID},
+      #${PANEL_ID} * {
+        box-sizing: border-box;
+      }
       #${PANEL_ID} .predicate-card {
         background: #fff;
         border: 1px solid #dce3ee;
@@ -171,12 +181,23 @@
         border-radius: 8px;
         padding: 13px;
         margin-bottom: 10px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      #${PANEL_ID} .predicate-decision > span {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.25;
       }
       #${PANEL_ID} .predicate-decision strong {
         display: block;
         font-size: 30px;
         text-transform: uppercase;
         margin: 3px 0;
+        line-height: 1.05;
       }
       #${PANEL_ID} .predicate-meta {
         display: grid;
@@ -259,7 +280,7 @@
     return panel;
   }
 
-  function renderResult(panel, run) {
+  function renderResult(panel, run, base) {
     const decision = run.decision || (run.allowed ? "allowed" : "blocked");
     const readiness = run.readiness ?? run.readiness_score ?? "n/a";
     const confidence = run.confidence ?? "n/a";
@@ -278,7 +299,7 @@
       <div class="predicate-status">${run.reason || "Predicate evaluated this asset."}</div>
       <h3 style="font-size:14px; margin:12px 0 0;">Repair queue</h3>
       <ol>${remediationFor(run).map((item) => `<li>${item}</li>`).join("")}</ol>
-      <a class="predicate-link" href="${API_BASE}/review" target="_blank" rel="noreferrer">Open Predicate Review</a>
+      <a class="predicate-link" href="${base}/review" target="_blank" rel="noreferrer">Open Predicate Review</a>
     `;
   }
 
@@ -308,14 +329,16 @@
       panel = buildPanel(urn);
     }
     try {
-      const url = `${API_BASE}/api/evaluate?urn=${encodeURIComponent(urn)}&capability=${encodeURIComponent(CAPABILITY)}`;
+      const base = await apiBase();
+      const url = `${base}/api/evaluate?urn=${encodeURIComponent(urn)}&capability=${encodeURIComponent(CAPABILITY)}`;
       const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) {
-        throw new Error(`Predicate API returned ${response.status}`);
+        const detail = await response.text();
+        throw new Error(`Predicate API returned ${response.status}: ${detail.slice(0, 160)}`);
       }
-      renderResult(panel, await response.json());
+      renderResult(panel, await response.json(), base);
     } catch (error) {
-      renderError(panel, "Start the local Predicate review server, then refresh this DataHub asset page.");
+      renderError(panel, `Predicate could not evaluate this asset. ${error.message || "Check the configured API URL."}`);
     }
   }
 

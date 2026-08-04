@@ -89,6 +89,23 @@
       font-size: 13px;
       line-height: 1.45;
     }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .resource-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 14px;
+    }
+    .resource-item h4 { margin: 0 0 5px; font-size: 16px; }
+    .resource-item p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+    .resource-item a { display: inline-block; margin-top: 9px; color: var(--blue); font-weight: 700; text-decoration: none; }
+    .resource-item a:hover { text-decoration: underline; }
+    .resource-tag { display: inline-block; margin-top: 9px; color: var(--yellow); font-size: 12px; font-weight: 800; text-transform: uppercase; }
     .sidebar-assets {
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 8px;
@@ -1190,6 +1207,7 @@
       .action-row { grid-template-columns: 1fr; }
       .action-row .request-button { width: 100%; }
       h1 { font-size: 28px; }
+      .resource-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1205,6 +1223,7 @@
         <button class="nav-item" type="button" data-target="evidence-section">DataHub Evidence</button>
         <button class="nav-item" type="button" data-target="writeback-section">Decision Diff</button>
         <button class="nav-item" type="button" data-target="security-section">Security Model</button>
+        <button class="nav-item" type="button" data-target="hackathon-resources">Hackathon Resources</button>
       </div>
       <div>
         <div class="nav-label">Proof</div>
@@ -1437,6 +1456,63 @@
               <h3>What to fix next</h3>
               <div id="remediationList" class="remediation-list"></div>
               <p class="quiet-note">Fix these in DataHub. Then rerun the check.</p>
+          </section>
+
+          <section id="hackathon-resources" class="feature-card">
+            <h3>Hackathon DataHub resources</h3>
+            <p class="quiet-note">Official tools and sample environments for this project. Load a dataset in DataHub, then check its URN with Predicate.</p>
+            <div class="resource-grid">
+              <div class="resource-item">
+                <h4>DataHub Quickstart</h4>
+                <p>Run the local DataHub platform used by the live proof.</p>
+                <a href="https://docs.datahub.com/docs/quickstart" target="_blank" rel="noreferrer">Open Quickstart</a>
+              </div>
+              <div class="resource-item">
+                <h4>DataHub MCP Server</h4>
+                <p>Let an agent read catalog context through a governed interface.</p>
+                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+              </div>
+              <div class="resource-item">
+                <h4>Agent Context Kit</h4>
+                <p>Give agents structured metadata context before they act.</p>
+                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+              </div>
+              <div class="resource-item">
+                <h4>DataHub Skills</h4>
+                <p>Reusable catalog skills for metadata-aware agent workflows.</p>
+                <a href="https://github.com/datahub-project/datahub-skills" target="_blank" rel="noreferrer">Open Skills repository</a>
+              </div>
+              <div class="resource-item">
+                <h4>Showcase Ecommerce</h4>
+                <p>Rich cross-platform graph with lineage, governance, glossary, and domains.</p>
+                <span class="resource-tag">Loadable datapack</span>
+              </div>
+              <div class="resource-item">
+                <h4>Bootstrap</h4>
+                <p>Small starter graph for a quick end-to-end smoke test.</p>
+                <span class="resource-tag">Loadable datapack</span>
+              </div>
+              <div class="resource-item">
+                <h4>NYC Taxi</h4>
+                <p>Pipeline and freshness stress case built around trip records.</p>
+                <span class="resource-tag">Scenario dataset</span>
+              </div>
+              <div class="resource-item">
+                <h4>Healthcare</h4>
+                <p>Synthetic sensitive-data scenario with planted quality issues.</p>
+                <span class="resource-tag">Scenario dataset</span>
+              </div>
+              <div class="resource-item">
+                <h4>Fiction Retail</h4>
+                <p>Clean multi-table analytics scenario for lineage and definitions.</p>
+                <span class="resource-tag">Scenario dataset</span>
+              </div>
+              <div class="resource-item">
+                <h4>Analytics Agent</h4>
+                <p>DataHub’s analytics-agent path for metadata-aware analysis.</p>
+                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+              </div>
+            </div>
           </section>
 
           <details class="advanced-feature-block">

@@ -745,8 +745,10 @@
     }
     .score-trace h3 { margin: 0 0 8px; }
     .score-trace p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
     .score-trace details { border-top: 1px solid var(--line); padding-top: 10px; }
-    .score-trace summary { cursor: pointer; color: var(--blue); font-weight: 800; font-size: 13px; }
+    .score-trace summary { color: var(--ink); font-weight: 800; font-size: 13px; }
     .trace-row {
       display: grid;
       grid-template-columns: 130px 90px minmax(0, 1fr) 90px;
@@ -770,9 +772,9 @@
     .fact strong { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; }
     .fact span { display: block; margin-top: 4px; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
     .assessment-panel details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
-    .assessment-panel summary { cursor: pointer; color: var(--blue); font-weight: 800; font-size: 13px; }
+    .assessment-panel summary { color: var(--ink); font-weight: 800; font-size: 13px; }
     .advanced-detail { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 10px; }
-    .advanced-detail summary { cursor: pointer; color: var(--blue); font-size: 13px; font-weight: 800; }
+    .advanced-detail summary { color: var(--ink); font-size: 13px; font-weight: 800; }
     .proof-details { margin-bottom: 2px; }
     .profile-check { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid #edf1f7; font-size: 12px; }
     .profile-check:last-child { border-bottom: 0; }
@@ -965,14 +967,44 @@
       padding-top: 12px;
     }
     .advanced-feature-block > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       cursor: pointer;
-      color: var(--blue);
-      font-size: 14px;
+      color: var(--ink);
+      font-size: 18px;
       font-weight: 800;
-      list-style-position: inside;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f4f7fb;
+    }
+    .advanced-feature-block > summary::-webkit-details-marker { display: none; }
+    .advanced-feature-block > summary::after {
+      content: "";
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg) translateY(-2px);
+      transition: transform .16s ease;
+    }
+    .advanced-feature-block[open] > summary::after {
+      transform: rotate(225deg) translate(-1px, -1px);
     }
     .advanced-feature-block[open] > summary {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      color: #fff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    .advanced-feature-block[open] .product-grid {
+      animation: proofExpand .18s ease-out;
+    }
+    @keyframes proofExpand {
+      from { opacity: .35; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .compact-remediation {
       margin-top: 16px;
@@ -1203,8 +1235,8 @@
           <strong id="environmentTitle">Public static visual demo</strong>
           <span id="environmentProof">Source: local DataHub</span>
           <span>Review: Predicate API</span>
-          <span id="dataMode">Mode: recorded proof data</span>
-          <span id="dataUpdate">Waiting for a live check.</span>
+          <span id="dataMode">Mode: sanitized fixture fallback (not live)</span>
+          <span id="dataUpdate">Showing the latest sanitized fixture result.</span>
           <span id="actionResult" class="action-log">Ready.</span>
         </div>
       </div>
@@ -1359,8 +1391,8 @@
           <div class="score-trace">
             <h3>Score basis</h3>
             <p id="scoreTraceSummary">This score will show the DataHub evidence used to calculate it.</p>
-            <details>
-              <summary>Show evidence math</summary>
+            <details open>
+              <summary>Evidence math</summary>
               <div id="scoreTraceList"></div>
             </details>
           </div>
@@ -1370,16 +1402,16 @@
             <div id="assessmentFacts" class="fact-grid"></div>
             <div id="assessmentGuidance" class="assessment-guidance"></div>
             <div id="beforeAfter" class="before-after"></div>
-            <details>
-              <summary>Show the rubric for this dataset type</summary>
+            <details open>
+              <summary>Dataset rubric</summary>
               <div id="profileChecks"></div>
             </details>
           </div>
 
           <div class="two-col">
             <div>
-              <details class="advanced-detail">
-                <summary>Show decision rule</summary>
+              <details class="advanced-detail" open>
+                <summary>Decision rule</summary>
                 <pre id="predicateBlock" class="predicate"></pre>
               </details>
             </div>
@@ -1392,7 +1424,7 @@
             </div>
           </div>
 
-          <details class="advanced-detail proof-details">
+          <details class="advanced-detail proof-details" open>
             <summary>How Predicate reaches this decision</summary>
             <div class="proof-strip">
               <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>Predicate gathers ownership, lineage, definitions, quality, freshness, usage, and assertion evidence.</p></div>
@@ -1408,7 +1440,7 @@
           </section>
 
           <details class="advanced-feature-block">
-            <summary>More proof and audit details</summary>
+            <summary aria-label="Open proof and audit">Proof &amp; audit</summary>
             <div class="product-grid">
             <section class="feature-card">
               <h3>Capability Matrix</h3>
@@ -1443,7 +1475,7 @@
 
             <section class="feature-card" id="human-review">
               <h3>Human review</h3>
-              <p class="quiet-note">Record whether this decision looks right. Saved in this browser for the current asset and action.</p>
+              <p class="quiet-note">Record whether this decision looks right. Local review saves to the review server; the hosted demo keeps a browser copy.</p>
               <div class="review-actions">
                 <button id="reviewAgree" type="button">Looks right</button>
                 <button id="reviewDisagree" type="button">Needs review</button>
@@ -1487,16 +1519,37 @@
   </div>
 
   <script>
-    const PUBLIC_API_BASE = "";
+    // The hosted page is API-backed by default. The API itself decides whether
+    // it is connected to live DataHub or serving the explicitly labelled demo
+    // fixture; the page never guesses from the URL alone.
+    // Local review pages must call the local server. The hosted page uses
+    // Render, but a localhost page must never silently read the public fixture.
+    const PUBLIC_API_BASE = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)
+      ? ""
+      : "https://predicate-ixz0.onrender.com";
 
+    // Sanitized offline fallback. These values match the current six-asset
+    // fixture and are never presented as a live DataHub result.
     const recordedRuns = [
+      {
+        asset: "analytics.revenue_daily",
+        urn: "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
+        capability: "autonomous-agent-action",
+        decision: "allowed",
+        readiness: 96.01,
+        confidence: 91.55,
+        reason: "Capability is certified by the active policy.",
+        failed: [],
+        evidence: ["owner, glossary, lineage, assertions, incident, freshness, usage, and policy evidence are present."],
+        predicate: { action: "autonomous-agent-action", result: true, failed_terms: [], decision: "allowed" }
+      },
       {
         asset: "SampleHiveDataset",
         urn: "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
         capability: "autonomous-agent-action",
         decision: "allowed",
-        readiness: 96.8,
-        confidence: 94.4,
+        readiness: 95.36,
+        confidence: 90.18,
         reason: "Capability is certified by the active policy.",
         failed: [],
         evidence: [
@@ -1522,8 +1575,8 @@
         urn: "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
         capability: "autonomous-agent-action",
         decision: "blocked",
-        readiness: 91.22,
-        confidence: 86.25,
+        readiness: 67.41,
+        confidence: 66.97,
         reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
         failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
         evidence: [
@@ -1548,8 +1601,8 @@
         urn: "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",
         capability: "autonomous-agent-action",
         decision: "blocked",
-        readiness: 91.22,
-        confidence: 86.25,
+        readiness: 67.39,
+        confidence: 66.9,
         reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
         failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
         evidence: [
@@ -1574,8 +1627,8 @@
         urn: "urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",
         capability: "autonomous-agent-action",
         decision: "blocked",
-        readiness: 84.1,
-        confidence: 82.5,
+        readiness: 61.81,
+        confidence: 67.15,
         reason: "Missing required evidence: assertions; readiness score below 92.0; confidence below 88.0.",
         failed: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
         evidence: [
@@ -1596,12 +1649,12 @@
         }
       },
       {
-        asset: "customer_lifetime_value",
+        asset: "finance.customer_lifetime_value",
         urn: "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
         capability: "autonomous-agent-action",
         decision: "blocked",
-        readiness: 71.47,
-        confidence: 84.94,
+        readiness: 38.12,
+        confidence: 65.68,
         reason: "Finance-critical asset has incomplete glossary, incomplete column lineage, contradictory assertions, stale freshness, and weak policy confidence.",
         failed: ["glossary.present", "column_lineage.present", "assertions.present", "freshness.present", "readiness_score >= 95.0", "confidence >= 93.0"],
         evidence: [
@@ -1622,29 +1675,11 @@
       }
     ];
 
-    let runs = recordedRuns;
     const initialApiParams = new URLSearchParams(window.location.search);
     const initialApiBase = (initialApiParams.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
-    const liveApiExpected = Boolean(initialApiBase || window.location.protocol !== "file:");
-    if (liveApiExpected) {
-      runs = recordedRuns.map((run) => ({
-        ...run,
-        allowed: false,
-        decision: "checking",
-        readiness: null,
-        confidence: null,
-        reason: "Checking live DataHub evidence...",
-        evidence: [],
-        failed: [],
-        predicate: {
-          action: run.capability,
-          predicate: "Live evaluation in progress.",
-          result: false,
-          failed_terms: [],
-          decision: "checking"
-        }
-      }));
-    }
+    // A configured API starts empty until its first response arrives. This
+    // prevents a stale recorded decision from appearing as live evidence.
+    let runs = (initialApiBase || window.location.protocol !== "file:") ? [] : recordedRuns;
 
     const assetList = document.getElementById("assetList");
     const assetSelect = document.getElementById("assetSelect");
@@ -1687,14 +1722,43 @@
       document.getElementById("reviewDisagree").classList.toggle("selected", saved && saved.verdict === "disagree");
       document.getElementById("reviewNote").value = saved && saved.note ? saved.note : "";
       document.getElementById("reviewSaved").textContent = saved
-        ? `Saved ${saved.verdict === "agree" ? "Looks right" : "Needs review"} in this browser.`
+        ? `Saved ${saved.verdict === "agree" ? "Looks right" : "Needs review"}${saved.serverSaved ? " to the review record." : " in this browser."}`
         : "No review recorded yet.";
+      if (activeApiBase) {
+        const endpoint = `${activeApiBase}/api/reviews?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(run.capability)}`;
+        fetch(endpoint, { cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .then((payload) => {
+            const latest = payload && Array.isArray(payload.reviews) ? payload.reviews[payload.reviews.length - 1] : null;
+            if (!latest || runs[selected] !== run) return;
+            const serverSaved = { ...latest, serverSaved: true };
+            document.getElementById("reviewAgree").classList.toggle("selected", serverSaved.verdict === "agree");
+            document.getElementById("reviewDisagree").classList.toggle("selected", serverSaved.verdict === "disagree");
+            document.getElementById("reviewNote").value = serverSaved.note || "";
+            document.getElementById("reviewSaved").textContent = `Saved ${serverSaved.verdict === "agree" ? "Looks right" : "Needs review"} to the review record.`;
+          })
+          .catch(() => {});
+      }
     }
 
-    function saveHumanReview(verdict) {
+    async function saveHumanReview(verdict) {
       const run = runs[selected];
       const note = document.getElementById("reviewNote").value.trim();
-      localStorage.setItem(reviewKey(run), JSON.stringify({ verdict, note, savedAt: new Date().toISOString() }));
+      const saved = { verdict, note, savedAt: new Date().toISOString() };
+      localStorage.setItem(reviewKey(run), JSON.stringify(saved));
+      if (activeApiBase) {
+        try {
+          const response = await fetch(`${activeApiBase}/api/reviews`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ urn: run.urn, capability: run.capability, verdict, note })
+          });
+          if (response.ok) saved.serverSaved = true;
+        } catch (error) {
+          // The hosted static demo has no write endpoint; browser storage remains usable.
+        }
+      }
+      localStorage.setItem(reviewKey(run), JSON.stringify(saved));
       renderHumanReview(run);
     }
 
@@ -1821,6 +1885,7 @@
 
     function renderScoreTrace(run) {
       const trace = run.score_trace || {};
+      const observation = run.datahub_observation || {};
       const summary = document.getElementById("scoreTraceSummary");
       const list = document.getElementById("scoreTraceList");
       if (!trace.evidence || !trace.evidence.length) {
@@ -1828,7 +1893,14 @@
         list.innerHTML = "";
         return;
       }
-      summary.textContent = `${trace.evidence.length} DataHub signals. Readiness ${formatMetric(trace.base_readiness_score)} before graph adjustment, ${formatMetric(trace.final_readiness_score)} after. Average source confidence: ${formatMetric(Number(trace.average_source_confidence || 0) * 100)}%.`;
+      const unavailable = observation.unavailable_evidence || {};
+      const unavailableNames = Object.keys(unavailable);
+      const availability = unavailableNames.length
+        ? ` ${unavailableNames.length} not returned by this DataHub schema: ${unavailableNames.join(", ")}.`
+        : " All requested evidence fields were returned by DataHub.";
+      const selectedScore = run.readiness ?? trace.displayed_readiness_score;
+      const overallScore = run.overall_readiness ?? trace.final_readiness_score;
+      summary.textContent = `${trace.evidence.length} DataHub signals. Selected action readiness ${formatMetric(selectedScore)}; overall asset readiness ${formatMetric(overallScore)}. Source confidence ${formatMetric(Number(trace.average_source_confidence || 0) * 100)}%.${availability}`;
       list.innerHTML = trace.evidence.map((item) => {
         const detail = item.details && typeof item.details === "object"
           ? Object.entries(item.details).filter(([key]) => key !== "present").slice(0, 2).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.length + " items" : value}`).join("; ")
@@ -2192,10 +2264,21 @@
     function render() {
       const run = runs[selected];
       renderScoreboard();
+      renderAssetControls();
+      if (!run) {
+        document.getElementById("assetName").textContent = "Waiting for Predicate API";
+        document.getElementById("assetUrn").textContent = "No live evaluation is available yet.";
+        document.getElementById("embeddedAssetName").textContent = "Waiting for live data";
+        document.getElementById("embeddedDecision").textContent = "UNAVAILABLE";
+        document.getElementById("embeddedReason").textContent = "Connect the review server to see a current DataHub decision.";
+        document.getElementById("decisionText").textContent = "unavailable";
+        document.getElementById("readableStatus").textContent = "Waiting for live evidence";
+        document.getElementById("actionResult").textContent = "Waiting for the Predicate Review API.";
+        return;
+      }
       renderEvidenceChart(run);
       renderScoreTrace(run);
       renderAssessment(run);
-      renderAssetControls();
       document.getElementById("assetName").textContent = run.asset;
       document.getElementById("assetUrn").textContent = run.urn;
       document.getElementById("embeddedAssetName").textContent = run.asset;
@@ -2357,9 +2440,12 @@
       }
     }
 
-    async function loadLiveRuns(forceRefresh = false) {
-      refreshData.disabled = true;
-      refreshData.textContent = "Checking DataHub...";
+    async function loadLiveRuns(forceRefresh = false, background = false) {
+      const visibleRuns = runs;
+      if (!background) {
+        refreshData.disabled = true;
+        refreshData.textContent = "Updating...";
+      }
       const params = new URLSearchParams(window.location.search);
       const apiBase = (params.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
       activeApiBase = apiBase || (window.location.protocol !== "file:" ? window.location.origin : "");
@@ -2367,14 +2453,20 @@
       const refreshEndpoint = `${endpoint}${endpoint.includes("?") ? "&" : "?"}refresh=${Date.now()}`;
       if (window.location.protocol === "file:" && !apiBase) {
         document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
-        refreshData.disabled = false;
-        refreshData.textContent = "Refresh DataHub check";
+        if (!background) {
+          refreshData.disabled = false;
+          refreshData.textContent = "Refresh DataHub";
+        }
         return;
       }
       try {
         const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
         const status = statusResponse.ok ? await statusResponse.json() : null;
-        const response = await fetch(forceRefresh ? refreshEndpoint : endpoint, { cache: "no-store" });
+        // Live mode must never paint a cached decision first. An old ALLOWED
+        // result is more dangerous than a short loading state when metadata
+        // may have changed underneath it.
+        const liveMode = status && status.mode === "live-datahub-api";
+        const response = await fetch(forceRefresh || liveMode ? refreshEndpoint : endpoint, { cache: "no-store" });
         if (!response.ok) {
           const detail = await response.text().catch(() => "");
           throw new Error(detail || `Predicate returned HTTP ${response.status}`);
@@ -2386,7 +2478,6 @@
         if (Array.isArray(payload.runs) && payload.runs.length) {
           runs = payload.runs;
           selected = 0;
-          const liveMode = status && status.mode === "live-datahub-api";
           document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
           document.getElementById("environmentProof").textContent = liveMode ? "Source: live DataHub" : "Source: demo fixture";
           const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
@@ -2400,21 +2491,26 @@
             ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.`
             : `${liveMode ? "Live check complete" : "Demo check complete"} at ${new Date().toLocaleTimeString()}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action.";
-          if (!forceRefresh && liveMode) {
-            document.getElementById("dataUpdate").textContent = "Live result loaded. Updating in background...";
-            window.setTimeout(() => loadLiveRuns(true), 0);
-          }
         }
       } catch (error) {
-        runs = recordedRuns;
-        selected = 0;
+        // Never substitute recorded fixture data for a configured API. Keep a
+        // previously successful live result if one exists; otherwise show the
+        // unavailable state so the UI cannot claim a stale decision is live.
+        runs = activeApiBase ? visibleRuns : recordedRuns;
+        selected = runs.length ? Math.min(selected, runs.length - 1) : 0;
         render();
-        document.getElementById("dataMode").textContent = "Mode: recorded fallback data";
-        document.getElementById("dataUpdate").textContent = friendlyApiError(error);
+        document.getElementById("dataMode").textContent = activeApiBase
+          ? "Mode: live API unavailable"
+          : "Mode: recorded fallback data";
+        document.getElementById("dataUpdate").textContent = activeApiBase
+          ? "Live results are unavailable. Start the review server or DataHub, then refresh."
+          : "Update failed. Showing the recorded demo.";
         document.getElementById("actionResult").textContent = friendlyApiError(error);
       }
-      refreshData.disabled = false;
-      refreshData.textContent = "Refresh DataHub check";
+      if (!background) {
+        refreshData.disabled = false;
+        refreshData.textContent = "Refresh DataHub";
+      }
     }
 
     assetSelect.addEventListener("change", (event) => {
@@ -2442,6 +2538,13 @@
       if (saved) {
         saved.note = document.getElementById("reviewNote").value.trim();
         localStorage.setItem(reviewKey(runs[selected]), JSON.stringify(saved));
+        if (activeApiBase && saved.verdict) {
+          fetch(`${activeApiBase}/api/reviews`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ urn: runs[selected].urn, capability: runs[selected].capability, verdict: saved.verdict, note: saved.note })
+          }).catch(() => {});
+        }
       }
     });
     urnInput.addEventListener("keydown", (event) => {
@@ -2464,7 +2567,11 @@
         remediationDrawer.classList.remove("open");
       }
     });
-    refreshData.addEventListener("click", () => loadLiveRuns(true));
+    refreshData.addEventListener("click", () => {
+      document.getElementById("dataUpdate").textContent = "Updating DataHub in background...";
+      document.getElementById("actionResult").textContent = "Your current result stays visible while the update runs.";
+      loadLiveRuns(true);
+    });
     render();
     loadLiveRuns();
   </script>

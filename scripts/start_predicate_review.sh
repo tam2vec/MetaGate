@@ -6,11 +6,14 @@ PROJECT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 cd "$PROJECT_DIR"
 
 export DATAHUB_GRAPHQL_URL="${DATAHUB_GRAPHQL_URL:-http://localhost:8080/api/graphql}"
+export PREDICATE_PORT="${PREDICATE_PORT:-8765}"
 
 PYTHONPATH=src python3 scripts/serve_review.py \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --port "$PREDICATE_PORT" \
   --policy examples/policies/enterprise_ai.yml \
   --no-recorded-fallback \
+  --urn "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --urn "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --urn "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)" \
   --urn "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \

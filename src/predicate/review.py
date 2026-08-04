@@ -4,19 +4,21 @@ import argparse
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from context_gradient.cli import _action_predicate
-from context_gradient.datahub.adapter import DataHubEvidenceExtractor, GraphQLDataHubClient
+from context_gradient.datahub.adapter import DEFAULT_MAX_HOPS, DataHubEvidenceExtractor, GraphQLDataHubClient
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.sdk.admission import admit_capability
 from context_gradient.sdk.cache import JsonCache
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.history import ReadinessHistory
 from context_gradient.sdk.policy import load_policy
+from predicate.review_store import ReviewStore
 
 
 def _repo_root() -> Path:
@@ -32,10 +34,12 @@ ROOT = _repo_root()
 APP = ROOT / "public-demo/index.html"
 RUNS = ROOT / "examples/outputs/live-runs.json"
 DEFAULT_URNS = [
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)",
     "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
     "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_deleted,PROD)",
     "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
     "urn:li:dataset:(urn:li:dataPlatform:kafka,SampleKafkaDataset,PROD)",
+    "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
 ]
 STARTED_AT = time.time()
 
@@ -49,6 +53,20 @@ def _asset_name(urn: str) -> str:
 
 
 def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
+    capability_result = next(
+        (
+            item
+            for item in certificate.get("certified_capabilities", [])
+            if item.get("capability") == decision["capability"]
+        ),
+        None,
+    )
+    # The decision is capability-specific. Keep the overall certificate too,
+    # but show the score that actually governed the selected action in the UI.
+    overall_readiness = certificate.get("readiness_score")
+    overall_confidence = certificate.get("confidence")
+    action_readiness = capability_result.get("score") if capability_result else overall_readiness
+    action_confidence = capability_result.get("confidence") if capability_result else overall_confidence
     action_thresholds = None
     if policy is not None:
         matching_policy = next(
@@ -60,6 +78,10 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
                 "score": matching_policy.minimum_score,
                 "confidence": matching_policy.minimum_confidence,
             }
+    score_trace = dict(certificate.get("metadata", {}).get("score_trace", {}))
+    score_trace["displayed_capability"] = decision["capability"]
+    score_trace["displayed_readiness_score"] = action_readiness
+    score_trace["displayed_confidence"] = action_confidence
     return {
         "entity_urn": decision["entity_urn"],
         "urn": decision["entity_urn"],
@@ -68,9 +90,13 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
         "allowed": decision["allowed"],
         "decision": "allowed" if decision["allowed"] else "blocked",
         "reason": decision["reason"],
-        "readiness": certificate.get("readiness_score"),
-        "confidence": certificate.get("confidence"),
-        "readiness_score": certificate.get("readiness_score"),
+        "readiness": action_readiness,
+        "confidence": action_confidence,
+        "readiness_score": action_readiness,
+        "overall_readiness": overall_readiness,
+        "overall_confidence": overall_confidence,
+        "capability_score": action_readiness,
+        "capability_confidence": action_confidence,
         "policy": certificate.get("metadata", {}).get("policy"),
         "evidence": decision.get("evidence", []),
         "gaps": certificate.get("gaps", []),
@@ -78,7 +104,8 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
         "action_predicate": decision.get("action_predicate", {}),
         "predicate": decision.get("action_predicate", {}),
         "action_thresholds": action_thresholds,
-        "score_trace": certificate.get("metadata", {}).get("score_trace", {}),
+        "score_trace": score_trace,
+        "datahub_observation": certificate.get("metadata", {}).get("datahub_observation", {}),
     }
 
 
@@ -103,11 +130,13 @@ class ReviewState:
         datahub_file: str | None,
         *,
         allow_recorded_fallback: bool = True,
+        max_hops: int = DEFAULT_MAX_HOPS,
     ):
         self.policy_path = policy_path
         self.datahub_url = datahub_url
         self.datahub_file = datahub_file
-        self.allow_recorded_fallback = allow_recorded_fallback
+        # Live mode must never silently display an older recorded decision.
+        self.allow_recorded_fallback = bool(allow_recorded_fallback and datahub_file)
         if datahub_file and datahub_url:
             raise ReviewConfigError("Use either --datahub-file or --datahub-url, not both.")
         if not datahub_file and not (datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL")):
@@ -126,13 +155,35 @@ class ReviewState:
             self.client = GraphQLDataHubClient(datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL"))
         self.extractor = DataHubEvidenceExtractor(
             self.client,
+            # The review page needs direct lineage evidence for its decision.
+            # Deeper graph walks belong in the evidence view and make every
+            # refresh fan out into many extra GraphQL requests.
+            max_hops=max_hops,
             # The cache filename is versioned so a scoring/rubric change can
             # never silently reuse an older evidence interpretation.
-            cache=JsonCache(ROOT / ".context-gradient/review-cache-v2.json"),
+            cache=JsonCache(ROOT / ".context-gradient/review-cache-v4.json"),
         )
         self.assessment_history = ReadinessHistory(ROOT / ".context-gradient/assessment-history")
-        self.history: dict[str, list[dict]] = {}
+        self.review_store = ReviewStore(ROOT / ".context-gradient/review.sqlite3")
         self.last_errors: list[dict] = []
+
+    def reviews(self, urn: str, capability: str) -> list[dict]:
+        return self.review_store.reviews(urn, capability)
+
+    def save_review(self, urn: str, capability: str, verdict: str, note: str, actor: str = "local-user") -> dict:
+        if verdict not in {"agree", "disagree"}:
+            raise ValueError("verdict must be agree or disagree")
+        if not note.strip():
+            raise ValueError("note is required")
+        record = {
+            "urn": urn,
+            "capability": capability,
+            "verdict": verdict,
+            "note": note.strip(),
+            "actor": actor.strip() or "local-user",
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return self.review_store.add_review(record)
 
     def evaluate(self, urn: str, capability: str, *, refresh: bool = False) -> dict:
         if refresh:
@@ -170,10 +221,16 @@ class ReviewState:
             "capability": capability,
             "reason": run["reason"],
         }
-        self.history.setdefault(urn, []).append(event)
         run["decision_id"] = event["decision_id"]
         run["evaluated_at"] = event["evaluated_at"]
-        run["history"] = self.history[urn][-10:]
+        # Persist the complete evaluated run, including score, evidence,
+        # before/after context, and predicate terms, not only the headline.
+        self.review_store.record_decision(run)
+        run["history"] = self.review_store.decisions(urn, capability, limit=10)
+        override = self.review_store.latest_override(urn, capability)
+        run["override"] = override
+        run["effective_decision"] = override["decision"] if override else run["decision"]
+        run["effective_allowed"] = run["effective_decision"] == "allowed"
         run["saved_assessments"] = [
             {
                 "issued_at": item.get("issued_at"),
@@ -185,29 +242,85 @@ class ReviewState:
         ]
         return run
 
+    def save_override(self, urn: str, capability: str, decision: str, reason: str, actor: str, role: str) -> dict:
+        if role not in {"steward", "admin"}:
+            raise PermissionError("Only a steward or admin may override a blocked decision.")
+        if decision not in {"allowed", "blocked"}:
+            raise ValueError("decision must be allowed or blocked")
+        if not actor.strip() or not reason.strip():
+            raise ValueError("actor and reason are required")
+        return self.review_store.add_override({
+            "urn": urn,
+            "capability": capability,
+            "decision": decision,
+            "reason": reason.strip(),
+            "actor": actor.strip(),
+            "role": role,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+
     def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
         live_runs = []
         self.last_errors = []
+        # Each asset requires its own DataHub and lineage reads. Run those
+        # independent checks together so one slow asset does not hold up the
+        # entire review page.
+        with ThreadPoolExecutor(max_workers=min(5, max(1, len(urns)))) as pool:
+            futures = {
+                pool.submit(self.evaluate, urn, capability, refresh=refresh): urn
+                for urn in urns
+            }
+            results = {}
+            for future in as_completed(futures):
+                urn = futures[future]
+                try:
+                    results[urn] = future.result()
+                except Exception as error:
+                    self.last_errors.append({"urn": urn, "error": str(error)})
+        # Keep every configured asset visible. A failed DataHub read must not
+        # make the asset disappear or make the run count look healthier than it
+        # is; represent it explicitly as unavailable instead.
+        live_runs = []
         for urn in urns:
-            try:
-                live_runs.append(self.evaluate(urn, capability, refresh=refresh))
-            except Exception as error:
-                self.last_errors.append({"urn": urn, "error": str(error)})
+            if urn in results:
+                live_runs.append(results[urn])
                 continue
+            error = next((item["error"] for item in self.last_errors if item["urn"] == urn), "Unknown DataHub error.")
+            live_runs.append({
+                "asset": _asset_name(urn),
+                "urn": urn,
+                "decision": "unavailable",
+                "allowed": False,
+                "readiness_score": None,
+                "confidence": None,
+                "reason": f"Predicate could not evaluate this asset: {error}",
+                "evidence": [],
+                "failed": [],
+                "error": error,
+                "action_predicate": {"decision": "unavailable", "result": None, "failed_terms": []},
+            })
         if live_runs:
             return live_runs
-        if self.allow_recorded_fallback and RUNS.exists():
+        # Recorded runs are acceptable for an explicitly fixture-backed demo,
+        # but never mask a failed live DataHub read. A stale recorded card is
+        # worse than an honest error when the score is used for admission.
+        if self.allow_recorded_fallback and self.datahub_file and RUNS.exists():
             return [_normalize_recorded(run) for run in json.loads(RUNS.read_text())]
         return []
 
     def health(self) -> dict:
+        live = not self.datahub_file
         return {
             "status": "ok",
             "mode": "fixture" if self.datahub_file else "datahub_graphql",
+            "live_datahub": live,
             "policy": self.policy_path,
             "datahub_url_configured": bool(self.datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL")),
+            "datahub_token_configured": bool(os.environ.get("DATAHUB_TOKEN")),
             "recorded_fallback": self.allow_recorded_fallback,
+            "fixture_fallback_blocked": live and not self.allow_recorded_fallback,
             "uptime_seconds": round(time.time() - STARTED_AT, 3),
+            "history_store": "sqlite",
         }
 
     def ready(self, urns: list[str], capability: str) -> dict:
@@ -223,16 +336,19 @@ class ReviewState:
     def status(self, urns: list[str], capability: str) -> dict:
         """Return a judge-friendly, machine-readable explanation of this server."""
         health = self.health()
-        readiness = self.ready(urns, capability)
         return {
             "product": "Predicate",
             "service": "Predicate Review",
             "mode": "fixture-api" if self.datahub_file else "live-datahub-api",
             "data_source": "local fixture" if self.datahub_file else "DataHub GraphQL",
+            "live_datahub": not self.datahub_file,
+            "datahub_url_configured": health["datahub_url_configured"],
+            "datahub_token_configured": health["datahub_token_configured"],
+            "fixture_fallback_blocked": not self.datahub_file and not self.allow_recorded_fallback,
             "policy": self.policy_path,
             "capability": capability,
             "recorded_fallback_enabled": self.allow_recorded_fallback,
-            "ready": readiness["status"] == "ready",
+            "ready": health["status"] == "ok",
             "health": health["status"],
             "checked_urns": urns,
             "writeback": {
@@ -241,6 +357,12 @@ class ReviewState:
                 "mode": "explicit-and-verified" if os.environ.get("DATAHUB_CERTIFICATE_MUTATION") and os.environ.get("DATAHUB_CERTIFICATE_QUERY") else "read-only",
             },
             "evaluation_errors": self.last_errors,
+            "rbac": {
+                "evaluation": "requester or reviewer",
+                "review_notes": "requester or reviewer",
+                "overrides": "steward or admin only",
+                "override_reason_required": True,
+            },
         }
 
 
@@ -252,7 +374,7 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
             self.send_header("Content-Type", "application/json")
             self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
             self.send_header("Access-Control-Allow-Origin", cors_origin)
-            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
@@ -284,7 +406,10 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                 self._html()
                 return
             if parsed.path == "/api/runs":
-                refresh = "refresh" in parse_qs(parsed.query)
+                # A live API request must always reflect current DataHub
+                # metadata. This also protects older browser tabs whose JS
+                # still requests /api/runs without the refresh query flag.
+                refresh = bool(state.datahub_url) or "refresh" in parse_qs(parsed.query)
                 self._json(
                     {
                         "source": "live-api" if not state.datahub_file else "fixture-api",
@@ -306,18 +431,90 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                     self._json({"error": str(error)}, 500)
                 return
             if parsed.path == "/api/history":
-                urn = parse_qs(parsed.query).get("urn", [""])[0]
+                query = parse_qs(parsed.query)
+                urn = query.get("urn", [""])[0]
+                capability_name = query.get("capability", [capability])[0]
                 if not urn:
                     self._json({"error": "Missing urn query parameter."}, 400)
                     return
-                self._json({"urn": urn, "assessments": state.assessment_history.list(urn, limit=25)})
+                self._json({
+                    "urn": urn,
+                    "capability": capability_name,
+                    "assessments": state.assessment_history.list(urn, limit=25),
+                    "decisions": state.review_store.decisions(urn, capability_name, limit=25),
+                })
+                return
+            if parsed.path == "/api/reviews":
+                query = parse_qs(parsed.query)
+                urn = query.get("urn", [""])[0]
+                capability_name = query.get("capability", [capability])[0]
+                if not urn:
+                    self._json({"error": "Missing urn query parameter."}, 400)
+                    return
+                self._json({"urn": urn, "capability": capability_name, "reviews": state.reviews(urn, capability_name)})
+                return
+            if parsed.path == "/api/overrides":
+                query = parse_qs(parsed.query)
+                urn = query.get("urn", [""])[0]
+                capability_name = query.get("capability", [capability])[0]
+                if not urn:
+                    self._json({"error": "Missing urn query parameter."}, 400)
+                    return
+                self._json({
+                    "urn": urn,
+                    "capability": capability_name,
+                    "override": state.review_store.latest_override(urn, capability_name),
+                })
                 return
             self.send_error(404)
+
+        def do_POST(self) -> None:
+            parsed = urlparse(self.path)
+            if parsed.path not in {"/api/reviews", "/api/overrides"}:
+                self.send_error(404)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length).decode() or "{}")
+                if parsed.path == "/api/overrides":
+                    self.do_POST_override(payload)
+                    return
+                urn = str(payload.get("urn", "")).strip()
+                if not urn:
+                    raise ValueError("urn is required")
+                record = state.save_review(
+                    urn,
+                    str(payload.get("capability", capability)),
+                    str(payload.get("verdict", "")),
+                    str(payload.get("note", "")),
+                    str(payload.get("actor") or self.headers.get("X-Predicate-Actor", "local-user")),
+                )
+                self._json({"review": record}, 201)
+            except PermissionError as error:
+                self._json({"error": str(error)}, 403)
+            except (ValueError, TypeError, json.JSONDecodeError) as error:
+                self._json({"error": str(error)}, 400)
+
+        def do_POST_override(self, payload: dict) -> None:
+            urn = str(payload.get("urn", "")).strip()
+            if not urn:
+                raise ValueError("urn is required")
+            actor = str(payload.get("actor") or self.headers.get("X-Predicate-Actor", "")).strip()
+            role = str(payload.get("role") or self.headers.get("X-Predicate-Role", "requester")).strip().lower()
+            record = state.save_override(
+                urn,
+                str(payload.get("capability", capability)),
+                str(payload.get("decision", "")),
+                str(payload.get("reason", "")),
+                actor,
+                role,
+            )
+            self._json({"override": record}, 201)
 
         def do_OPTIONS(self) -> None:
             self.send_response(204)
             self.send_header("Access-Control-Allow-Origin", cors_origin)
-            self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
             self.end_headers()
 
@@ -337,7 +534,10 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--policy", default="examples/policies/enterprise_ai.yml")
-    parser.add_argument("--datahub-url", default=os.environ.get("DATAHUB_GRAPHQL_URL"))
+    # Leave this unset when --datahub-file is used. ReviewState can still read
+    # DATAHUB_GRAPHQL_URL for live mode, but a fixture must not be rejected
+    # merely because the shell happens to retain a live endpoint variable.
+    parser.add_argument("--datahub-url")
     parser.add_argument("--datahub-file")
     parser.add_argument(
         "--no-recorded-fallback",
@@ -351,6 +551,12 @@ def main() -> None:
     )
     parser.add_argument("--capability", default="autonomous-agent-action")
     parser.add_argument(
+        "--max-hops",
+        type=int,
+        default=DEFAULT_MAX_HOPS,
+        help="Lineage graph scope. Keep this equal to the CLI --max-hops value.",
+    )
+    parser.add_argument(
         "--urn",
         action="append",
         dest="urns",
@@ -358,11 +564,26 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    demo_mode = os.environ.get("PREDICATE_DEMO_MODE", "").strip().lower()
+    if demo_mode not in {"", "fixture", "live"}:
+        raise ReviewConfigError("PREDICATE_DEMO_MODE must be 'fixture' or 'live'.")
+    if demo_mode == "live":
+        # Hosted live mode must be explicit and fail closed. In particular, a
+        # missing endpoint must never turn into a convincing fixture page.
+        if args.datahub_file:
+            raise ReviewConfigError("PREDICATE_DEMO_MODE=live cannot use --datahub-file.")
+        if not (args.datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL")):
+            raise ReviewConfigError(
+                "PREDICATE_DEMO_MODE=live requires DATAHUB_GRAPHQL_URL or --datahub-url."
+            )
+        args.no_recorded_fallback = True
+
     state = ReviewState(
         args.policy,
         args.datahub_url,
         args.datahub_file,
         allow_recorded_fallback=not args.no_recorded_fallback,
+        max_hops=args.max_hops,
     )
     urns = args.urns or DEFAULT_URNS
     server = QuietReviewServer(

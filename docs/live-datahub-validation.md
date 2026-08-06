@@ -123,8 +123,34 @@ production deployments should map it to DataHub authentication and policy.
 
 ## Write-back validation
 
-Use a non-production namespace first. The repository now includes a command that
-requires both a mutation document and a read-back query:
+Use a non-production namespace first. The default path uses DataHub's supported
+Python REST SDK rather than guessing a GraphQL mutation. It preserves existing
+dataset properties, upserts one `predicate.ai_context_contract` property, polls
+DataHub until that property is readable, and fails unless the read-back exactly
+matches the contract that was written:
+
+```bash
+export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
+export DATAHUB_GMS_URL="http://localhost:8080"
+
+PYTHONPATH=src python3 scripts/writeback_datahub.py \
+  "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
+  --policy examples/policies/enterprise_ai.yml \
+  --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --datahub-gms-url "$DATAHUB_GMS_URL" \
+  --transport rest \
+  --yes
+```
+
+The successful JSON receipt includes `transport: "datahub-rest-sdk"`,
+`property_name: "predicate.ai_context_contract"`, and
+`verified_readback: true`. Open the same dataset in DataHub and inspect its
+Properties tab to see the written property. The command is intentionally
+read/write: use a least-privilege token and a non-production dataset.
+
+If your deployment does not expose the DatasetProperties REST aspect, use the
+deployment-specific GraphQL path below. Predicate still requires both a
+mutation document and a read-back query:
 
 ```bash
 PYTHONPATH=src python3 scripts/writeback_datahub.py \

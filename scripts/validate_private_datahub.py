@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone
 
 from context_gradient.datahub.adapter import DataHubEvidenceExtractor, GraphQLDataHubClient
-from context_gradient.sdk.admission import admit_capability
+from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.policy import load_policy
 
@@ -47,7 +47,7 @@ def main() -> None:
         try:
             bundle = extractor.bundle(urn)
             certificate = engine.certify(bundle).as_dict()
-            decision = admit_capability(certificate, args.capability).__dict__
+            decision = enforce_action_guardrails(certificate, args.capability).__dict__
             observation = certificate.get("metadata", {}).get("datahub_observation", {})
             results.append(
                 {

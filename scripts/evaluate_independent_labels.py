@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from context_gradient.datahub.adapter import DataHubEvidenceExtractor, DEFAULT_MAX_HOPS
 from context_gradient.datahub.mock_client import FileDataHubClient
-from context_gradient.sdk.admission import admit_capability
+from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.cache import JsonCache
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.policy import load_policy
@@ -67,7 +67,7 @@ def main() -> None:
                 except (KeyError, RuntimeError) as error:
                     row["evaluation_error"] = str(error)
                     continue
-                decision = admit_capability(certificate, row["capability"])
+                decision = enforce_action_guardrails(certificate, row["capability"])
                 row["predicate_decision"] = "allowed" if decision.allowed else "blocked"
                 row["predicate_readiness"] = certificate["readiness_score"]
                 row["predicate_confidence"] = certificate["confidence"]

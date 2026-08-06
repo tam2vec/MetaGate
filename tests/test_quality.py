@@ -4,7 +4,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from context_gradient.datahub.adapter import DataHubEvidenceExtractor, DataHubWriteback, GraphQLDataHubClient
+from context_gradient.datahub.adapter import (
+    DataHubEvidenceExtractor,
+    DataHubRestWritebackClient,
+    DataHubWriteback,
+    GraphQLDataHubClient,
+)
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.scanner import BackgroundScanner
 from context_gradient.sdk.engine import ReadinessEngine
@@ -159,6 +164,29 @@ class QualityTest(unittest.TestCase):
         self.assertLess(certificate.readiness_score, 10.0)
         self.assertTrue(any(gap.type.value == "contradictory" for gap in certificate.gaps))
 
+    def test_duplicate_assertion_urns_count_once_using_latest_result(self):
+        normalized = GraphQLDataHubClient("http://invalid")._normalize(
+            {
+                "urn": "urn:li:dataset:test",
+                "assertions": {"assertions": [
+                    {
+                        "urn": "urn:li:assertion:row-count",
+                        "runEvents": {"runEvents": [{"timestampMillis": 1000, "status": "SUCCESS"}]},
+                    },
+                    {
+                        "urn": "urn:li:assertion:row-count",
+                        "runEvents": {"runEvents": [{"timestampMillis": 2000, "status": "FAILURE"}]},
+                    },
+                ]},
+            },
+            "urn:li:dataset:test",
+        )
+
+        assertions = normalized["assertions"]
+        self.assertEqual(assertions["count"], 1)
+        self.assertEqual(assertions["passing"], 0)
+        self.assertEqual(assertions["failing"], 1)
+
     def test_unavailable_required_evidence_counts_against_readiness(self):
         normalized = GraphQLDataHubClient("http://invalid")._normalize(
             {"urn": "urn:li:dataset:test", "properties": {"description": "sample"}},
@@ -264,10 +292,74 @@ class QualityTest(unittest.TestCase):
             client = FileDataHubClient(ROOT / "examples/data/datahub_graph.json", path / "writeback.json")
             receipt = DataHubWriteback(client).publish(URN, {"gaps": []})
             self.assertTrue(receipt["certificate_written"])
+            self.assertTrue(receipt["written_at"])
+            self.assertTrue(receipt["read_back_at"])
+            self.assertTrue(receipt["verified_readback"])
             scanner = BackgroundScanner(DataHubEvidenceExtractor(client), ReadinessEngine(PolicyProfile("test", {}, {}, [])), ReadinessHistory(path / "history"), audit_log=AuditLog(path / "audit.jsonl"))
             result = scanner.handle_metadata_events([URN])[0]
             self.assertGreaterEqual(result.duration_ms, 0)
             self.assertTrue((path / "audit.jsonl").exists())
+
+    def test_rest_writeback_preserves_properties_and_verifies_exact_contract(self):
+        from datahub.metadata.schema_classes import DatasetPropertiesClass
+
+        class FakeGraph:
+            def __init__(self):
+                self.aspect = DatasetPropertiesClass(
+                    customProperties={"existing.key": "keep-me"},
+                    description="Existing description",
+                )
+
+            def get_aspect(self, _urn, _aspect_type):
+                return self.aspect
+
+            def emit(self, proposal):
+                self.aspect = proposal.aspect
+
+        graph = FakeGraph()
+        client = DataHubRestWritebackClient("http://datahub.invalid", graph=graph)
+        certificate = {
+            "entity_urn": URN,
+            "decision": "blocked",
+            "decision_id": "pred-test",
+            "gaps": [],
+        }
+
+        receipt = DataHubWriteback(client).publish(URN, certificate)
+
+        self.assertTrue(receipt["verified_readback"])
+        self.assertEqual(receipt["transport"], "datahub-rest-sdk")
+        self.assertEqual(receipt["property_name"], "predicate.ai_context_contract")
+        self.assertEqual(graph.aspect.customProperties["existing.key"], "keep-me")
+        self.assertIn("predicate.ai_context_contract", graph.aspect.customProperties)
+
+    def test_writeback_does_not_create_tasks_before_readback(self):
+        class DelayedReadback:
+            def __init__(self):
+                self.tasks = []
+                self.reads = 0
+            def write_certificate(self, urn, certificate):
+                return None
+            def create_remediation_task(self, urn, title, body):
+                self.tasks.append(title)
+            def get_written_certificate(self, urn):
+                self.reads += 1
+                if self.reads == 1:
+                    self.assert_no_tasks()
+                    return None
+                return {"urn": urn, "decision": "blocked"}
+            def assert_no_tasks(self):
+                if self.tasks:
+                    raise AssertionError("remediation task created before read-back")
+
+        client = DelayedReadback()
+        with patch.dict("os.environ", {"PREDICATE_WRITEBACK_READBACK_INTERVAL": "0"}):
+            receipt = DataHubWriteback(client).publish(
+                URN,
+                {"decision": "blocked", "gaps": [{"evidence_kind": "freshness", "type": "missing", "recommendation": "Add a freshness SLA."}]},
+            )
+        self.assertTrue(receipt["verified_readback"])
+        self.assertEqual(len(client.tasks), 1)
 
     def test_writeback_rejects_readback_for_the_wrong_asset(self):
         class WrongReadback:

@@ -106,6 +106,18 @@
     .resource-item a { display: inline-block; margin-top: 9px; color: var(--blue); font-weight: 700; text-decoration: none; }
     .resource-item a:hover { text-decoration: underline; }
     .resource-tag { display: inline-block; margin-top: 9px; color: var(--yellow); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .resource-discovery { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+    .resource-discovery h4 { margin: 0 0 6px; }
+    .resource-discovery p { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+    .resource-discovery button { margin: 5px 6px 0 0; border: 1px solid var(--blue); border-radius: 6px; padding: 7px 10px; background: white; color: var(--blue); font: inherit; font-size: 13px; cursor: pointer; }
+    .resource-discovery button:hover { background: #eef4ff; }
+    .resource-discovery .resource-error { color: var(--red); }
+    .resource-item code { display: block; margin-top: 9px; padding: 7px 8px; overflow-wrap: anywhere; background: #f4f6fb; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); font-size: 12px; }
+    .resource-proof { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f8fbff; }
+    .resource-proof h4 { margin: 0 0 10px; }
+    .resource-proof-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+    .resource-proof-grid span { padding: 9px; border-left: 3px solid var(--blue); background: white; }
+    .resource-proof-grid strong { display: block; color: var(--ink); }
     .sidebar-assets {
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 8px;
@@ -753,6 +765,48 @@
     .evidence-fill { height: 100%; border-radius: inherit; background: var(--green); }
     .evidence-fill.failed { background: var(--red); }
     .evidence-label { color: var(--muted); text-align: right; }
+    .contract-card {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #172238;
+      color: #fff;
+    }
+    .contract-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+    .contract-head h3 { margin: 3px 0 0; }
+    .contract-head .panel-kicker { color: #a9c4ff; }
+    .contract-decision { font-weight: 900; text-transform: uppercase; color: #8ee0b3; }
+    .contract-decision.blocked, .contract-decision.unavailable { color: #ffaaa5; }
+    .contract-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+    .contract-fact { border: 1px solid rgba(255,255,255,.16); border-radius: 6px; padding: 10px; min-width: 0; }
+    .contract-fact span { display: block; color: #aebbd0; font-size: 11px; text-transform: uppercase; }
+    .contract-fact strong { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
+    .contract-card p { margin: 12px 0 0; color: #dce6f7; font-size: 13px; line-height: 1.4; }
+    .integration-proof {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+    .integration-proof-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .integration-proof-head h3 { margin: 0; }
+    .integration-proof-status { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .integration-proof-status.verified { color: var(--green); }
+    .integration-proof-status.attention_required, .integration-proof-status.unavailable { color: var(--red); }
+    .integration-proof-summary { margin: 7px 0 12px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .integration-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .integration-proof-fact { border: 1px solid var(--line); border-radius: 6px; padding: 10px; min-width: 0; }
+    .integration-proof-fact span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    .integration-proof-fact strong { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
+    .integration-proof-fact strong.verified { color: var(--green); }
+    .integration-proof-fact strong.attention_required, .integration-proof-fact strong.unavailable { color: var(--red); }
+    .integration-proof-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .integration-mcp-facts { margin: 10px 0 0; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    @media (max-width: 760px) {
+      .integration-proof-grid { grid-template-columns: 1fr; }
+    }
     .score-trace {
       margin-top: 16px;
       border: 1px solid var(--line);
@@ -1261,7 +1315,7 @@
       </div>
 
       <section id="scoreboard" class="scoreboard" aria-label="Proof metrics">
-        <div class="metric"><strong id="assetCount">0</strong><span>assets in the current run</span></div>
+        <div class="metric"><strong id="assetCount">0</strong><span id="assetCountLabel">assets in the current run</span></div>
         <div class="metric"><strong id="financeCount">0</strong><span>finance stress-test assets</span></div>
         <div class="metric"><strong id="allowedCount">0</strong><span>allowed autonomous actions</span></div>
         <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
@@ -1372,6 +1426,8 @@
                   <option value="autonomous-agent-action">Autonomous agent action</option>
                   <option value="generate-executive-metrics">Generate executive metrics</option>
                   <option value="answer-business-questions">Answer business questions</option>
+                  <option value="modify-dataset">Modify dataset</option>
+                  <option value="restricted-sql">Run restricted SQL</option>
                 </select>
                 <button id="requestAction" class="request-button" type="button">Request AI action</button>
               </div>
@@ -1407,6 +1463,33 @@
             <h3>Evidence coverage</h3>
             <div id="evidenceChart"></div>
           </div>
+          <section class="contract-card" aria-live="polite" aria-label="Agent constraint contract">
+            <div class="contract-head">
+              <div><div class="panel-kicker">Agent boundary</div><h3>What this agent may do</h3></div>
+              <span id="contractDecision" class="contract-decision">unavailable</span>
+            </div>
+            <div class="contract-grid">
+              <div class="contract-fact"><span>Allowed</span><strong id="contractAllowed">Waiting for evidence</strong></div>
+              <div class="contract-fact"><span>Approval</span><strong id="contractApproval">Unknown</strong></div>
+              <div class="contract-fact"><span>Evidence</span><strong id="contractEvidence">Not checked</strong></div>
+              <div class="contract-fact"><span>Decision ID</span><strong id="contractDecisionId">Not recorded</strong></div>
+            </div>
+            <p id="contractNextStep">The contract appears after the selected asset is evaluated.</p>
+          </section>
+          <section class="integration-proof" aria-live="polite" aria-label="Agent integration proof">
+            <div class="integration-proof-head">
+              <h3>Agent integration proof</h3>
+              <span id="integrationProofStatus" class="integration-proof-status">waiting</span>
+            </div>
+            <p id="integrationProofSummary" class="integration-proof-summary">Run a connected evaluation to compare the agent entry points.</p>
+            <div class="integration-proof-grid">
+              <div class="integration-proof-fact"><span>Skill path</span><strong id="integrationSkillProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>Predicate MCP</span><strong id="integrationMcpProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>Agreement</span><strong id="integrationAgreementProof">Waiting</strong></div>
+            </div>
+            <p id="integrationExternalMcp" class="integration-proof-note">The official DataHub MCP remains a separate optional server; this panel does not pretend it ran unless it is configured.</p>
+            <div id="integrationExternalMcpFacts" class="integration-mcp-facts" hidden></div>
+          </section>
           <div class="score-trace">
             <h3>Score basis</h3>
             <p id="scoreTraceSummary">This score will show the DataHub evidence used to calculate it.</p>
@@ -1460,8 +1543,13 @@
 
           <section id="hackathon-resources" class="feature-card">
             <h3>Hackathon DataHub resources</h3>
-            <p class="quiet-note">Official tools and sample environments for this project. Load a dataset in DataHub, then check its URN with Predicate.</p>
+            <p class="quiet-note">Load one of these resources into DataHub. Predicate can then find and review the real dataset URNs.</p>
             <div class="resource-grid">
+              <div class="resource-item">
+                <h4>DataHub Docs</h4>
+                <p>Reference material for setup, agents, and platform behavior.</p>
+                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub Docs</a>
+              </div>
               <div class="resource-item">
                 <h4>DataHub Quickstart</h4>
                 <p>Run the local DataHub platform used by the live proof.</p>
@@ -1470,48 +1558,77 @@
               <div class="resource-item">
                 <h4>DataHub MCP Server</h4>
                 <p>Let an agent read catalog context through a governed interface.</p>
-                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+                <a href="https://github.com/acryldata/mcp-server-datahub" target="_blank" rel="noreferrer">Open MCP repository</a>
               </div>
               <div class="resource-item">
                 <h4>Agent Context Kit</h4>
                 <p>Give agents structured metadata context before they act.</p>
-                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+                <a href="https://docs.datahub.com/docs/dev-guides/agent-context/agent-context" target="_blank" rel="noreferrer">Open Context Kit docs</a>
               </div>
               <div class="resource-item">
                 <h4>DataHub Skills</h4>
                 <p>Reusable catalog skills for metadata-aware agent workflows.</p>
-                <a href="https://github.com/datahub-project/datahub-skills" target="_blank" rel="noreferrer">Open Skills repository</a>
+                <a href="https://docs.datahub.com/docs/dev-guides/agent-context/skills" target="_blank" rel="noreferrer">Open Skills docs</a>
+                <a href="https://github.com/datahub-project/datahub-skills" target="_blank" rel="noreferrer">Repository</a>
+              </div>
+              <div class="resource-item">
+                <h4>DataHub Core</h4>
+                <p>The open-source catalog platform that stores the graph Predicate evaluates.</p>
+                <a href="https://github.com/datahub-project/datahub" target="_blank" rel="noreferrer">Open Core repository</a>
               </div>
               <div class="resource-item">
                 <h4>Showcase Ecommerce</h4>
                 <p>Rich cross-platform graph with lineage, governance, glossary, and domains.</p>
-                <span class="resource-tag">Loadable datapack</span>
+                <code>datahub datapack load showcase-ecommerce --force</code>
+                <a href="https://docs.datahub.com/docs/quickstart" target="_blank" rel="noreferrer">Load instructions</a>
               </div>
               <div class="resource-item">
                 <h4>Bootstrap</h4>
                 <p>Small starter graph for a quick end-to-end smoke test.</p>
-                <span class="resource-tag">Loadable datapack</span>
+                <code>datahub datapack load bootstrap --force</code>
+                <a href="https://docs.datahub.com/docs/quickstart" target="_blank" rel="noreferrer">Load instructions</a>
               </div>
               <div class="resource-item">
                 <h4>NYC Taxi</h4>
                 <p>Pipeline and freshness stress case built around trip records.</p>
-                <span class="resource-tag">Scenario dataset</span>
+                <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/nyc-taxi" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
                 <h4>Healthcare</h4>
                 <p>Synthetic sensitive-data scenario with planted quality issues.</p>
-                <span class="resource-tag">Scenario dataset</span>
+                <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/healthcare" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
                 <h4>Fiction Retail</h4>
                 <p>Clean multi-table analytics scenario for lineage and definitions.</p>
-                <span class="resource-tag">Scenario dataset</span>
+                <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/fiction-retail" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
                 <h4>Analytics Agent</h4>
                 <p>DataHub’s analytics-agent path for metadata-aware analysis.</p>
-                <a href="https://docs.datahub.com/" target="_blank" rel="noreferrer">Open DataHub docs</a>
+                <a href="https://docs.datahub.com/docs/features/feature-guides/analytics-agent" target="_blank" rel="noreferrer">Open Analytics Agent docs</a>
               </div>
+              <div class="resource-item">
+                <h4>DataHub community</h4>
+                <p>Ask questions, get feedback, and learn from maintainers.</p>
+                <a href="https://join.slack.com/t/datahubspace/shared_invite/zt-3rxzw3uww-7F2k5mDpjKXIGLskiQPwLQ" target="_blank" rel="noreferrer">Join hackathon Slack</a>
+                <a href="https://datahub.com/community/datahub-town-halls/" target="_blank" rel="noreferrer">Town Halls</a>
+              </div>
+            </div>
+            <div class="resource-proof">
+              <h4>Why these resources matter</h4>
+              <div class="resource-proof-grid">
+                <span><strong>DataHub use</strong> Live GraphQL context, MCP/agent paths, and catalog discovery.</span>
+                <span><strong>Technical execution</strong> CLI, API, review surface, browser panel, and tests over metadata.</span>
+                <span><strong>Originality</strong> A capability-specific gate before an AI action, not another catalog view.</span>
+                <span><strong>Real-world value</strong> Freshness, quality, lineage, ownership, and incident evidence become explainable decisions.</span>
+              </div>
+            </div>
+            <div class="resource-discovery">
+              <h4>Assets currently in this DataHub</h4>
+              <p>Predicate automatically scores datasets that are loaded in the connected DataHub. Resources not loaded yet stay unscored.</p>
+              <button id="discoverResources" type="button">Find loaded assets</button>
+              <div id="discoveredResources" class="quiet-note">Connect a live local review server to search the catalog.</div>
             </div>
           </section>
 
@@ -1776,16 +1893,145 @@
     let selected = 0;
     let embeddedView = "summary";
     let activeApiBase = "";
+    let assetScope = "configured review scope";
+    let integrationProofKey = "";
+    let evaluationSequence = 0;
+    let evaluationController = null;
     const capabilityThresholds = {
       "answer-business-questions": { score: 78, confidence: 75 },
       "generate-executive-metrics": { score: 84, confidence: 80 },
-      "autonomous-agent-action": { score: 92, confidence: 88 }
+      "autonomous-agent-action": { score: 92, confidence: 88 },
+      "modify-dataset": { score: 99, confidence: 99 },
+      "restricted-sql": { score: 99, confidence: 99 }
     };
 
     function renderMetricContext(run) {
       const thresholds = run.action_thresholds || capabilityThresholds[run.capability] || capabilityThresholds[capabilitySelect.value];
       document.getElementById("readinessContext").textContent = thresholds ? `(action needs ${thresholds.score}+)` : "";
       document.getElementById("confidenceContext").textContent = thresholds ? `(action needs ${thresholds.confidence}+)` : "";
+    }
+
+    function renderConstraintContract(run) {
+      const contract = run && run.constraint_contract;
+      const decision = document.getElementById("contractDecision");
+      const allowed = document.getElementById("contractAllowed");
+      const approval = document.getElementById("contractApproval");
+      const evidence = document.getElementById("contractEvidence");
+      const decisionId = document.getElementById("contractDecisionId");
+      const nextStep = document.getElementById("contractNextStep");
+      if (!decision || !allowed || !approval || !evidence || !decisionId || !nextStep) return;
+      if (!contract) {
+        decision.textContent = "unavailable";
+        decision.className = "contract-decision unavailable";
+        allowed.textContent = "Waiting for live evidence";
+        approval.textContent = "Unknown";
+        evidence.textContent = "Not available in recorded mode";
+        decisionId.textContent = "Not recorded";
+        nextStep.textContent = "Run this asset through the live Predicate Review API to create a traceable agent boundary.";
+        return;
+      }
+      const state = String(contract.decision || run.decision || "unavailable").toLowerCase();
+      decision.textContent = state;
+      decision.className = `contract-decision ${state}`;
+      allowed.textContent = contract.allowed_action || "No action allowed";
+      approval.textContent = contract.required_human_approval ? "Required" : "Not required";
+      const statuses = Object.values(contract.evidence || {}).map((item) => item && item.status).filter(Boolean);
+      const unavailableCount = statuses.filter((item) => item === "unavailable").length;
+      const absentCount = statuses.filter((item) => item === "absent").length;
+      evidence.textContent = unavailableCount ? `${unavailableCount} unavailable` : absentCount ? `${absentCount} absent` : "Verified facts";
+      decisionId.textContent = contract.decision_id || "Not recorded";
+      nextStep.textContent = contract.next_step || "Keep the contract current when DataHub metadata changes.";
+    }
+
+    function renderIntegrationProof(proof) {
+      const status = document.getElementById("integrationProofStatus");
+      const summary = document.getElementById("integrationProofSummary");
+      const skill = document.getElementById("integrationSkillProof");
+      const mcp = document.getElementById("integrationMcpProof");
+      const agreement = document.getElementById("integrationAgreementProof");
+      const external = document.getElementById("integrationExternalMcp");
+      const externalFacts = document.getElementById("integrationExternalMcpFacts");
+      if (!status || !summary || !skill || !mcp || !agreement || !external || !externalFacts) return;
+      if (!proof) {
+        status.textContent = "Waiting";
+        status.className = "integration-proof-status";
+        summary.textContent = "Run a connected evaluation to compare the agent entry points.";
+        [skill, mcp, agreement].forEach((node) => { node.textContent = "Waiting"; node.className = ""; });
+        externalFacts.hidden = true;
+        return;
+      }
+      const state = proof.status || "unavailable";
+      const skillDecision = proof.skill && proof.skill.decision ? proof.skill.decision.toUpperCase() : "Unavailable";
+      const mcpDecision = proof.predicate_mcp && proof.predicate_mcp.decision ? proof.predicate_mcp.decision.toUpperCase() : "Unavailable";
+      const agreementText = proof.same_decision ? `Same decision: ${skillDecision}` : "Paths need attention";
+      status.textContent = state.replace(/_/g, " ");
+      status.className = `integration-proof-status ${state}`;
+      summary.textContent = state === "verified"
+        ? `Skill and Predicate MCP returned the same ${skillDecision} result for this asset.`
+        : (proof.message || "The two entry points did not produce a verified match.");
+      skill.textContent = skillDecision;
+      mcp.textContent = mcpDecision;
+      agreement.textContent = agreementText;
+      skill.className = proof.skill && proof.skill.status === "ok" ? "verified" : "unavailable";
+      mcp.className = proof.predicate_mcp && proof.predicate_mcp.status === "ok" ? "verified" : "unavailable";
+      agreement.className = proof.same_decision ? "verified" : "attention_required";
+      const official = proof.official_datahub_mcp || {};
+      if (official.status === "verified") {
+        const entityCall = official.entity_call || {};
+        external.textContent = entityCall.entity_found
+          ? "Official DataHub MCP returned this asset and Predicate processed its facts below."
+          : "Official DataHub MCP responded, but the requested asset was not found in its result.";
+      } else if (official.status === "attention_required") {
+        external.textContent = official.error
+          ? `Official DataHub MCP needs attention: ${official.error}`
+          : (official.note || "Official DataHub MCP needs attention before it can be used.");
+      } else {
+        external.textContent = official.note
+          || "Official DataHub MCP is optional and has not been configured for this run.";
+      }
+      const entityCall = official.entity_call || {};
+      const facts = entityCall.facts || {};
+        const evidence = entityCall.evidence || {};
+      if (entityCall.entity_found) {
+        const owner = (facts.ownership && facts.ownership.owners || []).length;
+        const lineage = facts.lineage || {};
+        const links = (lineage.upstreams || []).length + (lineage.downstreams || []).length;
+        const latest = (facts.assertions && facts.assertions.latest_results || [])[0];
+        const freshness = facts.freshness && (facts.freshness.timestamp || facts.freshness.observed_at);
+        const incidentStatus = evidence.incidents && evidence.incidents.status;
+        const queryCall = official.query_call || {};
+        const querySummary = queryCall.status === "present"
+          ? `${queryCall.query_count} recorded quer${queryCall.query_count === 1 ? "y" : "ies"}; latest ${queryCall.latest_query_at || "timestamp unavailable"}`
+          : queryCall.status === "absent" ? "no recorded queries" : "usage unavailable";
+        externalFacts.textContent = [
+          `MCP facts: owner ${owner ? "found" : "missing"}; lineage ${links} link${links === 1 ? "" : "s"};`,
+          `latest assertion ${latest ? (latest.status || "unknown") : "unavailable"};`,
+          `freshness ${freshness || "unavailable"}; incidents ${incidentStatus || "unavailable"}; usage ${querySummary}.`,
+        ].join(" ");
+        externalFacts.hidden = false;
+      } else {
+        externalFacts.hidden = true;
+      }
+    }
+
+    async function loadIntegrationProof(run) {
+      if (!run || !activeApiBase) {
+        integrationProofKey = "";
+        renderIntegrationProof(null);
+        return;
+      }
+      const key = `${activeApiBase}|${run.urn}|${run.capability}|${run.evaluated_at || run.decision_id || "current"}`;
+      if (key === integrationProofKey) return;
+      integrationProofKey = key;
+      try {
+        const endpoint = `${activeApiBase}/api/integration-proof?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(run.capability)}`;
+        const response = await fetch(endpoint, { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        renderIntegrationProof(payload);
+      } catch (error) {
+        renderIntegrationProof({ status: "unavailable", message: "Integration proof needs the updated Review API. Restart the local server or redeploy the public API." });
+      }
     }
 
     function reviewKey(run) {
@@ -1905,6 +2151,7 @@
       const finance = runs.filter((run) => /finance|customer_lifetime_value/i.test(`${run.asset} ${run.urn}`));
       const allowed = runs.filter((run) => run.allowed === true || run.decision === "allowed");
       document.getElementById("assetCount").textContent = runs.length;
+      document.getElementById("assetCountLabel").textContent = `datasets in ${assetScope}`;
       document.getElementById("financeCount").textContent = finance.length;
       document.getElementById("allowedCount").textContent = allowed.length;
     }
@@ -2350,9 +2597,11 @@
         document.getElementById("decisionText").textContent = "unavailable";
         document.getElementById("readableStatus").textContent = "Waiting for live evidence";
         document.getElementById("actionResult").textContent = "Waiting for the Predicate Review API.";
+        renderConstraintContract(null);
         return;
       }
       renderEvidenceChart(run);
+      renderConstraintContract(run);
       renderScoreTrace(run);
       renderAssessment(run);
       document.getElementById("assetName").textContent = run.asset;
@@ -2376,6 +2625,7 @@
       document.getElementById("confidenceText").textContent = formatMetric(run.confidence);
       document.getElementById("confidenceText").className = metricClass(run.confidence);
       renderMetricContext(run);
+      renderConstraintContract(run);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       renderScoreTrace(run);
@@ -2427,6 +2677,7 @@
       document.getElementById("scoreText").className = metricClass(run.readiness);
       document.getElementById("confidenceText").className = metricClass(run.confidence);
       renderMetricContext(run);
+      renderConstraintContract(run);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       document.getElementById("predicateBlock").textContent = JSON.stringify(run.predicate, null, 2).replace(/ && /g, " &&\n    ");
@@ -2449,7 +2700,11 @@
     }
 
     async function loadCapabilityDecision(capability) {
-      const run = runs[selected];
+      const requestId = ++evaluationSequence;
+      if (evaluationController) evaluationController.abort();
+      evaluationController = new AbortController();
+      const selectedAtRequest = selected;
+      const run = runs[selectedAtRequest];
       const actionResult = document.getElementById("actionResult");
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       if (!run || !activeApiBase) {
@@ -2463,24 +2718,32 @@
       requestAction.textContent = "Checking...";
       const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
       try {
-        const response = await fetch(endpoint, { cache: "no-store" });
+        const response = await fetch(endpoint, { cache: "no-store", signal: evaluationController.signal });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
-        runs[selected] = payload;
-        renderDecisionOnly(runs[selected]);
-        const decisionHero = document.querySelector(".decision-hero");
-        decisionHero.classList.remove("updated");
-        void decisionHero.offsetWidth;
-        decisionHero.classList.add("updated");
+        // A user can change the asset or action again before this request
+        // returns. Never let an older response repaint the newer selection.
+        if (requestId !== evaluationSequence || selectedAtRequest !== selected) return;
+        runs[selectedAtRequest] = payload;
+        // Re-render every dependent panel. A capability changes more than the
+        // headline: thresholds, scores, failed terms, repair plan, diff, and
+        // timeline all belong to the selected action.
+        render();
+        loadIntegrationProof(runs[selectedAtRequest]);
         document.getElementById("dataUpdate").textContent = `Checked at ${new Date().toLocaleTimeString()}`;
-        actionResult.textContent = `${actionName}: ${runs[selected].decision.toUpperCase()} - ${runs[selected].reason}`;
-        requestAction.textContent = `Checked: ${runs[selected].decision.toUpperCase()}`;
+        actionResult.textContent = `${actionName}: ${runs[selectedAtRequest].decision.toUpperCase()} - ${runs[selectedAtRequest].reason} Saved to the review server.`;
+        requestAction.textContent = `Checked: ${runs[selectedAtRequest].decision.toUpperCase()}`;
       } catch (error) {
+        if (error.name === "AbortError" || requestId !== evaluationSequence) return;
         document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
         actionResult.textContent = friendlyApiError(error);
+      } finally {
+        if (requestId === evaluationSequence) evaluationController = null;
       }
-      requestAction.disabled = false;
-      if (requestAction.textContent === "Checking...") requestAction.textContent = "Request AI action";
+      if (requestId === evaluationSequence) {
+        requestAction.disabled = false;
+        if (requestAction.textContent === "Checking...") requestAction.textContent = "Request AI action";
+      }
     }
 
     async function evaluateNewAsset() {
@@ -2506,13 +2769,53 @@
           selected = runs.length - 1;
         }
         render();
-        document.getElementById("actionResult").textContent = `Checked ${payload.asset}: ${payload.decision.toUpperCase()}.`;
+        loadIntegrationProof(payload);
+        document.getElementById("actionResult").textContent = `Checked ${payload.asset}: ${payload.decision.toUpperCase()}. Saved to the review server.`;
         urnInput.value = "";
       } catch (error) {
         document.getElementById("actionResult").textContent = friendlyApiError(error);
       } finally {
         evaluateAsset.disabled = false;
         evaluateAsset.textContent = "Check asset";
+      }
+    }
+
+    async function loadHackathonResources() {
+      const target = document.getElementById("discoveredResources");
+      const button = document.getElementById("discoverResources");
+      if (!target || !button) return;
+      if (!activeApiBase) {
+        target.textContent = "Connect the local Predicate Review server first.";
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "Finding assets...";
+      try {
+        const response = await fetch(`${activeApiBase}/api/resources`, { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        const urns = Array.isArray(payload.discovered_dataset_urns) ? payload.discovered_dataset_urns : [];
+        if (!urns.length) {
+          target.textContent = payload.discovery_error || "No dataset assets were found in this DataHub.";
+          target.className = payload.discovery_error ? "resource-error" : "quiet-note";
+          return;
+        }
+        target.className = "";
+        target.innerHTML = `<strong>${urns.length} dataset${urns.length === 1 ? "" : "s"} found.</strong> Predicate scores them automatically in the current run. Select one to inspect its evidence.` + urns.map((urn) =>
+          `<button type="button" data-resource-urn="${escapeHtml(urn)}">${escapeHtml(urn.split(",").slice(-2, -1)[0] || urn)}</button>`
+        ).join("");
+        target.querySelectorAll("[data-resource-urn]").forEach((item) => {
+          item.addEventListener("click", () => {
+            urnInput.value = item.dataset.resourceUrn;
+            evaluateNewAsset();
+          });
+        });
+      } catch (error) {
+        target.className = "resource-error";
+        target.textContent = friendlyApiError(error);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Find loaded assets";
       }
     }
 
@@ -2555,17 +2858,33 @@
           runs = payload.runs;
           selected = 0;
           document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
-          document.getElementById("environmentProof").textContent = liveMode ? "Source: live DataHub" : "Source: demo fixture";
+          const resolvedCount = Number(payload.asset_count || payload.runs.length);
+          const configuredCount = Number(payload.configured_asset_count || status?.configured_asset_count || 0);
+          const scopeLabel = configuredCount && resolvedCount !== configuredCount
+            ? `Scope: ${resolvedCount}/${configuredCount} assets`
+            : `Scope: ${resolvedCount} assets`;
+          const buildLabel = payload.build_id || status?.build_id;
+          document.getElementById("environmentProof").textContent = `${liveMode ? "Source: live DataHub" : "Source: six-asset demo fixture"} · ${scopeLabel}${buildLabel ? ` · ${buildLabel}` : ""}`;
           const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
           document.getElementById("dataMode").textContent = `${liveMode ? "Mode: live DataHub API" : "Mode: public API fixture"} - Write-back: ${writebackMode}`;
+          assetScope = payload.discovered ? "the connected DataHub" : "the configured review scope";
           document.getElementById("dataUpdate").textContent = liveMode
             ? "Live DataHub. Refresh after changes."
             : "Demo data. Changes only when the fixture changes.";
           render();
+          loadIntegrationProof(runs[selected]);
           const errors = Array.isArray(payload.errors) ? payload.errors : [];
+          const discoveryNote = payload.discovery_error
+            ? ` DataHub discovery issue: ${payload.discovery_error}`
+            : (payload.discovered ? ` ${resolvedCount} loaded dataset${resolvedCount === 1 ? "" : "s"} in this run.` : ` ${scopeLabel}.`);
+          const scopeWarning = configuredCount && resolvedCount !== configuredCount
+            ? ` Expected ${configuredCount} configured assets but received ${resolvedCount}.`
+            : "";
+          const savedCount = payload.runs.filter((run) => run.stale_until_rechecked).length;
+          const savedNote = savedCount ? ` ${savedCount} saved check${savedCount === 1 ? "" : "s"} restored.` : "";
           document.getElementById("dataUpdate").textContent = errors.length
-            ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.`
-            : `${liveMode ? "Live check complete" : "Demo check complete"} at ${new Date().toLocaleTimeString()}`;
+            ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.${discoveryNote}${scopeWarning}`
+            : `${liveMode ? "Live check complete" : "Demo check complete"} at ${new Date().toLocaleTimeString()}.${savedNote}${scopeWarning}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action.";
         }
       } catch (error) {
@@ -2590,23 +2909,33 @@
     }
 
     assetSelect.addEventListener("change", (event) => {
+      evaluationSequence += 1;
+      if (evaluationController) evaluationController.abort();
+      requestAction.disabled = false;
+      requestAction.textContent = "Check selected action";
       selected = Number(event.target.value);
       requestAction.textContent = "Check selected action";
       render();
+      loadIntegrationProof(runs[selected]);
       const assetName = runs[selected] ? runs[selected].asset : "the selected asset";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       document.getElementById("dataUpdate").textContent = `Asset changed to ${assetName}.`;
       document.getElementById("actionResult").textContent = `Ready to check ${actionName} on ${assetName}.`;
     });
-      capabilitySelect.addEventListener("change", () => {
+    capabilitySelect.addEventListener("change", () => {
       requestAction.textContent = "Check selected action";
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       const assetName = runs[selected] ? runs[selected].asset : "this asset";
       document.getElementById("dataUpdate").textContent = `Action changed for ${assetName}.`;
       document.getElementById("actionResult").textContent = `Ready to check ${actionName} on ${assetName}.`;
+      // Changing the action is itself a request for a new decision. This keeps
+      // the selected action, scores, evidence, and guidance in sync without
+      // requiring a second click or a page reload.
+      loadCapabilityDecision(capabilitySelect.value);
     });
     requestAction.addEventListener("click", () => loadCapabilityDecision(capabilitySelect.value));
     evaluateAsset.addEventListener("click", evaluateNewAsset);
+    document.getElementById("discoverResources").addEventListener("click", loadHackathonResources);
     document.getElementById("reviewAgree").addEventListener("click", () => saveHumanReview("agree"));
     document.getElementById("reviewDisagree").addEventListener("click", () => saveHumanReview("disagree"));
     document.getElementById("reviewNote").addEventListener("blur", () => {

@@ -15,6 +15,12 @@ Netlify public page
 Render cannot reach `http://localhost:8080` on your Mac. Live hosted mode
 requires a reachable DataHub GraphQL URL and a server-side token.
 
+This repository includes `render.live.yaml` for the live service variant. Use
+it only after you have permissioned, non-sensitive DataHub access. The default
+`render.yaml` deliberately stays in fixture mode so a public deployment cannot
+accidentally expose a private DataHub or fail closed because no credentials were
+provided.
+
 ## Deploy the API on Render
 
 1. Push this repository to GitHub.

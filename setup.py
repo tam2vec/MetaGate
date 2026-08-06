@@ -11,5 +11,11 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("src"),
     python_requires=">=3.9",
-    entry_points={"console_scripts": ["predicate=context_gradient.cli:main", "context-gradient=context_gradient.cli:main"]},
+    entry_points={"console_scripts": [
+        "predicate=context_gradient.cli:main",
+        "context-gradient=context_gradient.cli:main",
+        "predicate-review=predicate.review:main",
+        "predicate-mcp=predicate.mcp_server:main",
+        "predicate-doctor=predicate.doctor:main",
+    ]},
 )

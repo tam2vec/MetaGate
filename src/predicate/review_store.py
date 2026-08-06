@@ -20,7 +20,32 @@ class ReviewStore:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._recover_oversized_store()
         self._init()
+
+    def _recover_oversized_store(self) -> None:
+        """Move a runaway local store aside before it can break the service.
+
+        Review payloads are meant to be small audit records. A historical
+        version accidentally nested the full history inside each new payload,
+        which can grow a SQLite file until inserts fail. Preserve that file as
+        a recovery artifact and start a clean store rather than silently
+        deleting evidence or refusing to start.
+        """
+        try:
+            oversized = self.path.exists() and self.path.stat().st_size > 256 * 1024 * 1024
+        except OSError:
+            oversized = False
+        if not oversized:
+            return
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        recovery_path = self.path.with_name(f"{self.path.stem}.recovery-{stamp}{self.path.suffix}")
+        try:
+            self.path.replace(recovery_path)
+        except OSError:
+            # If the platform cannot rename the file, leave it in place and
+            # let SQLite report the underlying problem instead of masking it.
+            return
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=10)
@@ -74,6 +99,10 @@ class ReviewStore:
         return datetime.now(timezone.utc).isoformat()
 
     def record_decision(self, payload: dict[str, Any]) -> None:
+        stored_payload = dict(payload)
+        # History is derived from this table and must never be stored inside a
+        # row. Keeping it here causes exponential JSON growth on each check.
+        stored_payload.pop("history", None)
         with self._connect() as connection:
             connection.execute(
                 """INSERT INTO decisions
@@ -86,7 +115,7 @@ class ReviewStore:
                     payload.get("reason", ""),
                     payload.get("decision_id", ""),
                     payload.get("evaluated_at") or self._now(),
-                    json.dumps(payload, sort_keys=True),
+                    json.dumps(stored_payload, sort_keys=True),
                 ),
             )
 
@@ -102,6 +131,41 @@ class ReviewStore:
     def latest_decision(self, urn: str, capability: str) -> dict[str, Any] | None:
         values = self.decisions(urn, capability, limit=1)
         return values[-1] if values else None
+
+    def latest_runs(
+        self,
+        capability: str | None = None,
+        *,
+        limit: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """Return the latest saved evaluation for each asset/capability pair.
+
+        The ``decisions`` table contains the complete evaluated run payload,
+        not just the allow/block headline. Keeping this query here gives the
+        review server a durable run list without introducing a second copy of
+        the assessment schema.
+        """
+        query = "SELECT payload_json FROM decisions"
+        parameters: tuple[Any, ...] = ()
+        if capability:
+            query += " WHERE capability = ?"
+            parameters = (capability,)
+        query += " ORDER BY id DESC LIMIT ?"
+        parameters += (max(1, int(limit)) * 20,)
+        with self._connect() as connection:
+            rows = connection.execute(query, parameters).fetchall()
+
+        latest: dict[tuple[str, str], dict[str, Any]] = {}
+        for row in rows:
+            payload = json.loads(row["payload_json"])
+            urn = payload.get("urn") or payload.get("entity_urn")
+            item_capability = payload.get("capability", "")
+            if not urn or not item_capability:
+                continue
+            latest.setdefault((urn, item_capability), payload)
+            if len(latest) >= limit:
+                break
+        return list(reversed(list(latest.values())))
 
     def add_review(self, record: dict[str, Any]) -> dict[str, Any]:
         with self._connect() as connection:
@@ -147,4 +211,3 @@ class ReviewStore:
                 (urn, capability),
             ).fetchone()
         return dict(row) if row else None
-

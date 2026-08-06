@@ -19,11 +19,16 @@ This is the packaged prototype shape for a DataHub Skill/plugin.
 {
   "readiness_score": 97.5,
   "confidence": 97.25,
-  "certified_capabilities": [],
-  "blocked_capabilities": [],
-  "gaps": [],
-  "recommendations": [],
-  "context_contract": {}
+  "requested_action": "autonomous-agent-action",
+  "decision": "blocked",
+  "decision_id": "pred-...",
+  "constraint_contract": {
+    "allowed_action": null,
+    "forbidden_actions": ["autonomous-agent-action"],
+    "required_human_approval": true,
+    "evidence": {},
+    "blocking_reasons": ["..."]
+  }
 }
 ```
 
@@ -36,7 +41,21 @@ remediation, and context contract.
 
 The live adapter calls DataHub GraphQL. Deployment-specific write-back uses the
 configured certificate and task mutation documents, keeping the SDK stable
-across DataHub versions.
+across DataHub versions. The Skill and Review API use the same latest-assertion,
+freshness, lineage, and unavailable-evidence rules.
+
+For a local smoke test after installing the repository:
+
+```bash
+predicate-skill \
+  "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
+  --policy examples/policies/enterprise_ai.yml \
+  --datahub-url "$DATAHUB_GRAPHQL_URL" \
+  --capability autonomous-agent-action
+```
+
+The default is read-only. Add `--writeback` only after configuring and
+authorizing the deployment-specific mutation and read-back query.
 
 For the asset-page UI, see `../datahub-embed/`. The Skill produces the decision
 contract; the embed renders the compact DataHub panel and links to the full

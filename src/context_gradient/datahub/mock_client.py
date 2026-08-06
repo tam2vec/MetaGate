@@ -17,6 +17,13 @@ class FileDataHubClient:
         self.data = json.loads(self.path.read_text())
         return self.data["entities"][urn]
 
+    def list_dataset_urns(self) -> list[str]:
+        self.data = json.loads(self.path.read_text())
+        return sorted(
+            urn for urn, entity in self.data.get("entities", {}).items()
+            if entity.get("type", "dataset").lower() == "dataset"
+        )
+
     def get_neighbors(self, urn: str) -> Iterable[Dict[str, Any]]:
         entity = self.get_entity(urn)
         neighbor_urns = set(entity.get("upstreams", []) + entity.get("downstreams", []))

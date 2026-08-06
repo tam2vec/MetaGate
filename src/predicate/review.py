@@ -21,12 +21,14 @@ except ImportError:
     # match the review server.
     DEFAULT_MAX_HOPS = 1
 from context_gradient.datahub.mock_client import FileDataHubClient
-from context_gradient.sdk.admission import admit_capability
+from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.cache import JsonCache
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.history import ReadinessHistory
 from context_gradient.sdk.policy import load_policy
 from predicate.review_store import ReviewStore
+from predicate.hackathon_resources import resource_catalog
+from predicate.contracts import build_constraint_contract
 
 
 def _repo_root() -> Path:
@@ -50,6 +52,9 @@ DEFAULT_URNS = [
     "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)",
 ]
 STARTED_AT = time.time()
+# Visible in /api/status so a stale Render image cannot masquerade as the
+# current repository. Bump this when the judge-visible service changes.
+BUILD_ID = os.environ.get("PREDICATE_BUILD_ID", "predicate-six-asset-proof-v2")
 
 
 class ReviewConfigError(ValueError):
@@ -120,7 +125,7 @@ def _decision_to_run(certificate: dict, decision: dict, policy=None) -> dict:
 def _normalize_recorded(run: dict) -> dict:
     predicate = run.get("action_predicate") or run.get("predicate") or {}
     readiness = run.get("readiness", run.get("readiness_score"))
-    return {
+    normalized = {
         **run,
         "urn": run.get("urn") or run.get("entity_urn"),
         "readiness": readiness,
@@ -128,6 +133,9 @@ def _normalize_recorded(run: dict) -> dict:
         "failed": run.get("failed", predicate.get("failed_terms", [])),
         "predicate": predicate,
     }
+    if not normalized.get("constraint_contract"):
+        normalized["constraint_contract"] = build_constraint_contract(normalized, normalized.get("capability"))
+    return normalized
 
 
 class ReviewState:
@@ -141,7 +149,10 @@ class ReviewState:
         max_hops: int = DEFAULT_MAX_HOPS,
     ):
         self.policy_path = policy_path
-        self.datahub_url = datahub_url
+        # Resolve the endpoint once. If it comes from DATAHUB_GRAPHQL_URL,
+        # live runs must still bypass the evidence cache.
+        resolved_datahub_url = datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL")
+        self.datahub_url = None if datahub_file else resolved_datahub_url
         self.datahub_file = datahub_file
         # Live mode must never silently display an older recorded decision.
         self.allow_recorded_fallback = bool(allow_recorded_fallback and datahub_file)
@@ -160,20 +171,60 @@ class ReviewState:
         if datahub_file:
             self.client = FileDataHubClient(datahub_file)
         else:
-            self.client = GraphQLDataHubClient(datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL"))
+            self.client = GraphQLDataHubClient(
+                datahub_url or os.environ.get("DATAHUB_GRAPHQL_URL"),
+                token=os.environ.get("DATAHUB_TOKEN"),
+            )
         self.extractor = DataHubEvidenceExtractor(
             self.client,
             # The review page needs direct lineage evidence for its decision.
             # Deeper graph walks belong in the evidence view and make every
             # refresh fan out into many extra GraphQL requests.
             max_hops=max_hops,
-            # The cache filename is versioned so a scoring/rubric change can
-            # never silently reuse an older evidence interpretation.
-            cache=JsonCache(ROOT / ".context-gradient/review-cache-v4.json"),
+            # A live DataHub is the source of truth. Caching live evidence can
+            # show yesterday's score after metadata changes, so only fixture
+            # mode gets the fast local cache.
+            cache=(JsonCache(ROOT / ".context-gradient/review-cache-v4.json") if datahub_file else None),
         )
         self.assessment_history = ReadinessHistory(ROOT / ".context-gradient/assessment-history")
         self.review_store = ReviewStore(ROOT / ".context-gradient/review.sqlite3")
         self.last_errors: list[dict] = []
+        self.discovery_error: str | None = None
+
+    def resolve_urns(
+        self,
+        configured_urns: list[str],
+        *,
+        discover_assets: bool = False,
+        max_assets: int = 1000,
+    ) -> list[str]:
+        """Choose the assets for this run without hiding catalog failures.
+
+        Live review uses the connected DataHub catalog as its scope, while
+        retaining explicitly configured proof assets. This matters for the
+        hackathon demo: a newly loaded catalog may not contain every curated
+        example yet, but those examples should remain visible as unavailable
+        rather than silently disappearing from the review.
+        """
+        self.discovery_error = None
+        if not discover_assets:
+            # The CLI supplies DEFAULT_URNS when no explicit --urn is given,
+            # but callers of the state object may pass an empty list directly.
+            # Keep both entry points on the same six-asset proof scope.
+            return list(configured_urns or DEFAULT_URNS)
+        try:
+            discovered = list(self.client.list_dataset_urns())
+        except Exception as exc:
+            self.discovery_error = str(exc)
+            return [] if not self.datahub_file else list(configured_urns)
+        if not discovered:
+            self.discovery_error = "DataHub returned no dataset URNs. Load metadata, then refresh Predicate."
+            return list(configured_urns[:max_assets])
+        # Keep the explicit proof set first, then append the live catalog.
+        # De-duplication preserves order so the six-asset demo is stable while
+        # still allowing a larger connected DataHub catalog to be explored.
+        merged = list(dict.fromkeys([*configured_urns, *discovered]))
+        return merged[:max_assets]
 
     def reviews(self, urn: str, capability: str) -> list[dict]:
         return self.review_store.reviews(urn, capability)
@@ -201,12 +252,13 @@ class ReviewState:
         certificate = certificate_obj.as_dict()
         previous = self.assessment_history.latest(urn)
         self.assessment_history.append(certificate_obj)
-        decision = admit_capability(certificate, capability).__dict__
+        decision = enforce_action_guardrails(certificate, capability).__dict__
         decision["action_predicate"] = _action_predicate(
             certificate,
             self.policy,
             capability,
             decision["allowed"],
+            decision.get("reason"),
         )
         run = _decision_to_run(certificate, decision, self.policy)
         run["assessment"] = certificate.get("metadata", {}).get("assessment", {})
@@ -231,14 +283,22 @@ class ReviewState:
         }
         run["decision_id"] = event["decision_id"]
         run["evaluated_at"] = event["evaluated_at"]
-        # Persist the complete evaluated run, including score, evidence,
-        # before/after context, and predicate terms, not only the headline.
-        self.review_store.record_decision(run)
-        run["history"] = self.review_store.decisions(urn, capability, limit=10)
+        run["constraint_contract"] = build_constraint_contract(run, capability)
+        run["saved"] = True
+        run["saved_source"] = "review-server-sqlite"
         override = self.review_store.latest_override(urn, capability)
         run["override"] = override
         run["effective_decision"] = override["decision"] if override else run["decision"]
         run["effective_allowed"] = run["effective_decision"] == "allowed"
+        # Overrides change the enforcement boundary, so persist and return a
+        # contract that reflects the effective decision rather than the stale
+        # pre-override verdict.
+        run["constraint_contract"] = build_constraint_contract(run, capability)
+        # Persist the complete evaluated run, including score, evidence,
+        # before/after context, and predicate terms, but never its derived
+        # history list. ReviewStore strips that field defensively as well.
+        self.review_store.record_decision(run)
+        run["history"] = self.review_store.decisions(urn, capability, limit=10)
         run["saved_assessments"] = [
             {
                 "issued_at": item.get("issued_at"),
@@ -267,7 +327,129 @@ class ReviewState:
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
 
-    def runs(self, urns: list[str], capability: str, *, refresh: bool = False) -> list[dict]:
+    def integration_proof(self, urn: str, capability: str) -> dict:
+        """Prove the agent-facing entry points agree on one asset.
+
+        The Skill and Predicate MCP adapter deliberately share the extractor,
+        policy, and guardrails. This endpoint makes that agreement visible to
+        a judge without claiming that DataHub's separate official MCP server
+        was invoked when it has not been configured here.
+        """
+        if not urn:
+            raise ValueError("urn is required")
+        source = {
+            "mode": "fixture" if self.datahub_file else "live-datahub",
+            "datahub_url_configured": bool(self.datahub_url),
+            "token_configured": bool(os.environ.get("DATAHUB_TOKEN")),
+            "fixture": self.datahub_file,
+        }
+        result: dict = {
+            "product": "Predicate",
+            "asset": urn,
+            "capability": capability,
+            "source": source,
+            "skill": {"entrypoint": "context_gradient.skill.certify"},
+            "predicate_mcp": {"tool": "predicate_evaluate"},
+            "official_datahub_mcp": {},
+        }
+        try:
+            from predicate.datahub_mcp_probe import probe_datahub_mcp
+
+            result["official_datahub_mcp"] = probe_datahub_mcp(urn)
+        except Exception as error:
+            result["official_datahub_mcp"] = {
+                "status": "attention_required",
+                "error": str(error),
+                "note": "The optional official DataHub MCP probe could not be started.",
+            }
+        official_entity_call = result["official_datahub_mcp"].get("entity_call") or {}
+        # Keep the processed MCP facts easy for API consumers to inspect. The
+        # official MCP remains an optional, read-only evidence source and is
+        # never silently merged into the GraphQL evaluation below.
+        result["official_mcp_evidence"] = official_entity_call.get("evidence", {})
+        result["official_mcp_facts"] = official_entity_call.get("facts", {})
+        result["official_mcp_query"] = result["official_datahub_mcp"].get("query_call", {})
+        try:
+            from context_gradient.skill import certify
+
+            skill = certify(
+                urn,
+                self.policy_path,
+                datahub_url=self.datahub_url,
+                datahub_file=self.datahub_file,
+                capability=capability,
+            )
+            result["skill"].update({
+                "status": "ok",
+                "decision": skill.get("decision"),
+                "decision_id": skill.get("decision_id"),
+                "contract_version": (skill.get("constraint_contract") or {}).get("contract_version"),
+                "evidence": (skill.get("constraint_contract") or {}).get("evidence", {}),
+            })
+        except Exception as error:
+            result["skill"].update({"status": "error", "error": str(error)})
+        try:
+            from predicate.mcp_server import PredicateMCP
+
+            mcp = PredicateMCP(
+                self.policy_path,
+                self.datahub_url,
+                os.environ.get("DATAHUB_TOKEN"),
+                self.datahub_file,
+            )
+            mcp_result = mcp.evaluate({"urn": urn, "capability": capability})
+            result["predicate_mcp"].update({
+                "status": "ok",
+                "decision": mcp_result.get("decision"),
+                "decision_id": mcp_result.get("decision_id"),
+                "contract_version": (mcp_result.get("constraint_contract") or {}).get("contract_version"),
+                "evidence": (mcp_result.get("constraint_contract") or {}).get("evidence", {}),
+            })
+        except Exception as error:
+            result["predicate_mcp"].update({"status": "error", "error": str(error)})
+        skill_result = result["skill"]
+        mcp_result = result["predicate_mcp"]
+        result["same_asset"] = True
+        result["same_decision"] = (
+            skill_result.get("status") == "ok"
+            and mcp_result.get("status") == "ok"
+            and skill_result.get("decision") == mcp_result.get("decision")
+        )
+        skill_evidence = (skill_result.get("evidence") or {})
+        mcp_evidence = (mcp_result.get("evidence") or {})
+        # The two entry points run at different instants, so observation
+        # timestamps and generated decision IDs are expected to differ. The
+        # proof compares the evidence state and the underlying latest facts,
+        # not volatile bookkeeping fields.
+        def comparable_evidence(value: dict) -> dict:
+            comparable = {}
+            for key, item in value.items():
+                if not isinstance(item, dict):
+                    comparable[key] = item
+                    continue
+                comparable[key] = {
+                    field: field_value
+                    for field, field_value in item.items()
+                    if field not in {"observed_at", "decision_id"}
+                }
+            return comparable
+
+        result["evidence_agreement"] = comparable_evidence(skill_evidence) == comparable_evidence(mcp_evidence)
+        result["status"] = (
+            "verified"
+            if result["same_asset"] and result["same_decision"] and result["evidence_agreement"]
+            else "attention_required"
+        )
+        return result
+
+    def runs(
+        self,
+        urns: list[str],
+        capability: str,
+        *,
+        refresh: bool = False,
+        include_saved: bool = False,
+    ) -> list[dict]:
         live_runs = []
         self.last_errors = []
         # Each asset requires its own DataHub and lineage reads. Run those
@@ -294,9 +476,11 @@ class ReviewState:
                 live_runs.append(results[urn])
                 continue
             error = next((item["error"] for item in self.last_errors if item["urn"] == urn), "Unknown DataHub error.")
-            live_runs.append({
+            unavailable_run = {
                 "asset": _asset_name(urn),
                 "urn": urn,
+                "entity_urn": urn,
+                "capability": capability,
                 "decision": "unavailable",
                 "allowed": False,
                 "readiness_score": None,
@@ -306,7 +490,32 @@ class ReviewState:
                 "failed": [],
                 "error": error,
                 "action_predicate": {"decision": "unavailable", "result": None, "failed_terms": []},
-            })
+                "decision_id": f"pred-unavailable-{int(time.time() * 1000)}",
+                "evaluated_at": datetime.now(timezone.utc).isoformat(),
+                "datahub_observation": {"status": "unavailable", "error": error},
+            }
+            unavailable_run["constraint_contract"] = build_constraint_contract(unavailable_run, capability)
+            live_runs.append(unavailable_run)
+
+        # A dataset checked through /api/evaluate may not be part of the
+        # server's startup scope. Keep its latest saved evaluation visible on
+        # the review page after refreshes and server restarts. Current assets
+        # win over saved copies so a live DataHub failure is never hidden by
+        # an older result for the same URN.
+        if include_saved:
+            current_urn_set = set(urns)
+            visible_urns = {run.get("urn") or run.get("entity_urn") for run in live_runs}
+            for saved_run in self.review_store.latest_runs(capability):
+                saved_urn = saved_run.get("urn") or saved_run.get("entity_urn")
+                if not saved_urn or saved_urn in current_urn_set or saved_urn in visible_urns:
+                    continue
+                saved_run = _normalize_recorded(dict(saved_run))
+                saved_run["saved"] = True
+                saved_run["saved_source"] = "review-server-sqlite"
+                saved_run["stale_until_rechecked"] = True
+                live_runs.append(saved_run)
+                visible_urns.add(saved_urn)
+
         if live_runs:
             return live_runs
         # Recorded runs are acceptable for an explicitly fixture-backed demo,
@@ -331,6 +540,21 @@ class ReviewState:
             "history_store": "sqlite",
         }
 
+    def resources(self) -> dict:
+        """Return hackathon profiles plus the real datasets in this source."""
+        discovered = []
+        error = None
+        try:
+            discovered = self.client.list_dataset_urns()
+        except Exception as exc:
+            error = str(exc)
+        return {
+            "resources": resource_catalog(),
+            "discovered_dataset_urns": discovered,
+            "discovery_error": error,
+            "source": "fixture" if self.datahub_file else "live-datahub",
+        }
+
     def ready(self, urns: list[str], capability: str) -> dict:
         runs = self.runs(urns[:1], capability)
         return {
@@ -344,9 +568,19 @@ class ReviewState:
     def status(self, urns: list[str], capability: str) -> dict:
         """Return a judge-friendly, machine-readable explanation of this server."""
         health = self.health()
+        configured_urns = list(DEFAULT_URNS)
+        available_urns = []
+        if self.datahub_file:
+            try:
+                available_urns = list(self.client.list_dataset_urns())
+            except Exception:
+                available_urns = []
+        missing_configured = [urn for urn in configured_urns if urn not in set(available_urns)] if self.datahub_file else []
         return {
             "product": "Predicate",
             "service": "Predicate Review",
+            "build_id": BUILD_ID,
+            "repository_version": "0.1.0",
             "mode": "fixture-api" if self.datahub_file else "live-datahub-api",
             "data_source": "local fixture" if self.datahub_file else "DataHub GraphQL",
             "live_datahub": not self.datahub_file,
@@ -355,9 +589,14 @@ class ReviewState:
             "fixture_fallback_blocked": not self.datahub_file and not self.allow_recorded_fallback,
             "policy": self.policy_path,
             "capability": capability,
+            "configured_asset_count": len(configured_urns),
+            "resolved_asset_count": len(urns),
+            "configured_assets": configured_urns,
+            "resolved_assets": urns,
+            "missing_configured_assets": missing_configured,
+            "asset_scope": "six-asset proof fixture" if self.datahub_file else "connected DataHub catalog plus configured proof assets",
             "recorded_fallback_enabled": self.allow_recorded_fallback,
             "ready": health["status"] == "ok",
-            "health": health["status"],
             "checked_urns": urns,
             "writeback": {
                 "configured": bool(os.environ.get("DATAHUB_CERTIFICATE_MUTATION")),
@@ -374,7 +613,22 @@ class ReviewState:
         }
 
 
-def make_handler(state: ReviewState, urns: list[str], capability: str, cors_origin: str = "*"):
+def make_handler(
+    state: ReviewState,
+    urns: list[str],
+    capability: str,
+    cors_origin: str = "*",
+    *,
+    discover_assets: bool = False,
+    max_assets: int = 1000,
+):
+    def current_urns() -> list[str]:
+        return state.resolve_urns(
+            urns,
+            discover_assets=discover_assets,
+            max_assets=max_assets,
+        )
+
     class Handler(BaseHTTPRequestHandler):
         def _json(self, payload: dict, status: int = 200) -> None:
             body = json.dumps(payload, indent=2).encode()
@@ -404,11 +658,17 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                 self._json(state.health())
                 return
             if parsed.path == "/readyz":
-                readiness = state.ready(urns, capability)
+                readiness = state.ready(current_urns(), capability)
                 self._json(readiness, 200 if readiness["status"] == "ready" else 503)
                 return
             if parsed.path == "/api/status":
-                self._json(state.status(urns, capability))
+                self._json(state.status(current_urns(), capability))
+                return
+            if parsed.path == "/api/resources":
+                resources = state.resources()
+                resources["auto_scoring_enabled"] = discover_assets
+                resources["max_assets_per_run"] = max_assets
+                self._json(resources)
                 return
             if parsed.path in {"/", "/review"}:
                 self._html()
@@ -418,13 +678,33 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                 # metadata. This also protects older browser tabs whose JS
                 # still requests /api/runs without the refresh query flag.
                 refresh = bool(state.datahub_url) or "refresh" in parse_qs(parsed.query)
+                run_urns = current_urns()
+                evaluated_runs = state.runs(run_urns, capability, refresh=refresh, include_saved=True)
+                evaluated_urns = {run.get("urn") or run.get("entity_urn") for run in evaluated_runs}
                 self._json(
                     {
                         "source": "live-api" if not state.datahub_file else "fixture-api",
-                        "runs": state.runs(urns, capability, refresh=refresh),
+                        "runs": evaluated_runs,
                         "errors": state.last_errors,
+                        "discovered": discover_assets,
+                        "asset_count": len(run_urns),
+                        "configured_asset_count": len(urns),
+                        "build_id": BUILD_ID,
+                        "asset_scope": "connected DataHub catalog" if discover_assets else "configured URN list",
+                        "missing_configured_assets": [configured for configured in urns if configured not in evaluated_urns]
+                        if state.datahub_file else [],
+                        "discovery_error": state.discovery_error,
                     }
                 )
+                return
+            if parsed.path == "/api/saved-runs":
+                query = parse_qs(parsed.query)
+                capability_name = query.get("capability", [capability])[0]
+                self._json({
+                    "source": "review-server-sqlite",
+                    "capability": capability_name,
+                    "runs": state.review_store.latest_runs(capability_name),
+                })
                 return
             if parsed.path == "/api/evaluate":
                 query = parse_qs(parsed.query)
@@ -435,6 +715,18 @@ def make_handler(state: ReviewState, urns: list[str], capability: str, cors_orig
                     return
                 try:
                     self._json(state.evaluate(urn, requested_capability, refresh=True))
+                except Exception as error:
+                    self._json({"error": str(error)}, 500)
+                return
+            if parsed.path == "/api/integration-proof":
+                query = parse_qs(parsed.query)
+                urn = query.get("urn", [""])[0]
+                requested_capability = query.get("capability", [capability])[0]
+                if not urn:
+                    self._json({"error": "Missing urn query parameter."}, 400)
+                    return
+                try:
+                    self._json(state.integration_proof(urn, requested_capability))
                 except Exception as error:
                     self._json({"error": str(error)}, 500)
                 return
@@ -565,12 +857,25 @@ def main() -> None:
         help="Lineage graph scope. Keep this equal to the CLI --max-hops value.",
     )
     parser.add_argument(
+        "--discover-assets",
+        action="store_true",
+        help="Discover and score dataset URNs from the connected DataHub on every run refresh.",
+    )
+    parser.add_argument(
+        "--max-assets",
+        type=int,
+        default=int(os.environ.get("PREDICATE_MAX_ASSETS", "1000")),
+        help="Maximum discovered dataset assets to score per refresh (default: 1000).",
+    )
+    parser.add_argument(
         "--urn",
         action="append",
         dest="urns",
         help="DataHub URN to evaluate. Repeat for multiple assets.",
     )
     args = parser.parse_args()
+    if args.max_assets < 1:
+        raise ReviewConfigError("--max-assets must be at least 1.")
 
     demo_mode = os.environ.get("PREDICATE_DEMO_MODE", "").strip().lower()
     if demo_mode not in {"", "fixture", "live"}:
@@ -596,10 +901,19 @@ def main() -> None:
     urns = args.urns or DEFAULT_URNS
     server = QuietReviewServer(
         (args.host, args.port),
-        make_handler(state, urns, args.capability, args.cors_origin),
+        make_handler(
+            state,
+            urns,
+            args.capability,
+            args.cors_origin,
+            discover_assets=args.discover_assets,
+            max_assets=args.max_assets,
+        ),
     )
     print(f"Predicate Review is running at http://{args.host}:{args.port}/review")
     print(f"Serving app from {APP}")
+    if args.discover_assets:
+        print(f"Automatic DataHub asset discovery enabled (up to {args.max_assets} datasets per refresh).")
     server.serve_forever()
 
 

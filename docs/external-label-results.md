@@ -1,7 +1,9 @@
-# External Label Results
+# Informal Label Sanity Check
 
 Two informal reviewers labeled 10 Predicate decisions across the local DataHub
-demo assets:
+demo assets. These are useful sanity checks, but they are not an independent
+held-out benchmark because the cases and decision context came from the
+project demo:
 
 - one reviewer with basic AI familiarity
 - one reviewer with basic data/analytics familiarity
@@ -23,8 +25,8 @@ Use:
 
 > Two informal reviewers labeled 10 demo decisions: one with basic AI
 > familiarity and one with basic data/analytics familiarity. Predicate matched
-> all 10 labels on this small review set. This is early external agreement, not
-> a production accuracy claim.
+> all 10 labels on this small sanity-check set. This is not independent
+> benchmark evidence or a production accuracy claim.
 
 Avoid:
 

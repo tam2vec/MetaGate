@@ -10,9 +10,21 @@
       "tags": {"values": ["pii-free", "production"]},
       "lineage": {"upstreams": ["analytics.source_orders"], "downstreams": []},
       "column_lineage": {"complete": true, "mapped_columns": 12},
-      "assertions": {"passing": 6, "failing": 0},
+      "assertions": {
+        "passing": 6,
+        "failing": 0,
+        "latest_results": [
+          {"assertion_urn": "urn:li:assertion:revenue-row-count", "name": "daily revenue row count", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:revenue-not-null", "name": "revenue is not null", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:revenue-unique-day", "name": "one row per day", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:revenue-currency", "name": "currency is USD", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:revenue-date", "name": "date is complete", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:revenue-reconciliation", "name": "reconciles to source orders", "status": "SUCCESS", "timestamp": "2026-08-05T23:45:00+00:00"}
+        ],
+        "observed_at": "2026-08-05T23:45:00+00:00"
+      },
       "incidents": {"open": 0},
-      "freshness": {"minutes_late": 0},
+      "freshness": {"minutes_late": 0, "timestamp": "2026-08-05T23:45:00+00:00", "observed_at": "2026-08-05T23:45:00+00:00", "sla": "24h", "passed": true},
       "usage": {"weekly_users": 44},
       "dashboards": {"count": 11},
       "charts": {"count": 24},
@@ -32,9 +44,19 @@
       "tags": {"values": ["production", "pii-free"]},
       "lineage": {"upstreams": ["hive.source_users"], "downstreams": []},
       "column_lineage": {"complete": true, "mapped_columns": 2},
-      "assertions": {"passing": 4, "failing": 0},
+      "assertions": {
+        "passing": 4,
+        "failing": 0,
+        "latest_results": [
+          {"assertion_urn": "urn:li:assertion:sample-users-row-count", "name": "user activity row count", "status": "SUCCESS", "timestamp": "2026-08-05T23:40:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:sample-users-not-null", "name": "user id is not null", "status": "SUCCESS", "timestamp": "2026-08-05T23:40:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:sample-users-unique", "name": "user id is unique", "status": "SUCCESS", "timestamp": "2026-08-05T23:40:00+00:00"},
+          {"assertion_urn": "urn:li:assertion:sample-users-fresh", "name": "activity is refreshed daily", "status": "SUCCESS", "timestamp": "2026-08-05T23:40:00+00:00"}
+        ],
+        "observed_at": "2026-08-05T23:40:00+00:00"
+      },
       "incidents": {"open": 0},
-      "freshness": {"minutes_late": 0},
+      "freshness": {"minutes_late": 0, "timestamp": "2026-08-05T23:40:00+00:00", "observed_at": "2026-08-05T23:40:00+00:00", "sla": "24h", "passed": true},
       "usage": {"weekly_users": 18},
       "dashboards": {"count": 2},
       "charts": {"count": 4},

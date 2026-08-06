@@ -14,12 +14,16 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "ruff>=0.5", "PyYAML>=6.0"]
-datahub = ["requests>=2.31"]
+datahub = ["requests>=2.31", "acryl-datahub>=1.3"]
 
 [project.scripts]
 predicate = "context_gradient.cli:main"
 predicate-review = "predicate.review:main"
 context-gradient = "context_gradient.cli:main"
+predicate-mcp = "predicate.mcp_server:main"
+predicate-doctor = "predicate.doctor:main"
+predicate-skill = "context_gradient.skill:main"
+predicate-datahub-mcp-probe = "predicate.datahub_mcp_probe:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

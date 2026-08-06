@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
+import time
 from typing import Any, Dict, Iterable, Protocol
 from urllib.request import Request, urlopen
 
@@ -31,6 +32,9 @@ class DataHubClient(Protocol):
         ...
 
 
+PREDICATE_CONTRACT_PROPERTY = "predicate.ai_context_contract"
+
+
 class DataHubEvidenceExtractor:
     def __init__(self, client: DataHubClient, cache: JsonCache | None = None, max_hops: int = DEFAULT_MAX_HOPS):
         self.client = client
@@ -42,7 +46,8 @@ class DataHubEvidenceExtractor:
             cached = self.cache.get(urn)
             if cached:
                 return self._bundle_from_dict(cached)
-        entity = self._node(self.client.get_entity(urn))
+        consistent_reader = getattr(self.client, "get_entity_consistent", None)
+        entity = self._node(consistent_reader(urn) if consistent_reader else self.client.get_entity(urn))
         neighbors = {}
         frontier = [urn]
         visited = {urn}
@@ -255,20 +260,29 @@ class DataHubWriteback:
             self.client.write_certificate(urn, certificate)
         except Exception as error:
             raise RuntimeError(f"DataHub write-back failed for {urn}: {error}") from error
-        tasks_created = 0
-        for gap in certificate.get("gaps", []):
-            self.client.create_remediation_task(
-                urn,
-                f"AI readiness: {gap['evidence_kind']} is {gap['type']}",
-                gap["recommendation"],
-            )
-            tasks_created += 1
-        receipt = {"urn": urn, "certificate_written": True, "tasks_requested": tasks_created}
+        receipt = {
+            "urn": urn,
+            "certificate_written": True,
+            "written_at": datetime.now(timezone.utc).isoformat(),
+        }
+        transport = getattr(self.client, "transport", None)
+        if transport:
+            receipt["transport"] = transport
+        property_name = getattr(self.client, "property_name", None)
+        if property_name:
+            receipt["property_name"] = property_name
         reader = getattr(self.client, "get_written_certificate", None)
         if not reader:
             raise RuntimeError("Write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY.")
         try:
-            readback = reader(urn)
+            attempts = max(1, int(os.environ.get("PREDICATE_WRITEBACK_READBACK_ATTEMPTS", "4")))
+            interval = max(0.0, float(os.environ.get("PREDICATE_WRITEBACK_READBACK_INTERVAL", "0.5")))
+            readback = None
+            for attempt in range(attempts):
+                readback = reader(urn)
+                if readback is not None or attempt == attempts - 1:
+                    break
+                time.sleep(interval)
         except Exception as error:
             raise RuntimeError(f"DataHub write-back was sent but read-back failed for {urn}: {error}") from error
         if readback is None:
@@ -283,9 +297,116 @@ class DataHubWriteback:
                 raise RuntimeError(
                     f"DataHub read-back decision {returned_decision!r} does not match {expected_decision!r} for {urn}"
                 )
+            expected_decision_id = certificate.get("decision_id")
+            returned_decision_id = readback.get("decision_id")
+            if expected_decision_id and returned_decision_id and returned_decision_id != expected_decision_id:
+                raise RuntimeError(
+                    f"DataHub read-back decision_id {returned_decision_id!r} does not match "
+                    f"{expected_decision_id!r} for {urn}"
+                )
+            stored_certificate = readback.get("_predicate_certificate")
+            if stored_certificate is not None and stored_certificate != certificate:
+                raise RuntimeError(f"DataHub read-back contract does not match the written contract for {urn}")
             receipt["readback_fields"] = sorted(readback.keys())
+        receipt["read_back_at"] = datetime.now(timezone.utc).isoformat()
         receipt["verified_readback"] = True
+        tasks_created = 0
+        for gap in certificate.get("gaps", []):
+            self.client.create_remediation_task(
+                urn,
+                f"AI readiness: {gap['evidence_kind']} is {gap['type']}",
+                gap["recommendation"],
+            )
+            tasks_created += 1
+        receipt["tasks_requested"] = tasks_created
         return receipt
+
+
+class DataHubRestWritebackClient:
+    """Write and read one Predicate contract through DataHub's REST client.
+
+    This deliberately uses the DatasetProperties aspect rather than guessing a
+    GraphQL mutation. Existing dataset properties are preserved and only the
+    Predicate custom property is upserted. The DataHub Python SDK is imported
+    lazily so fixture-only installs do not need the SDK at import time.
+    """
+
+    transport = "datahub-rest-sdk"
+    property_name = PREDICATE_CONTRACT_PROPERTY
+
+    def __init__(self, gms_url: str, token: str | None = None, graph: Any | None = None):
+        self.gms_url = gms_url.rstrip("/")
+        self.token = token
+        self._graph = graph
+
+    def _get_graph(self) -> Any:
+        if self._graph is None:
+            try:
+                from datahub.ingestion.graph.client import DataHubGraph
+                from datahub.ingestion.graph.config import DatahubClientConfig
+            except ImportError as error:
+                raise RuntimeError(
+                    "The DataHub Python SDK is required for REST write-back. "
+                    "Install it with: python3 -m pip install 'acryl-datahub[all]'."
+                ) from error
+            self._graph = DataHubGraph(
+                DatahubClientConfig(server=self.gms_url, token=self.token, timeout_sec=30)
+            )
+        return self._graph
+
+    @staticmethod
+    def _properties_aspect(graph: Any, urn: str) -> Any:
+        from datahub.metadata.schema_classes import DatasetPropertiesClass
+
+        return graph.get_aspect(urn, DatasetPropertiesClass)
+
+    def write_certificate(self, urn: str, certificate: Dict[str, Any]) -> None:
+        from datahub.emitter.mcp import MetadataChangeProposalWrapper
+        from datahub.metadata.schema_classes import DatasetPropertiesClass
+
+        graph = self._get_graph()
+        existing = self._properties_aspect(graph, urn)
+        custom_properties = dict(getattr(existing, "customProperties", {}) or {})
+        custom_properties[PREDICATE_CONTRACT_PROPERTY] = json.dumps(
+            certificate, sort_keys=True, separators=(",", ":")
+        )
+        if existing is None:
+            aspect = DatasetPropertiesClass(customProperties=custom_properties)
+        else:
+            existing.customProperties = custom_properties
+            aspect = existing
+        graph.emit(MetadataChangeProposalWrapper(entityUrn=urn, aspect=aspect))
+
+    def get_written_certificate(self, urn: str) -> Dict[str, Any] | None:
+        graph = self._get_graph()
+        aspect = self._properties_aspect(graph, urn)
+        if aspect is None:
+            return None
+        raw = (getattr(aspect, "customProperties", {}) or {}).get(PREDICATE_CONTRACT_PROPERTY)
+        if not raw:
+            return None
+        try:
+            certificate = json.loads(raw)
+        except (TypeError, ValueError) as error:
+            raise RuntimeError(
+                f"DataHub property {PREDICATE_CONTRACT_PROPERTY} is not valid JSON for {urn}"
+            ) from error
+        if not isinstance(certificate, dict):
+            raise RuntimeError(
+                f"DataHub property {PREDICATE_CONTRACT_PROPERTY} is not a JSON object for {urn}"
+            )
+        return {"urn": urn, "_predicate_certificate": certificate, **certificate}
+
+    def get_entity(self, urn: str) -> Dict[str, Any]:
+        raise NotImplementedError("REST write-back client is only for contract publication")
+
+    def get_neighbors(self, urn: str) -> Iterable[Dict[str, Any]]:
+        return []
+
+    def create_remediation_task(self, urn: str, title: str, body: str) -> None:
+        # Remediation tasks are local Predicate records unless a deployment
+        # separately configures a task mutation. Do not invent a REST aspect.
+        return None
 
 
 class GraphQLDataHubClient:
@@ -464,6 +585,14 @@ class GraphQLDataHubClient:
     }
     """
 
+    SEARCH_DATASETS_QUERY = """
+    query PredicateDatasetDiscovery($query: String!, $start: Int!, $count: Int!) {
+      search(input: { type: DATASET, query: $query, start: $start, count: $count }) {
+        searchResults { entity { urn type } }
+      }
+    }
+    """
+
     LINEAGE_QUERY = """
     query ContextGradientLineage($urn: String!) {
       scrollAcrossLineage(
@@ -543,6 +672,65 @@ class GraphQLDataHubClient:
                     raw["upstreamLineage"] = {"upstreams": []}
                     raw["downstreamLineage"] = {"downstreams": []}
         return self._normalize(raw, urn)
+
+    def get_entity_consistent(self, urn: str) -> Dict[str, Any]:
+        """Retry deployment-lagged reads without turning unknown into absent.
+
+        DataHub writes are asynchronous. A missing optional field on the first
+        response is therefore retried, while the final normalized result still
+        records the signal as unavailable when the deployment never exposes it.
+        """
+        attempts = max(1, int(os.environ.get("PREDICATE_CONSISTENCY_ATTEMPTS", "3")))
+        interval = max(0.0, float(os.environ.get("PREDICATE_CONSISTENCY_INTERVAL", "0.25")))
+        pending_kinds = set(os.environ.get(
+            "PREDICATE_CONSISTENCY_SIGNALS",
+            "assertions,freshness,usage,column_lineage,incidents",
+        ).split(","))
+        last = None
+        for attempt in range(attempts):
+            candidate = self.get_entity(urn)
+            unavailable = set((candidate.get("_unavailable_evidence") or {}).keys())
+            pending = sorted(item for item in unavailable if item in pending_kinds)
+            properties = dict(candidate.get("properties") or {})
+            properties["_consistency"] = {
+                "attempt": attempt + 1,
+                "attempts": attempts,
+                "pending_unavailable": pending,
+                "source_observed_at": datetime.now(timezone.utc).isoformat(),
+            }
+            candidate["properties"] = properties
+            last = candidate
+            if not pending or attempt == attempts - 1:
+                return candidate
+            time.sleep(interval)
+        return last or self.get_entity(urn)
+
+    def list_dataset_urns(self) -> list[str]:
+        """Discover all dataset URNs currently present in this DataHub deployment.
+
+        DataHub search responses are paged. Keeping pagination here prevents a
+        large datapack from looking complete when only its first page loaded.
+        The review server applies its own per-refresh safety cap afterward.
+        """
+        page_size = 1000
+        start = 0
+        urns: set[str] = set()
+        while True:
+            data = self._request(
+                self.SEARCH_DATASETS_QUERY,
+                {"query": "*", "start": start, "count": page_size},
+            )
+            results = ((data.get("search") or {}).get("searchResults") or [])
+            if not results:
+                break
+            for item in results:
+                entity = item.get("entity") if isinstance(item, dict) else None
+                if isinstance(entity, dict) and entity.get("urn"):
+                    urns.add(entity["urn"])
+            if len(results) < page_size:
+                break
+            start += len(results)
+        return sorted(urns)
 
     def _lineage_entities(self, urn: str, direction: str) -> list[Dict[str, Any]]:
         """Read lineage through DataHub's supported search API.
@@ -671,7 +859,22 @@ class GraphQLDataHubClient:
             if isinstance(item, dict) and item.get("fieldPath")
         ]
         assertion_data = raw.get("assertions")
-        assertion_items = (assertion_data or {}).get("assertions", [])
+        # DataHub can return the same assertion through multiple relationship
+        # edges. Count one assertion once; its runEvents still determine the
+        # latest result below.
+        assertions_by_key = {}
+        for item in (assertion_data or {}).get("assertions", []):
+            if not isinstance(item, dict):
+                continue
+            key = item.get("urn") or f"inline:{len(assertions_by_key)}"
+            existing = assertions_by_key.get(key)
+            if existing is None:
+                assertions_by_key[key] = dict(item)
+                continue
+            existing_events = (existing.setdefault("runEvents", {})).setdefault("runEvents", [])
+            duplicate_events = (item.get("runEvents") or {}).get("runEvents", [])
+            existing_events.extend(event for event in duplicate_events if isinstance(event, dict))
+        assertion_items = list(assertions_by_key.values())
         latest_results = []
         assertions_without_results = []
         for item in assertion_items:

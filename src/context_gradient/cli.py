@@ -14,12 +14,13 @@ from context_gradient.datahub.adapter import (
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.scanner import BackgroundScanner
 from context_gradient.sdk.cache import JsonCache
-from context_gradient.sdk.admission import admit_capability
+from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.assessment import required_evidence_for_action
 from context_gradient.sdk.reports import explain_certificate
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.history import ReadinessHistory
 from context_gradient.sdk.policy import load_policy
+from predicate.contracts import build_constraint_contract
 
 
 def _predicate_expression(required_evidence: list) -> str:
@@ -32,7 +33,13 @@ def _predicate_expression(required_evidence: list) -> str:
     return " && ".join(terms) if terms else "true"
 
 
-def _action_predicate(certificate: dict, policy, capability: str, allowed: bool) -> dict:
+def _action_predicate(
+    certificate: dict,
+    policy,
+    capability: str,
+    allowed: bool,
+    guardrail_reason: str | None = None,
+) -> dict:
     capability_policy = next(
         (item for item in policy.capability_policies if item.name == capability),
         None,
@@ -60,11 +67,14 @@ def _action_predicate(certificate: dict, policy, capability: str, allowed: bool)
             failed_terms.append("readiness_score >= policy.minimum_score")
         elif reason.startswith("Confidence below"):
             failed_terms.append("confidence >= policy.minimum_confidence")
+    if guardrail_reason and not allowed:
+        failed_terms.append("action.guardrail")
     return {
         "action": capability,
         "predicate": expression,
         "result": bool(allowed),
         "failed_terms": list(dict.fromkeys(term for term in failed_terms if term)),
+        "reasons": [guardrail_reason] if guardrail_reason and not allowed else [],
         "decision": "allowed" if allowed else "blocked",
     }
 
@@ -130,8 +140,11 @@ def main() -> None:
         client = FileDataHubClient(args.datahub_file, args.writeback_file)
     policy = load_policy(args.policy)
     writeback = DataHubWriteback(client) if args.enable_writeback else None
+    # Live DataHub runs must read current metadata; fixture/file runs may use
+    # the cache for fast repeated evaluations.
+    cache = None if isinstance(client, GraphQLDataHubClient) else JsonCache(args.cache_file)
     scanner = BackgroundScanner(
-        extractor=DataHubEvidenceExtractor(client, cache=JsonCache(args.cache_file), max_hops=args.max_hops),
+        extractor=DataHubEvidenceExtractor(client, cache=cache, max_hops=args.max_hops),
         engine=ReadinessEngine(policy),
         history=ReadinessHistory(Path(args.history_dir)),
         writeback=writeback,
@@ -139,13 +152,25 @@ def main() -> None:
     result = scanner.handle_metadata_events([args.urn])[0]
     output = result.certificate
     if args.request_capability:
-        decision = admit_capability(output, args.request_capability).__dict__
+        decision = enforce_action_guardrails(output, args.request_capability).__dict__
+        decision["decision"] = "allowed" if decision["allowed"] else "blocked"
         decision["action_predicate"] = _action_predicate(
             output,
             policy,
             args.request_capability,
             decision["allowed"],
+            decision.get("reason"),
         )
+        now = datetime.now(timezone.utc).isoformat()
+        decision["decision_id"] = f"pred-{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+        decision["evaluated_at"] = now
+        assessment = output.get("metadata", {}).get("assessment", {})
+        decision["facts"] = assessment.get("facts", {})
+        decision["guidance"] = assessment.get("guidance", [])
+        decision["score_trace"] = output.get("metadata", {}).get("score_trace", {})
+        decision["datahub_observation"] = output.get("metadata", {}).get("datahub_observation", {})
+        decision["gaps"] = output.get("gaps", [])
+        decision["constraint_contract"] = build_constraint_contract(decision, args.request_capability)
         if args.record_live_run:
             _record_live_run(args.live_runs_file, output, decision)
         output = decision

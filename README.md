@@ -35,12 +35,36 @@ blocked with the exact missing evidence.
 | Public Predicate Review | [Open the hosted review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) |
 | Local DataHub runbook | [Live DataHub Validation](docs/live-datahub-validation.md) |
 | Browser extension prototype | [DataHub Panel Prototype](examples/browser-extension/README.md) |
+| Agent integration | [Predicate MCP server](examples/mcp/README.md) |
 | Hackathon DataHub sources | [Load and review the provided datasets](docs/hackathon-datahub-sources.md) |
 
 The hosted page is API-backed and labels its source. In the current safe
 fixture mode it says `Mode: public API fixture`; after a reachable DataHub is
 configured on Render it says `Mode: live DataHub API`. The real proof path
 must always be verified through `/api/status`, not inferred from appearance.
+
+## Judge path: five minutes
+
+1. Start DataHub with the [Quickstart Guide](https://docs.datahub.com/docs/quickstart).
+2. Load a rich graph: `datahub datapack load showcase-ecommerce --force`.
+3. Start Predicate with `./scripts/start_predicate_review.sh`.
+4. Open the review page and choose **Hackathon DataHub resources** -> **Find loaded assets**.
+5. Predicate automatically discovers and scores the datasets currently loaded
+   in DataHub. Select a discovered URN and request an AI action. The decision, evidence,
+   failed terms, and remediation come from that asset's current DataHub metadata.
+
+The page also links the official [MCP Server](https://github.com/acryldata/mcp-server-datahub),
+[Agent Context Kit](https://docs.datahub.com/docs/dev-guides/agent-context/agent-context),
+[DataHub Skills](https://docs.datahub.com/docs/dev-guides/agent-context/skills),
+[Analytics Agent](https://docs.datahub.com/docs/features/feature-guides/analytics-agent),
+and the hackathon's NYC Taxi, Healthcare, and Fiction Retail scenarios. See the
+[resource lab guide](docs/hackathon-datahub-sources.md) for the full source list.
+
+For a repeatable presentation without Docker or a live DataHub, use
+`./scripts/start_predicate_demo.sh`. It serves the same six-asset proof fixture
+every time and labels itself as a fixture. It is not a substitute for the live
+DataHub run; it is the reliable fallback for a judge who needs to see the full
+decision flow immediately.
 
 ## One Command
 
@@ -99,6 +123,7 @@ Proof layers:
 | Layer | Artifact |
 | --- | --- |
 | DataHub preflight action | [Predicate Preflight](examples/datahub-preflight-action/README.md) |
+| Agent tool integration | [Predicate MCP server](examples/mcp/README.md) |
 | Context Contract write-back shape | [AI Context Contract aspect](examples/datahub-preflight-action/context-contract-aspect.json) |
 | Private deployment adapter | [Private Deployment Adapter](docs/private-deployment-adapter.md) |
 | Unsafe-answer benchmark framing | [Unsafe-Answer Reduction Benchmark](docs/unsafe-answer-reduction-benchmark.md) |
@@ -126,6 +151,22 @@ From the project folder, start the live review once:
 ./scripts/start_predicate_review.sh
 ```
 
+In live mode this enables automatic discovery of the current DataHub dataset
+catalog, scoring up to 1,000 dataset URNs per refresh. Loading another DataHub
+pack and pressing **Refresh DataHub check** updates the catalog without
+another per-asset terminal command.
+
+Before presenting the demo, check the four local prerequisites in one shot:
+
+```bash
+predicate-doctor
+```
+
+It reports DataHub GraphQL, the review API, the extension source, Predicate's
+local MCP server, and the optional official DataHub MCP separately. The
+official server is not considered configured until its separate probe succeeds.
+A failed required check is a setup problem, not a blocked dataset.
+
 Then open `http://127.0.0.1:8765/review`. After metadata changes in DataHub,
 use **Refresh DataHub check** in the page. You do not rerun a separate CLI
 command for every asset.
@@ -140,6 +181,10 @@ Open `http://127.0.0.1:8765/review`.
 
 The review app shows the asset, decision, readiness, confidence, failed terms,
 remediation plan, capability matrix, audit trail, and write-back queue.
+The API status also exposes a build ID, source mode, configured asset count,
+resolved asset count, and any configured assets that could not be read. This
+makes a stale deployment or an incomplete DataHub catalog visible instead of
+silently changing the scorecard.
 CLI and Review use the same direct-lineage scope by default. Override both with
 the same `--max-hops` value if a deeper graph is needed.
 
@@ -204,21 +249,28 @@ Real in this MVP:
 - CLI and SDK decision engine
 - Live reads from local DataHub GraphQL
 - Local API-backed Predicate Review app
-- Browser extension prototype that detects DataHub asset URNs
+- Packaged browser extension that detects DataHub asset URNs
+- MCP server and DataHub Skill-compatible entrypoint for agent integrations
 - Dockerized review API path
 - Safe write-back payloads and receipts
-- Installed commands: `predicate` and `predicate-review`
+- Installed commands: `predicate`, `predicate-review`, `predicate-mcp`, and
+  `predicate-doctor`
 - Tests, curated benchmark, contribution guide, release notes, and docs
 
-Prototype or future integration:
+For a single local check, run `./scripts/verify_predicate.sh`. It runs the
+tests, rebuilds the extension package, and reports whether DataHub and the
+review API are reachable.
 
-- The embedded DataHub panel is an intended product experience, not a packaged
-  production DataHub plugin.
+Deployment-specific proof:
+
+- The browser extension is packaged and installable; native DataHub frontend
+  registration still depends on the target deployment's extension mechanism.
 - The public hosted page uses sanitized data, not a public DataHub deployment.
-- Live write-back mutations require deployment-supported DataHub GraphQL
-  mutations.
-- Independent benchmark scoring exists, but external reviewers still need to
-  label held-out cases.
+- Live write-back is implemented as a mutation-plus-read-back adapter, but a
+  real DataHub screenshot requires an approved mutation and credentials for a
+  reachable deployment.
+- A blank independent-label template and scorer are included. The informal
+  sanity labels are not presented as independent benchmark evidence.
 
 ## Core Capabilities
 

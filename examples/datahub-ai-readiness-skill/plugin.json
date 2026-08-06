@@ -5,9 +5,8 @@
   "entrypoint": "context_gradient.skill:certify",
   "capabilities": [
     "datahub.graph.read",
-    "datahub.assertions.write",
-    "datahub.tasks.write",
     "ai-readiness.certify",
-    "predicate.evaluate"
+    "predicate.evaluate",
+    "predicate.constraint-contract"
   ]
 }

@@ -1,4 +1,4 @@
-# Predicate Browser Extension Prototype
+# Predicate Browser Extension
 
 This prototype makes Predicate automatic on a local DataHub asset page.
 
@@ -10,8 +10,11 @@ When a user opens a DataHub dataset URL, the content script:
 4. The extension injects an allow/block panel into the DataHub page.
 5. The panel shows readiness, confidence, reason, and a repair queue.
 
-This is not a packaged production DataHub plugin. It is a browser-extension
-integration path for the hackathon demo.
+This is a packaged browser integration for the hackathon demo. It is
+installable as a Chrome extension and automatically evaluates the DataHub asset
+currently open in the browser. It is not a native DataHub frontend bundle:
+native packaging depends on the target DataHub deployment's extension
+mechanism.
 
 ## Package and Install
 
@@ -21,6 +24,8 @@ From the repository root, create a shareable extension bundle:
 ./scripts/package_extension.sh
 ```
 
+The script creates `dist/Predicate-DataHub-extension.zip`. Unzip it before
+using **Load unpacked**; Chrome does not load a zip file through that button.
 For development, Chrome can load the folder directly. For a different local
 or private Predicate API, open the extension's **Details** page, choose
 **Extension options**, and save the API URL there. The URL is stored in Chrome
@@ -102,8 +107,8 @@ Capture one screenshot with:
 Use this screenshot as the proof for:
 
 > Predicate can automatically evaluate the DataHub asset a user is already
-> viewing. The production DataHub plugin is future packaging; the automatic UX
-> is proven here through the browser extension prototype.
+> viewing. The packaged browser integration proves the automatic UX; native
+> DataHub frontend registration remains deployment-specific.
 
 ## Demo Wording
 
@@ -113,6 +118,5 @@ Use:
 > asset page triggers Predicate against that asset URN and renders the decision
 > without a separate terminal command.
 
-Avoid:
-
-> This is a production DataHub plugin.
+Avoid claiming that this browser extension is already installed inside every
+DataHub deployment.

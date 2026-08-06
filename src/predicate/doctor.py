@@ -61,34 +61,49 @@ def main() -> None:
         ("Predicate Review API", f"{args.predicate_url}/healthz", "GET"),
     ):
         ok, detail = check_url(url, method)
-        checks.append({"name": name, "ok": ok, "detail": detail})
+        checks.append({"name": name, "required": True, "ok": ok, "detail": detail})
     checks.extend(
         [
             {
                 "name": "extension source",
+                "required": True,
                 "ok": (ROOT / "examples/browser-extension/manifest.json").exists(),
                 "detail": str(ROOT / "examples/browser-extension"),
             },
             {
                 "name": "MCP server",
+                "required": True,
                 "ok": (ROOT / "src/predicate/mcp_server.py").exists(),
                 "detail": "Predicate MCP (local read-only gate)",
             },
             {
                 "name": "official DataHub MCP",
+                "required": False,
                 "ok": optional_mcp_status()[0],
                 "detail": optional_mcp_status()[1],
             },
         ]
     )
+    for item in checks:
+        item["status"] = "verified" if item["ok"] else "unavailable"
+        if not item["required"]:
+            item["status"] = "informational" if item["ok"] else "optional_unavailable"
+    required_checks = [item for item in checks if item["required"]]
+    required_ready = all(item["ok"] for item in required_checks)
     payload = {
         "product": "Predicate",
         "checks": checks,
-        "ready": all(item["ok"] for item in checks),
+        "required_ready": required_ready,
+        "ready": required_ready,
+        "summary": (
+            "Required local checks passed; optional official DataHub MCP is informational."
+            if required_ready
+            else "One or more required local checks are unavailable."
+        ),
     }
     print(json.dumps(payload, indent=2))
-    if not payload["ready"]:
-        print("\nFix the failed checks, then rerun this command.", file=sys.stderr)
+    if not required_ready:
+        print("\nFix the unavailable required checks, then rerun this command.", file=sys.stderr)
         raise SystemExit(1)
 
 

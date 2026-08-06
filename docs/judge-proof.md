@@ -3,6 +3,24 @@
 This page separates what Predicate already demonstrates from what remains
 production work.
 
+## One-command proof bundle
+
+Run `./scripts/judge_proof.sh` from the repository root. It produces
+`/tmp/predicate-release-proof.json` with the exact commit and the status of:
+
+- the full repository test suite;
+- the curated 30-case benchmark;
+- the allowed explanation, blocked executive metric, blocked modification,
+  and blocked restricted-SQL story;
+- agreement between Predicate's Skill and MCP surfaces;
+- the packaged browser extension;
+- local DataHub and review-server prerequisites;
+- the live schema-contract test when its environment variables are present.
+
+The bundle also lists external proof still required. This is deliberate:
+missing credentials, a private deployment, an upstream maintainer review, and
+independent human labels cannot be honestly replaced by a local fixture.
+
 ## Demonstrated in this repository
 
 | Claim | Evidence |
@@ -21,11 +39,11 @@ production work.
 
 | Limitation | Current mitigation |
 | --- | --- |
-| The DataHub panel is not packaged as a production DataHub plugin. | A framework-neutral embed prototype and JSON contract are included. |
+| The DataHub panel is not packaged as a production DataHub plugin. | `dist/Predicate-DataHub-extension.zip` is installable in Chrome; native DataHub frontend registration remains deployment-specific. |
 | The automatic page integration is a browser extension prototype. | It proves the UX loop while avoiding assumptions about DataHub frontend packaging. |
-| The public hosted page is static and sanitized. | The local review server loads the same UI through `/api/runs` and can query DataHub GraphQL. |
+| The public hosted page is fixture-backed unless a reachable DataHub is deliberately configured. | The page labels its source; the local review server loads the same UI through `/api/runs` and can query DataHub GraphQL. |
 | The benchmark is curated by the project. | The README and benchmark docs avoid production accuracy claims and provide a held-out evaluation template. |
-| Live write-back depends on DataHub version and custom mutation support. | Predicate is read-only by default and requires explicit mutation documents before writing. |
+| Live write-back depends on DataHub version and custom mutation support. | Predicate is read-only by default and requires an approved mutation, authorized token, and read-back verification before writing. |
 | Scoring weights are policy-driven, not independently calibrated. | `docs/scoring-calibration.md` explains the formula and recommended production calibration process. |
 
 ## Best demo path

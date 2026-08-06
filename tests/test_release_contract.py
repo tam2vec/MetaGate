@@ -37,9 +37,15 @@ class ReleaseContractTest(unittest.TestCase):
         self.assertIn('signal: evaluationController.signal', page)
 
     def test_launchers_use_the_canonical_python_path(self):
-        for name in ("start_predicate_review.sh", "start_predicate_demo.sh", "verify_predicate.sh"):
+        for name in ("start_predicate_review.sh", "start_predicate_demo.sh", "verify_predicate.sh", "judge_proof.sh"):
             script = (ROOT / "scripts" / name).read_text()
             self.assertIn("PYTHONPATH=src", script, name)
+
+    def test_release_proof_separates_deterministic_and_external_checks(self):
+        script = (ROOT / "scripts/build_release_proof.py").read_text()
+        self.assertIn('"deterministic_proof"', script)
+        self.assertIn('"external_proof_required"', script)
+        self.assertIn('"live_schema_contract"', script)
 
 
 if __name__ == "__main__":

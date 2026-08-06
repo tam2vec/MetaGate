@@ -261,6 +261,18 @@ For a single local check, run `./scripts/verify_predicate.sh`. It runs the
 tests, rebuilds the extension package, and reports whether DataHub and the
 review API are reachable.
 
+For a judge-ready release snapshot, run:
+
+```bash
+./scripts/judge_proof.sh
+```
+
+This writes a machine-readable proof bundle to `/tmp/predicate-release-proof.json`.
+It records the commit, test count, curated benchmark, four-action enforcement
+story, extension package, local prerequisite status, and any external proof
+that still requires a real deployment or human reviewer. It never labels an
+unconfigured MCP server, live write-back, or independent review as complete.
+
 Deployment-specific proof:
 
 - The browser extension is packaged and installable; native DataHub frontend

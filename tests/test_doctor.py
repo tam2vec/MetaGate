@@ -19,6 +19,14 @@ class DoctorTest(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("connection refused", detail)
 
+    def test_doctor_source_marks_optional_checks_separately(self):
+        from pathlib import Path
+        import predicate.doctor
+
+        source = Path(predicate.doctor.__file__).read_text(encoding="utf-8")
+        self.assertIn('"required": False', source)
+        self.assertIn('"required_ready": required_ready', source)
+
 
 if __name__ == "__main__":
     unittest.main()

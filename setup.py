@@ -17,5 +17,7 @@ setup(
         "predicate-review=predicate.review:main",
         "predicate-mcp=predicate.mcp_server:main",
         "predicate-doctor=predicate.doctor:main",
+        "predicate-skill=context_gradient.skill:main",
+        "predicate-datahub-mcp-probe=predicate.datahub_mcp_probe:main",
     ]},
 )

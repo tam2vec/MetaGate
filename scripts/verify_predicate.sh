@@ -38,11 +38,15 @@ if proof['integration_proof']['status'] != 'verified':
 print('Enforcement story, constraint contract, Skill, and MCP proof passed.')
 PY
 
-printf '%s\n' 'Optional live prerequisite status:'
-if PYTHONPATH=src python3 -m predicate.doctor; then
-  printf '%s\n' 'Local DataHub is reachable.'
+printf '%s\n' 'Optional local environment status:'
+doctor_status=0
+doctor_output=$(PYTHONPATH=src python3 -m predicate.doctor 2>/tmp/predicate-doctor-error.log) || doctor_status=$?
+if [ "$doctor_status" -eq 0 ]; then
+  printf '%s\n' 'Required local checks passed. Official DataHub MCP is informational unless configured.'
 else
-  printf '%s\n' 'Local DataHub is not running; deterministic repository proof still passed.'
+  printf '%s\n' 'Required local environment is unavailable; deterministic repository proof still passed.'
+  cat /tmp/predicate-doctor-error.log >&2 || true
 fi
+printf '%s\n' "$doctor_output"
 
 printf '%s\n' 'Predicate verification passed.'

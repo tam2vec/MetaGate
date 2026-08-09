@@ -7,6 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseContractTest(unittest.TestCase):
+    def test_repository_license_is_apache_2(self):
+        license_text = (ROOT / "LICENSE").read_text()
+        self.assertIn("Apache License", license_text)
+        self.assertIn("Version 2.0, January 2004", license_text)
+        self.assertNotIn("MIT License", license_text)
+
     def test_container_contains_the_review_page_and_runtime_port_contract(self):
         dockerfile = (ROOT / "Dockerfile").read_text()
         self.assertIn("COPY public-demo ./public-demo", dockerfile)

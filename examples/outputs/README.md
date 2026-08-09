@@ -6,12 +6,12 @@ validation.
 
 - `certificate.json`: MetaGate Certificate summary.
 - `action-metagate.json`: Go/no-go metagate for a risky AI action.
-- `allowed-action.json`: Representative live DataHub allowed decision.
-- `blocked-action.json`: Representative live DataHub blocked decision.
-- `live-datahub-proof.html`: Visual proof page for the local DataHub validation.
+- `allowed-action.json`: Representative bundled-fixture allowed decision.
+- `blocked-action.json`: Representative bundled-fixture blocked decision.
+- `live-datahub-proof.html`: Visual proof page for the local validation fixture.
 - `metagate-demo-app.html`: Interactive local demo for asset/capability decisions.
-- `live-datahub-proof.md`: Markdown summary of the local DataHub validation.
-- `live-datahub-proof.json`: Machine-readable summary of the local DataHub validation.
+- `live-datahub-proof.md`: Markdown summary of the local validation fixture.
+- `live-datahub-proof.json`: Machine-readable summary of the local validation fixture.
 - `before-after-repair.json`: Before/after metadata repair proof artifact.
 - `writeback-proof.json`: Safe write-back proof and payload shape.
 - `writeback-receipt.json`: safe local receipt showing what would be written

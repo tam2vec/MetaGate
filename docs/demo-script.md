@@ -1,187 +1,239 @@
-# Three-Minute Demo Script
+# MetaGate DataHub Hackathon Video Script
 
-This script is written for a judge who has never seen MetaGate.
+Target length: 3 minutes 30 seconds.
 
-## Setup
+## The one-line story
 
-Open these before recording:
+> **DataHub gives AI context. MetaGate gives AI permission.**
 
-- DataHub asset page for `fct_users_created`
-- MetaGate public page or local review app
-- Terminal in the MetaGate repo
-- README on GitHub
+The video should feel like one reveal: open a DataHub asset, see MetaGate
+appear beside it, ask for an AI action, watch the evidence-backed block, fix the
+gap, and prove that the protected tool never runs without permission.
 
-Keep the language honest:
+## Recording setup
 
-> The public page is a sanitized demo. The real proof path is local/private
-> DataHub GraphQL plus the MetaGate CLI/API.
+Have these ready:
 
-## 0:00-0:20 - The Problem
+1. Local DataHub v1.7.0 at `http://localhost:9002`.
+2. MetaGate Review at `http://127.0.0.1:8765/review`.
+3. Chrome with the unpacked extension loaded from `examples/browser-extension`.
+4. A DataHub page for `fct_users_created`.
+5. The bundled fixture demo on port `8766` for the positive control.
+6. A terminal only for the final proof backup.
 
-Screen: DataHub asset page.
-
-Say:
-
-> Companies spent years adding metadata for people: owners, glossary terms,
-> lineage, quality checks, freshness, incidents, and policies. Now AI agents are
-> being asked to act on that same data. The missing question is simple: is the
-> metadata good enough to let the agent act?
-
-## 0:20-0:45 - The Product
-
-Screen: MetaGate README, then MetaGate Review.
-
-Say:
-
-> MetaGate is an AI admission controller for DataHub. It turns metadata into a
-> deterministic action check. No metadata proof, no AI action.
-
-Show this idea:
-
-```json
-{
-  "action": "autonomous-agent-action",
-  "metagate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
-  "result": false,
-  "failed_terms": ["assertions.present"],
-  "decision": "blocked"
-}
-```
-
-## 0:45-1:15 - Live DataHub Decision
-
-Screen: terminal.
-
-Run:
+Before recording, run:
 
 ```bash
-export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
-
-metagate \
-  "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
-  --policy examples/policies/enterprise_ai.yml \
-  --datahub-url "$DATAHUB_GRAPHQL_URL" \
-  --request-capability autonomous-agent-action
+metagate-doctor
+PYTHONPATH=src python3 -m unittest discover -s tests -q
 ```
+
+The live review scans the connected catalog (currently 74 datasets). Keep the
+six-asset fixture available only as a clearly labelled rehearsal fallback.
+
+Never show tokens, private URLs, or customer data. Do not claim that the
+Chrome extension is a native DataHub plugin, that the official DataHub MCP ran,
+or that a public deployment is connected unless that is separately verified.
+
+## 0:00–0:18 — The hook
+
+Screen: a normal DataHub dataset page.
 
 Say:
 
-> This is reading the local DataHub GraphQL endpoint. MetaGate blocks
-> autonomous action on this asset because assertions are missing and the score
-> and confidence are below policy thresholds.
+> DataHub already knows what this dataset means, who owns it, how it was
+> produced, whether its checks pass, and whether it is fresh. But an AI agent
+> still needs a sharper answer: may I act on it right now?
 
-Point to:
+Pause briefly, then say:
 
-- `allowed: false`
-- same DataHub URN
-- missing assertions
-- readiness/confidence thresholds
+> MetaGate is the missing permission layer.
 
-## 1:15-1:45 - Same Policy, Different Asset
+## 0:18–0:48 — The Chrome extension reveal
 
-Screen: terminal.
+Screen: refresh the DataHub asset page with the MetaGate extension enabled.
 
-Run:
+Show the injected panel on the right with the asset name, decision, readiness,
+confidence, and compact repair plan.
+
+Say:
+
+> I did not copy this URN into a separate tool. The browser extension reads the
+> DataHub asset page I am already viewing, sends that exact URN to MetaGate, and
+> puts the action decision back in context.
+
+Point to the compact repair plan:
+
+> This is the first useful difference: the catalog remains the source of
+> context, while MetaGate adds a decision about what an agent may do.
+
+On-screen label: `Chrome extension prototype · local DataHub · local MetaGate API`.
+
+## 0:48–1:18 — The block is evidence-backed
+
+Screen: open MetaGate Review with `fct_users_created` selected and
+`Autonomous agent action` requested.
+
+Say:
+
+> Now I will ask for a higher-risk capability. MetaGate does not answer with a
+> generic data-quality score. It checks this action against this asset's current
+> evidence.
+
+Show the evidence-first card and point to:
+
+- the exact DataHub identity;
+- `BLOCKED`;
+- the missing assertion and lineage evidence;
+- readiness and confidence thresholds;
+- the source and current catalog scope.
+
+Say:
+
+> The block is explainable: the agent is missing the evidence required for this
+> action. No evidence, no autonomous action.
+
+## 1:18–1:48 — Turn the block into a repair
+
+Screen: click **Repair plan** and then **Copy full plan**.
+
+Say:
+
+> A block is only useful if somebody can fix it. MetaGate converts each
+> blocking term into a precise steward step: add dataset-specific assertions,
+> complete the expected lineage, then rerun the same asset and capability after
+> DataHub indexing.
+
+Briefly show that the copied plan contains:
+
+- exact URN;
+- requested capability;
+- decision before repair;
+- blocking evidence;
+- copyable repair values or explicit placeholders;
+- the final verification command.
+
+Say:
+
+> MetaGate proposes the repair. It does not silently mutate DataHub.
+
+## 1:48–2:15 — Show a truthful positive control
+
+The current connected DataHub catalog is a blocked-first run: its available
+GraphQL evidence does not currently produce an allowed high-risk action. Do not
+select `SampleHiveDataset` and call it live-allowed.
+
+Start the clearly labelled fixture demo on port `8766`:
 
 ```bash
-metagate \
-  "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
-  --policy examples/policies/enterprise_ai.yml \
-  --datahub-url "$DATAHUB_GRAPHQL_URL" \
-  --request-capability autonomous-agent-action
+METAGATE_PORT=8766 ./scripts/start_metagate_demo.sh
 ```
 
-Say:
-
-> MetaGate is not just a blocker. Under the same policy, this asset is allowed
-> because the required evidence is present. The point is controlled action, not
-> blanket denial.
-
-## 1:45-2:15 - Human Review Experience
-
-Screen: MetaGate Review page.
+Screen: `http://127.0.0.1:8766/review`, with the source label visible. Select
+`analytics.revenue_daily` and the same capability.
 
 Say:
 
-> The terminal output is for automation. The product experience is this review
-> surface: the basic decision appears beside the DataHub asset, and the full
-> review explains the failed terms, remediation plan, capability matrix, trust
-> timeline, and write-back queue.
+> For a positive control, I am switching to MetaGate's bundled DataHub-shaped
+> fixture. This asset is intentionally complete, so the same policy returns
+> allowed. The fixture label is visible: this demonstrates the decision
+> contract, not live DataHub health.
 
-Click:
+Point to the allowed decision and evidence facts:
 
-- blocked `fct_users_created`
-- remediation drawer
-- capability matrix
-- trust timeline
+> This is why MetaGate is not a blanket deny-list. A complete evidence set can
+> pass; the current live catalog remains blocked until its missing evidence is
+> actually available.
 
-Say:
+## 2:10–2:35 — Prove the boundary
 
-> This is where MetaGate becomes operational. It does not say """add metadata."""
-> It says which checks to add, why they matter, and what should unlock after the
-> repair.
-
-## 2:15-2:35 - Stress Case
-
-Screen: MetaGate Review finance asset or difficult run docs.
+Screen: **Proof & audit** → constraint contract and enforcement result.
 
 Say:
 
-> For a harder case, MetaGate includes a finance-critical asset. It blocks
-> autonomous action because glossary terms are incomplete, column lineage is
-> incomplete, assertions conflict, freshness is stale, and finance policy has
-> stricter thresholds.
+> The decision is not just a badge in a dashboard. At the tool boundary, a
+> blocked contract fails closed and the protected callback is not invoked.
 
-Point to:
-
-- `customer_lifetime_value`
-- finance glossary terms
-- column lineage repairs
-- stale freshness
-- stricter score threshold
-
-## 2:35-2:50 - Engineering Proof
-
-Screen: terminal.
-
-Run:
-
-```bash
-PYTHONPATH=src:. python3 -m unittest discover -s tests -v
-PYTHONPATH=src python3 scripts/evaluate_benchmark.py
-```
+Show `tool_not_invoked` or the equivalent blocked enforcement result.
 
 Say:
 
-> The repository has automated tests and a 30-case curated conformance suite
-> covering ready, missing, stale, incomplete, and contradictory metadata states.
-> This validates policy behavior; it is not a production accuracy claim.
+> The agent sees a machine-readable contract; the human sees the reason and the
+> repair path.
 
-## 2:50-3:00 - Close
+## 2:35–2:58 — Show the connected system
 
-Screen: README proof links.
+Screen: Proof & audit, then the DataHub property or local receipt if already
+verified.
 
 Say:
 
-> MetaGate gives AI agents a metadata-backed permission layer. The output is
-> simple: allowed or blocked. The proof is explicit: which metagate terms passed,
-> which failed, who needs to repair them, and when the action can be rerun.
+> MetaGate also carries the decision through the governed execution chain:
+> agent, skill, tool, and owning service. In this local environment, the
+> Context Contract write-back and read-back were verified locally for
+> SampleHiveDataset.
 
-## If Something Breaks
+Use the precise label `verified-local-rest` if showing that receipt. Do not
+imply that every deployment supports the same mutation.
 
-Use this backup line:
+## 2:58–3:15 — Explain the scope and boundaries
+
+Screen: Review status/source labels.
+
+Say:
+
+> This live local run reads the connected DataHub catalog and currently scans 74
+> datasets. In this recording, the live high-risk result is blocked because the
+> required evidence is not available from the current GraphQL response. The
+> positive contrast is explicitly labelled fixture evidence. Native deployment plugins, a public live DataHub, the
+> separately configured official MCP server, independent reviewers, and an
+> upstream merge remain external dependencies.
+
+This short honesty moment increases trust; keep it to one sentence per label.
+
+## 3:15–3:30 — The close
+
+Screen: MetaGate Review beside the DataHub asset page, or README closing frame.
+
+Say:
+
+> DataHub already has the context. MetaGate turns that context into permission:
+> check the evidence, allow or block the exact AI action, and give the owner a
+> path to repair. Before AI acts, MetaGate checks the gate.
+
+End on the words:
+
+> **Context in DataHub. Permission in MetaGate.**
+
+## Backup path
+
+If the live DataHub or review API is unavailable, say:
 
 > The live DataHub endpoint is unavailable in this recording, so I am switching
-> to the bundled DataHub-shaped fixture. That proves the MetaGate engine and
-> output contract; the local DataHub runbook shows the live GraphQL path.
+> to MetaGate's bundled DataHub-shaped fixture. This proves the engine and
+> output contract; it is labelled fixture evidence, not a live catalog claim.
 
-Backup command:
+Run the fixture on another port:
 
 ```bash
-metagate \
-  "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
+PYTHONPATH=src python3 scripts/serve_review.py \
+  --host 127.0.0.1 \
+  --port 8766 \
   --policy examples/policies/enterprise_ai.yml \
-  --datahub-file examples/data/datahub_graph.json \
-  --request-capability autonomous-agent-action \
-  --explain
+  --datahub-file examples/data/six_asset_review_graph.json \
+  --no-recorded-fallback
 ```
+
+If the extension is unavailable, show the DataHub Embed prototype or the full
+Review page, and describe the browser panel as a packaged prototype rather
+than pretending it is present.
+
+## Claims to avoid
+
+- “MetaGate has installed a native DataHub plugin.”
+- “The public demo is connected to our private local DataHub.”
+- “The Chrome extension is deployed inside every DataHub instance.”
+- “The official DataHub MCP ran” when it is not configured and verified.
+- “The benchmark proves production accuracy.”
+- “The repair loop mutated DataHub” when showing a proposal or fixture.
+- “All 74 datasets are production-ready.”

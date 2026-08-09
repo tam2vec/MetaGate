@@ -2064,11 +2064,20 @@
     }
 
     function renderCapabilityMatrix(run) {
+      const records = new Map((Array.isArray(run.certified_capabilities) ? run.certified_capabilities : [])
+        .map((item) => [item.capability, item]));
       const rows = [
-        ["Answer business questions", run.decision === "allowed" ? "allowed" : "allowed", "Low-risk read-only use can proceed when basic ownership/glossary evidence exists."],
-        ["Generate executive metrics", run.decision === "allowed" ? "allowed" : "blocked", run.decision === "allowed" ? "Required evidence is certified." : "Needs assertions, freshness, and stronger readiness."],
-        ["Autonomous agent action", run.decision, run.decision === "allowed" ? "All required evidence is present." : "Blocked by failed metagate terms."]
-      ];
+        ["Answer business questions", "answer-business-questions", "Low-risk read-only use still requires its own evidence threshold."],
+        ["Generate executive metrics", "generate-executive-metrics", "Metrics require stronger lineage, assertion, and freshness evidence."],
+        ["Autonomous agent action", "autonomous-agent-action", "High-risk action requires the complete evidence contract."]
+      ].map(([action, capability, fallback]) => {
+        const record = records.get(capability);
+        const decision = record ? (record.certified ? "allowed" : "blocked") : "unavailable";
+        const why = record
+          ? (record.certified ? "Required evidence is certified." : (record.reasons && record.reasons[0]) || fallback)
+          : "This capability was not returned by the current evaluation.";
+        return [action, decision, why];
+      });
       document.getElementById("capabilityMatrix").innerHTML = rows.map(([action, decision, why]) => `
         <tr>
           <td>${escapeHtml(action)}</td>

@@ -142,6 +142,16 @@ class ReviewStore:
         values = self.decisions(urn, capability, limit=1)
         return values[-1] if values else None
 
+    def latest_decision_for_urn(self, urn: str) -> dict[str, Any] | None:
+        """Return the newest saved decision for an asset, regardless of action."""
+        with self._connect() as connection:
+            row = connection.execute(
+                """SELECT payload_json FROM decisions
+                WHERE urn = ? ORDER BY id DESC LIMIT 1""",
+                (urn,),
+            ).fetchone()
+        return json.loads(row["payload_json"]) if row else None
+
     def latest_runs(
         self,
         capability: str | None = None,

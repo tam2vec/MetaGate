@@ -1,6 +1,14 @@
 # MetaGate Browser Extension
 
-This prototype makes MetaGate automatic on a local DataHub asset page.
+> **Open a DataHub asset. See whether AI may act.**
+
+This lightweight Chrome extension is MetaGate's in-context “wow” moment: it
+recognizes the dataset page already open in Chrome and places the decision next
+to the DataHub metadata. No copy-pasted URN and no second workflow is needed.
+
+It is a packaged browser integration prototype for the hackathon, not a claim
+that a native DataHub frontend plugin has already been installed in every
+deployment.
 
 When a user opens a DataHub dataset URL, the content script:
 
@@ -8,7 +16,8 @@ When a user opens a DataHub dataset URL, the content script:
 2. Calls the local MetaGate review API.
 3. MetaGate queries DataHub GraphQL through `metagate-review`.
 4. The extension injects an allow/block panel into the DataHub page.
-5. The panel shows readiness, confidence, reason, and a repair queue.
+5. The panel shows readiness, confidence, reason, a compact repair plan, and an
+   Evidence heading; the full evidence and repair steps open in MetaGate Review.
 
 This is a packaged browser integration for the hackathon demo. It is
 installable as a Chrome extension and automatically evaluates the DataHub asset
@@ -101,7 +110,7 @@ Capture one screenshot with:
 - the DataHub URL bar showing the dataset URN
 - the normal DataHub asset page still visible
 - the MetaGate panel injected on the right
-- the decision, readiness, confidence, and repair queue visible
+- the decision, readiness, confidence, compact repair plan, and Evidence heading visible
 - no private token, cookie, or customer data visible
 
 Use this screenshot as the proof for:
@@ -109,6 +118,22 @@ Use this screenshot as the proof for:
 > MetaGate can automatically evaluate the DataHub asset a user is already
 > viewing. The packaged browser integration proves the automatic UX; native
 > DataHub frontend registration remains deployment-specific.
+
+## The video moment
+
+Use the extension immediately after showing the normal DataHub page:
+
+1. Open `fct_users_created` in DataHub.
+2. Let the panel appear automatically.
+3. Point to `BLOCKED`, readiness, confidence, and the compact repair plan.
+4. Point out the `Evidence` heading without expanding the popup.
+5. Open **MetaGate Review** from the panel to show the full evidence and
+   copyable repair plan, including why each repair is needed.
+
+Suggested narration:
+
+> DataHub gives the agent context. MetaGate puts a permission decision beside
+> that context before the agent acts.
 
 ## Demo Wording
 

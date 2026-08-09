@@ -1,5 +1,5 @@
 {
-  "source": "local DataHub quickstart seeded with sample metadata",
+  "source": "bundled DataHub-shaped fixture; not a live DataHub result",
   "entity_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
   "capability": "autonomous-agent-action",
   "allowed": false,

@@ -6,8 +6,8 @@ MetaGate
 
 ## Short description
 
-MetaGate is an AI admission controller for DataHub: it turns metadata evidence
-into go/no-go decisions that decide which agent actions are safe.
+DataHub gives AI context. MetaGate gives AI permission: an evidence-backed gate
+that decides whether a specific agent action is safe on a specific dataset.
 
 ## Long description
 
@@ -15,7 +15,9 @@ Enterprise metadata catalogs were built so people could understand data. AI
 agents need something stricter: a deterministic way to know whether metadata is
 complete, current, and governed enough for a specific action.
 
-MetaGate certifies DataHub assets for AI use. It reads evidence such as
+MetaGate certifies DataHub assets for AI use. Open a DataHub asset in Chrome and
+the MetaGate extension brings the decision into the page. Under the hood it
+reads evidence such as
 ownership, glossary terms, lineage, assertions, incidents, freshness, usage, and
 policy tags, then produces a MetaGate Certificate. The certificate says which
 capabilities are allowed, which are blocked, and why.
@@ -106,10 +108,12 @@ that suite. This is not presented as production accuracy. Real deployment
 validation should follow
 `docs/live-datahub-validation.md`.
 
-MetaGate was also run against a local DataHub quickstart seeded with sample
-metadata. The same policy produced both allowed and blocked outcomes across
-different DataHub assets. The public hosted page is a sanitized static demo of
-the intended embedded experience; the local review server is the live
+MetaGate was also run against a local DataHub quickstart. The current connected
+catalog produces a blocked-first result for the high-risk action because the
+available GraphQL evidence is incomplete. The bundled DataHub-shaped fixture
+provides the explicit positive control and produces both allowed and blocked
+outcomes under the same policy. The public hosted page is a sanitized static
+demo of the intended embedded experience; the local review server is the live
 API-backed proof path.
 
 The repository also includes an independent-label CSV template and scorer. That

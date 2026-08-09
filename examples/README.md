@@ -35,7 +35,7 @@ Use these examples in the demo and submission.
   DataHub AI readiness skill.
 - `datahub-embed/`: compact MetaGate side-panel prototype and JSON contract
   for a DataHub asset page integration.
-- `datahub-preflight-action/`: Context Gradient Preflight action contract and
+- `datahub-preflight-action/`: MetaGate Preflight action contract and
   AI Context Contract aspect shape.
 
 Local outputs are generated from the bundled fixture. Use

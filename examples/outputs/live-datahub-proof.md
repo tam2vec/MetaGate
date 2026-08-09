@@ -1,7 +1,8 @@
-# Live DataHub Proof
+# DataHub-Shaped Fixture Proof
 
-MetaGate was run against a local DataHub quickstart seeded with sample metadata.
-The same policy produced different decisions for different DataHub assets.
+This is a deterministic DataHub-shaped fixture proof. It is not a claim that
+the current connected local DataHub returned these same results. The same
+policy produces different decisions for different fixture assets.
 
 | Asset | Capability | Decision | Reason |
 | --- | --- | --- | --- |

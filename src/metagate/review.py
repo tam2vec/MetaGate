@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import json
 import os
 import threading
@@ -237,9 +238,10 @@ class ReviewState:
             # Deeper graph walks belong in the evidence view and make every
             # refresh fan out into many extra GraphQL requests.
             max_hops=max_hops,
-            # A live DataHub is the source of truth. Caching live evidence can
-            # show yesterday's score after metadata changes, so only fixture
-            # mode gets the fast local cache.
+            # A live DataHub remains the source of truth. The extractor keeps
+            # only a short-lived process-local bundle so switching capabilities
+            # does not repeat the same GraphQL fan-out; explicit refresh still
+            # invalidates it. Durable JSON caching remains fixture-only.
             cache=(JsonCache(ROOT / ".context-gradient/review-cache-v4.json") if datahub_file else None),
         )
         self.assessment_history = ReadinessHistory(ROOT / ".context-gradient/assessment-history")
@@ -435,7 +437,92 @@ class ReviewState:
         }
         return self.review_store.add_review(record)
 
+    def _reuse_saved_evidence(self, urn: str, capability: str) -> dict | None:
+        """Reframe the latest asset evidence for a capability without a new read.
+
+        The review page uses this only for a capability switch. A manual
+        refresh and all machine-facing default evaluations still read DataHub.
+        The response is labelled so a caller cannot mistake it for a fresh
+        observation.
+        """
+        if self.datahub_file:
+            return None
+        saved = self.review_store.latest_decision_for_urn(urn)
+        if not saved:
+            return None
+        capability_result = next(
+            (
+                item
+                for item in saved.get("certified_capabilities", [])
+                if isinstance(item, dict) and item.get("capability") == capability
+            ),
+            None,
+        )
+        if not capability_result:
+            return None
+        run = deepcopy(saved)
+        allowed = bool(capability_result.get("certified", capability_result.get("allowed", False)))
+        evidence_status = dict(capability_result.get("evidence_status") or {})
+        failed_terms = [
+            f"{kind}.present"
+            for kind, status in evidence_status.items()
+            if str(status).lower() not in {"present", "clear", "complete"}
+        ]
+        if str(evidence_status.get("incidents", "")).lower() in {"open", "open_incident"}:
+            failed_terms.append("incidents.open == 0")
+        reasons = capability_result.get("reasons") or []
+        run.update(
+            {
+                "capability": capability,
+                "allowed": allowed,
+                "decision": "allowed" if allowed else "blocked",
+                "effective_allowed": allowed,
+                "effective_decision": "allowed" if allowed else "blocked",
+                "readiness": capability_result.get("score"),
+                "readiness_score": capability_result.get("score"),
+                "capability_score": capability_result.get("score"),
+                "confidence": capability_result.get("confidence"),
+                "capability_confidence": capability_result.get("confidence"),
+                "reason": "Capability is certified by the active policy." if allowed else "; ".join(map(str, reasons)),
+                "failed": list(dict.fromkeys(failed_terms)),
+                "failed_terms": list(dict.fromkeys(failed_terms)),
+                "required_evidence": capability_result.get("required_evidence", []),
+                "evidence_status": evidence_status,
+                "evaluation_mode": "saved_evidence_reuse",
+                "stale_until_rechecked": True,
+                "saved_source": "review-server-sqlite",
+            }
+        )
+        matching_policy = next(
+            (item for item in self.policy.capability_policies if item.name == capability),
+            None,
+        )
+        if matching_policy:
+            run["action_thresholds"] = {
+                "score": matching_policy.minimum_score,
+                "confidence": matching_policy.minimum_confidence,
+            }
+        run["action_metagate"] = {
+            "action": capability,
+            "result": allowed,
+            "decision": run["decision"],
+            "failed_terms": run["failed"],
+        }
+        run["metagate"] = run["action_metagate"]
+        override = self.review_store.latest_override(urn, capability)
+        run["override"] = override
+        if override:
+            run["effective_decision"] = override["decision"]
+            run["effective_allowed"] = override["decision"] == "allowed"
+        run["constraint_contract"] = build_constraint_contract(run, capability)
+        return run
+
     def evaluate(self, urn: str, capability: str, *, refresh: bool = False) -> dict:
+        has_memory_bundle = getattr(self.extractor, "has_memory_bundle", lambda _urn: False)(urn)
+        if not refresh and not has_memory_bundle:
+            reused = self._reuse_saved_evidence(urn, capability)
+            if reused:
+                return reused
         if refresh:
             self.extractor.invalidate(urn)
         bundle = self.extractor.bundle(urn)
@@ -1354,11 +1441,13 @@ def make_handler(
                 query = parse_qs(parsed.query)
                 urn = query.get("urn", [""])[0]
                 requested_capability = query.get("capability", [capability])[0]
+                refresh_value = query.get("refresh", ["true"])[0].lower()
+                refresh = refresh_value not in {"0", "false", "no"}
                 if not urn:
                     self._json({"error": "Missing urn query parameter."}, 400)
                     return
                 try:
-                    self._json(state.evaluate(urn, requested_capability, refresh=True))
+                    self._json(state.evaluate(urn, requested_capability, refresh=refresh))
                 except Exception as error:
                     self._json({"error": str(error)}, 500)
                 return

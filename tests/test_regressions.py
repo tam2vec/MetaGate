@@ -17,6 +17,32 @@ URN = "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PRO
 
 
 class RegressionTest(unittest.TestCase):
+    def test_live_capability_checks_can_reuse_a_short_lived_bundle(self):
+        class CountingClient:
+            def __init__(self):
+                self.entity_reads = 0
+                self.neighbor_reads = 0
+
+            def get_entity(self, urn):
+                self.entity_reads += 1
+                return {"urn": urn, "owner": ["urn:li:corpuser:analytics"]}
+
+            def get_neighbors(self, urn):
+                self.neighbor_reads += 1
+                return []
+
+        client = CountingClient()
+        extractor = DataHubEvidenceExtractor(client)
+        extractor.bundle(URN)
+        extractor.bundle(URN)
+
+        self.assertEqual(client.entity_reads, 1)
+        self.assertEqual(client.neighbor_reads, 1)
+
+        extractor.invalidate(URN)
+        extractor.bundle(URN)
+        self.assertEqual(client.entity_reads, 2)
+
     def test_metadata_event_does_not_reuse_stale_evidence_cache(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

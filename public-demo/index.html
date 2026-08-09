@@ -31,8 +31,15 @@
       min-height: 100vh;
       display: grid;
       grid-template-columns: 238px minmax(0, 1fr);
+      align-items: start;
     }
     aside {
+      align-self: start;
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
       background: var(--nav);
       color: #d8e2f3;
       padding: 22px 18px;
@@ -440,6 +447,27 @@
       color: #f3f7ff;
       background: rgba(255,255,255,.04);
     }
+    .sidebar-assets .asset-catalog-hackathon {
+      border-color: rgba(122,162,232,.48);
+      background: rgba(49,95,216,.08);
+    }
+    .sidebar-assets .asset-catalog-hackathon > summary {
+      background: rgba(49,95,216,.24);
+      color: #ffffff;
+    }
+    .sidebar-assets .asset-catalog-hackathon > summary::before {
+      content: "★";
+      color: #a9c7ff;
+    }
+    .sidebar-assets .asset-catalog-connected > summary {
+      background: rgba(255,255,255,.025);
+    }
+    .sidebar-assets .asset-section-note {
+      padding: 9px 10px 10px;
+      color: #a9bbd5;
+      font-size: 10px;
+      line-height: 1.4;
+    }
     .sidebar-assets .asset-group summary {
       display: flex;
       align-items: center;
@@ -521,6 +549,7 @@
     main {
       padding: 24px;
       min-width: 0;
+      min-height: 100vh;
     }
     .topbar {
       display: flex;
@@ -528,6 +557,74 @@
       gap: 18px;
       align-items: flex-start;
       margin-bottom: 18px;
+    }
+    .topbar > div:first-child {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .decision-context {
+      flex: 0 0 350px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.72);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+    .decision-context h2 {
+      margin: 3px 0 6px;
+      font-size: 17px;
+    }
+    .decision-context p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    .decision-context-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+      margin-top: 12px;
+    }
+    .decision-context-item {
+      display: block;
+      padding: 9px 8px 0;
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+      min-width: 0;
+    }
+    .decision-context-item + .decision-context-item { border-left: 1px solid var(--line); }
+    .decision-context-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 11px;
+    }
+    .decision-context-item span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .decision-context-foot {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .decision-context-foot::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      border-radius: 50%;
+      background: var(--green);
     }
     h1 {
       margin: 0 0 6px;
@@ -1294,6 +1391,7 @@
     .integration-proof-fact strong.attention_required, .integration-proof-fact strong.unavailable { color: var(--red); }
     .integration-proof-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.35; }
     .integration-mcp-facts { margin: 10px 0 0; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .integration-mcp-facts:empty { display: none; }
     .proof-layer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
     .proof-layer { border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: #fff; min-width: 0; }
     .proof-layer-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -1747,6 +1845,16 @@
       font-size: 14px;
       line-height: 1.45;
     }
+    .repair-why {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .repair-why strong {
+      color: var(--ink);
+      font-weight: 800;
+    }
     .repair-copy-row {
       display: flex;
       align-items: flex-start;
@@ -1977,9 +2085,12 @@
       display: none;
     }
     body[data-review-view="embed-demo"] .topbar {
-      align-items: center;
+      align-items: stretch;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--line);
+    }
+    body[data-review-view="embed-demo"] .environment {
+      display: none !important;
     }
     body[data-review-view="embed-demo"] .environment {
       min-width: 0;
@@ -2151,11 +2262,16 @@
     @media (max-width: 1020px) {
       .shell, .workspace, .two-col, .proof-strip, .embed-demo, .product-grid, .diff-box, .queue-grid { grid-template-columns: 1fr; }
       aside { display: none; }
+      .topbar { display: block; }
+      .decision-context, .environment { width: 100%; margin-top: 12px; }
+      .asset-lookup { max-width: none; }
+      .controls, .bars, .datahub-body { grid-template-columns: 1fr; }
+      .action-row { grid-template-columns: minmax(0, 1fr) auto; }
     }
     @media (max-width: 760px) {
       main { padding: 16px; }
       .topbar, .decision-hero { display: block; }
-      .environment, .decision-box { width: 100%; margin-top: 12px; }
+      .decision-context, .environment, .decision-box { width: 100%; margin-top: 12px; }
       .scoreboard, .controls, .bars, .insight-grid, .datahub-body { grid-template-columns: 1fr; }
       .evidence-first-head { display: block; }
       .evidence-first-decision { display: inline-block; margin-top: 8px; }
@@ -2248,6 +2364,17 @@
             </div>
           </div>
         </div>
+        <section class="decision-context" aria-label="How MetaGate makes a decision">
+          <div class="panel-kicker">Decision context</div>
+          <h2>Before the agent acts</h2>
+          <p>Choose an asset and action. MetaGate checks the evidence first.</p>
+          <div class="decision-context-list">
+            <div class="decision-context-item"><strong>Input</strong><span>DataHub asset + requested AI action.</span></div>
+            <div class="decision-context-item"><strong>Decision</strong><span>Allowed or blocked with evidence.</span></div>
+            <div class="decision-context-item"><strong>If blocked</strong><span>Copy the repair and re-check.</span></div>
+          </div>
+          <div class="decision-context-foot"><span id="decisionContextStatus">Ready to check a DataHub asset</span></div>
+        </section>
         <div class="environment">
           <strong id="environmentTitle">Connection</strong>
           <span id="environmentProof">Source: local DataHub</span>
@@ -2454,7 +2581,7 @@
               </div>
             </div>
             <div id="remediationList" class="remediation-list"></div>
-            <p class="repair-plan-note">Paste the supplied values into DataHub, wait for indexing, then run the final check.</p>
+            <p id="repairPlanNote" class="repair-plan-note">The plan appears after a blocked evaluation.</p>
           </section>
 
           <section id="technical-proof" class="technical-proof-page" aria-label="Proof and audit">
@@ -2923,6 +3050,12 @@
     const assetPickerToggle = document.getElementById("assetPickerToggle");
     const assetPickerValue = document.getElementById("assetPickerValue");
     const assetPickerMenu = document.getElementById("assetPickerMenu");
+    function closeAssetPicker() {
+      assetPickerOpen = false;
+      if (assetPickerMenu) assetPickerMenu.hidden = true;
+      if (assetPickerToggle) assetPickerToggle.setAttribute("aria-expanded", "false");
+    }
+
     function resetMainVisibility() {
       document.querySelectorAll("main [hidden]").forEach((node) => {
         node.hidden = false;
@@ -2949,6 +3082,7 @@
     }
 
     function setReviewView(targetId) {
+      closeAssetPicker();
       const detailedTargets = new Set([
         "full-review",
         "remediation-plan",
@@ -2978,6 +3112,7 @@
       });
       const target = document.getElementById(targetId);
       if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+      if (targetId === "technical-proof") loadIntegrationProof(runs[selected]);
     }
 
     document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
@@ -2996,6 +3131,7 @@
     let evaluationSequence = 0;
     let evaluationController = null;
     let assetPickerOpen = false;
+    const sidebarGroupOpenState = new Map();
     const capabilityThresholds = {
       "answer-business-questions": { score: 78, confidence: 75 },
       "generate-executive-metrics": { score: 84, confidence: 80 },
@@ -3143,13 +3279,17 @@
           `latest assertion ${latest ? (latest.status || "unknown") : "unavailable"};`,
           `freshness ${freshness || "unavailable"}; incidents ${incidentStatus || "unavailable"}; usage ${querySummary}.`,
         ].join(" ");
-        externalFacts.hidden = false;
+        externalFacts.hidden = !externalFacts.textContent.trim();
       } else {
         externalFacts.hidden = true;
       }
     }
 
     async function loadIntegrationProof(run) {
+      // The integration proof performs additional agent/MCP evaluations. Keep
+      // it out of the main decision path; load it only when the judge opens
+      // the technical proof view.
+      if (document.body.dataset.reviewTarget !== "technical-proof") return;
       if (!run || !activeApiBase) {
         integrationProofKey = "";
         renderIntegrationProof(null);
@@ -3407,6 +3547,8 @@
         `MetaGate repair plan`,
         `Asset: ${run.urn || run.asset}`,
         `Action: ${run.capability || "autonomous-agent-action"}`,
+        `Decision before repair: ${run.effective_decision || run.decision || "unavailable"}`,
+        `Blocking evidence: ${(Array.isArray(run.failed) ? run.failed : []).filter((term) => !/^(readiness_score|confidence|action\.)/.test(String(term))).join(", ") || "review required"}`,
         "",
         ...repairs.map((repair, index) => [
           `${index + 1}. ${repair.title}`,
@@ -3545,13 +3687,70 @@
       return humanizeAssetPart(pieces[pieces.length - 1] || asset || "Asset");
     }
 
+    function displayAssetLabel(run) {
+      const group = assetGroupFor(run);
+      return shortAssetLabel(run, group) || friendlyAssetLabel(run) || "Asset";
+    }
+
+    const HACKATHON_DATAHUB_PROFILES = [
+      { key: "showcase-ecommerce", label: "Showcase Ecommerce", aliases: ["showcase_ecommerce", "showcaseecommerce"] },
+      { key: "bootstrap", label: "Bootstrap", aliases: ["bootstrap"] },
+      { key: "nyc-taxi", label: "NYC Taxi", aliases: ["nyc_taxi", "nyctaxi"] },
+      { key: "healthcare", label: "Healthcare", aliases: ["healthcare"] },
+      { key: "fiction-retail", label: "Fiction Retail", aliases: ["fiction_retail", "fictionretail"] }
+    ];
+
+    function normalizedAssetSearch(value) {
+      return String(value || "").toLowerCase().replace(/[\s-]+/g, "_");
+    }
+
+    function hackathonProfileFor(run) {
+      const haystack = normalizedAssetSearch([
+        run && run.asset,
+        run && run.display_name,
+        run && run.urn
+      ].filter(Boolean).join(" "));
+      return HACKATHON_DATAHUB_PROFILES.find((profile) =>
+        profile.aliases.some((alias) => haystack.includes(alias))
+      ) || null;
+    }
+
+    function assetMatchesQuery(run, group, query) {
+      if (!query) return true;
+      const profile = hackathonProfileFor(run);
+      const haystack = normalizedAssetSearch([
+        run && run.asset,
+        run && run.display_name,
+        run && run.urn,
+        shortAssetLabel(run, group),
+        profile && profile.label
+      ].filter(Boolean).join(" "));
+      return haystack.includes(normalizedAssetSearch(query));
+    }
+
+    function splitAssetGroups(groups) {
+      const sectionMaps = [new Map(), new Map()];
+      groups.forEach((group) => {
+        group.items.forEach((item) => {
+          const sectionIndex = hackathonProfileFor(item.run) ? 0 : 1;
+          const sectionMap = sectionMaps[sectionIndex];
+          if (!sectionMap.has(group.key)) sectionMap.set(group.key, { ...group, items: [] });
+          sectionMap.get(group.key).items.push(item);
+        });
+      });
+      return [
+        { key: "hackathon", label: "Hackathon DataHub assets", groups: Array.from(sectionMaps[0].values()) },
+        { key: "connected", label: "Other connected DataHub assets", groups: Array.from(sectionMaps[1].values()) }
+      ];
+    }
+
     function renderAssetControls() {
       assetList.innerHTML = "";
       assetSelect.innerHTML = "";
       const allGroups = groupedAssets();
       const query = String(assetFilter && assetFilter.value || "").trim().toLowerCase();
       const allItems = allGroups.reduce((total, group) => total + group.items.length, 0);
-      if (assetCatalogCount) assetCatalogCount.textContent = allGroups.length;
+      if (assetCatalogCount) assetCatalogCount.textContent = allItems;
       const runsListView = document.getElementById("runsListView");
       const runsCount = document.getElementById("runsCount");
       if (runsCount) runsCount.textContent = `${allItems} asset${allItems === 1 ? "" : "s"}`;
@@ -3604,7 +3803,7 @@
       const visibleGroups = allGroups.map((group) => ({
         ...group,
         items: query
-          ? group.items.filter(({ run }) => `${run.asset || ""} ${run.urn || ""} ${shortAssetLabel(run, group)}`.toLowerCase().includes(query))
+          ? group.items.filter(({ run }) => assetMatchesQuery(run, group, query))
           : group.items
       })).filter((group) => group.items.length);
 
@@ -3645,7 +3844,7 @@
             button.innerHTML = `<span><span class="asset-picker-item-label" title="${escapeHtml(rawName)}">${escapeHtml(label)}</span><span class="asset-picker-item-context">${escapeHtml(context || rawName)}</span></span><span class="pill ${escapeHtml(decision)}">${escapeHtml(decision)}</span>`;
             button.addEventListener("click", () => {
               selected = index;
-              assetPickerOpen = false;
+              closeAssetPicker();
               render();
               loadCapabilityDecision(capabilitySelect.value);
             });
@@ -3658,67 +3857,105 @@
         if (assetPickerToggle) assetPickerToggle.setAttribute("aria-expanded", assetPickerOpen ? "true" : "false");
       }
 
-      const catalog = document.createElement("details");
-      catalog.className = "asset-catalog";
-      catalog.open = true;
-      const catalogSummary = document.createElement("summary");
-      catalogSummary.innerHTML = `<span>Connected DataHub</span><span class="asset-catalog-count">${query ? `${visibleGroups.reduce((total, group) => total + group.items.length, 0)} of ${allItems}` : `${allGroups.length} groups`}</span>`;
-      catalog.appendChild(catalogSummary);
-      const catalogBody = document.createElement("div");
-      catalogBody.className = "asset-catalog-body";
+      const sidebarSections = splitAssetGroups(allGroups);
       const selectedRun = runs[selected];
       const selectedGroupKey = selectedRun ? assetGroupFor(selectedRun).key : "";
-      visibleGroups.forEach((group) => {
-        const groupPanel = document.createElement("details");
-        groupPanel.className = "asset-group";
-        groupPanel.open = Boolean(query) || group.key === selectedGroupKey;
-        const groupSummary = document.createElement("summary");
-        groupSummary.innerHTML = `<span>${escapeHtml(group.label)}</span><span class="asset-group-count">${group.items.length}</span>`;
-        groupPanel.appendChild(groupSummary);
-        groupPanel.addEventListener("toggle", () => {
-          if (!groupPanel.open || query) return;
-          catalogBody.querySelectorAll(".asset-group[open]").forEach((other) => {
-            if (other !== groupPanel) other.open = false;
+      sidebarSections.forEach((section) => {
+        const sectionTotal = section.groups.reduce((total, group) => total + group.items.length, 0);
+        const sectionGroups = section.groups.map((group) => ({
+          ...group,
+          items: query
+            ? group.items.filter(({ run }) => assetMatchesQuery(run, group, query))
+            : group.items
+        })).filter((group) => group.items.length);
+        const sectionVisibleCount = sectionGroups.reduce((total, group) => total + group.items.length, 0);
+        const catalog = document.createElement("details");
+        catalog.className = `asset-catalog asset-catalog-${section.key}`;
+        catalog.open = true;
+        const catalogSummary = document.createElement("summary");
+        catalogSummary.innerHTML = `<span>${section.label}</span><span class="asset-catalog-count">${query ? `${sectionVisibleCount} of ${sectionTotal}` : sectionTotal}</span>`;
+        catalog.appendChild(catalogSummary);
+        const catalogBody = document.createElement("div");
+        catalogBody.className = "asset-catalog-body";
+        if (section.key === "hackathon" && !sectionTotal) {
+          const note = document.createElement("div");
+          note.className = "asset-section-note";
+          note.textContent = query
+            ? `No loaded hackathon asset matches “${query}”. NYC Taxi, Healthcare, and Fiction Retail appear here after their metadata is loaded into DataHub.`
+            : "No official hackathon scenario is loaded in this connected DataHub yet. Load NYC Taxi, Healthcare, or Fiction Retail, then Refresh.";
+          catalogBody.appendChild(note);
+        }
+        sectionGroups.forEach((group) => {
+          const groupPanel = document.createElement("details");
+          groupPanel.className = "asset-group";
+          groupPanel.dataset.groupKey = `${section.key}::${group.key}`;
+          const rememberedOpen = sidebarGroupOpenState.get(groupPanel.dataset.groupKey);
+          groupPanel.open = Boolean(query) || (rememberedOpen === undefined ? group.key === selectedGroupKey : rememberedOpen);
+          const groupSummary = document.createElement("summary");
+          groupSummary.innerHTML = `<span>${escapeHtml(group.label)}</span><span class="asset-group-count">${group.items.length}</span>`;
+          groupPanel.appendChild(groupSummary);
+          groupPanel.addEventListener("toggle", () => {
+            if (query) return;
+            sidebarGroupOpenState.set(groupPanel.dataset.groupKey, groupPanel.open);
+            if (!groupPanel.open) return;
+            catalogBody.querySelectorAll(".asset-group[open]").forEach((other) => {
+              if (other !== groupPanel) {
+                other.open = false;
+                sidebarGroupOpenState.set(other.dataset.groupKey, false);
+              }
+            });
           });
-        });
-        const items = document.createElement("div");
-        items.className = "asset-group-items";
-        group.items.forEach(({ run, index }) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "asset-button" + (index === selected ? " active" : "");
-          const label = shortAssetLabel(run, group);
-          button.innerHTML = `
-            <span class="asset-name"><span class="asset-label" title="${escapeHtml(run.asset || run.urn)}">${escapeHtml(label)}${run.saved ? '<span class="saved-mark">saved check</span>' : ''}</span><span class="pill ${run.decision}">${run.decision}</span></span>
-            <span class="urn">${escapeHtml(run.urn)}</span>
-          `;
-          button.addEventListener("click", () => {
-            selected = index;
-            render();
-            loadCapabilityDecision(capabilitySelect.value);
+          const items = document.createElement("div");
+          items.className = "asset-group-items";
+          group.items.forEach(({ run, index }) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "asset-button" + (index === selected ? " active" : "");
+            const label = shortAssetLabel(run, group);
+            button.innerHTML = `
+              <span class="asset-name"><span class="asset-label" title="${escapeHtml(run.asset || run.urn)}">${escapeHtml(label)}${run.saved ? '<span class="saved-mark">saved check</span>' : ''}</span><span class="pill ${run.decision}">${run.decision}</span></span>
+              <span class="urn">${escapeHtml(run.urn)}</span>
+            `;
+            button.addEventListener("click", () => {
+              selected = index;
+              render();
+              loadCapabilityDecision(capabilitySelect.value);
+            });
+            items.appendChild(button);
           });
-          items.appendChild(button);
+          groupPanel.appendChild(items);
+          catalogBody.appendChild(groupPanel);
         });
-        groupPanel.appendChild(items);
-        catalogBody.appendChild(groupPanel);
+        if (!sectionGroups.length && sectionTotal) {
+          const empty = document.createElement("div");
+          empty.className = "asset-empty";
+          empty.textContent = section.key === "hackathon"
+            ? `No loaded hackathon asset matches “${query}”.`
+            : "No matching connected assets.";
+          catalogBody.appendChild(empty);
+        }
+        catalog.appendChild(catalogBody);
+        assetList.appendChild(catalog);
       });
-      if (!visibleGroups.length) {
-        const empty = document.createElement("div");
-        empty.className = "asset-empty";
-        empty.textContent = "No matching assets in the connected catalog.";
-        catalogBody.appendChild(empty);
-      }
-      catalog.appendChild(catalogBody);
-      assetList.appendChild(catalog);
       assetSelect.value = selected;
     }
 
     function primaryEvidenceStatus(contract, key, facts) {
       const requiredStatus = contract && contract.evidence_status && contract.evidence_status[key];
+      const rawValue = key === "ownership"
+        ? facts && (facts.ownership || (facts.owner !== undefined ? { owner: facts.owner } : undefined))
+        : key === "glossary"
+          ? facts && (facts.glossary || (facts.glossary_terms !== undefined ? { terms: facts.glossary_terms } : undefined))
+          : facts && facts[key];
+      // A normalized contract can report that a source row existed while the
+      // raw payload still lacks the fact needed for a human decision. Keep
+      // that distinction visible instead of rendering a misleading "present".
+      if (key === "freshness" && rawValue && typeof rawValue === "object" && !rawValue.timestamp && !rawValue.observed_at && !rawValue.last_updated) return "incomplete";
+      if (key === "incidents" && (!rawValue || (typeof rawValue === "object" && rawValue.open === undefined && rawValue.open_count === undefined))) return "unavailable";
       if (requiredStatus) return String(requiredStatus).toLowerCase();
       const item = contract && contract.evidence && contract.evidence[key];
       if (item && item.status) return String(item.status).toLowerCase();
-      const value = facts && facts[key];
+      const value = rawValue;
       if (value && typeof value === "object" && value.status) return String(value.status).toLowerCase();
       if (value && typeof value === "object" && value.available === false) return "unavailable";
       if (value && typeof value === "object" && value.present === true) return "present";
@@ -3730,6 +3967,7 @@
       if (status === "unavailable") return "DataHub did not return this signal.";
       if (status === "stale") return "DataHub returned it, but it is outside policy freshness.";
       if (status === "absent") return "No verified fact was found.";
+      if (status === "incomplete") return "DataHub returned an incomplete fact.";
       return presentText;
     }
 
@@ -3749,16 +3987,20 @@
       }
       const facts = run.facts || (run.assessment && run.assessment.facts) || {};
       const contract = run.constraint_contract || {};
-      const ownership = facts.ownership || {};
-      const glossary = facts.glossary || {};
+      // Assessment facts use compact keys (owner/glossary_terms), while the
+      // contract uses normalized keys (ownership/glossary). Accept both so
+      // the evidence card cannot say "present" and then show zero facts.
+      const ownership = facts.ownership || (facts.owner !== undefined ? { owner: facts.owner } : {});
+      const glossary = facts.glossary || (facts.glossary_terms !== undefined ? { terms: facts.glossary_terms } : {});
       const lineage = facts.lineage || {};
       const assertions = facts.assertions || {};
       const freshness = facts.freshness || {};
       const incidents = facts.incidents || {};
       const owners = ownership.owners || ownership.owner || [];
       const terms = glossary.terms || glossary.glossary_terms || [];
-      const upstreams = lineage.upstreams || lineage.upstream_entities || [];
-      const downstreams = lineage.downstreams || lineage.downstream_entities || [];
+      const upstreams = lineage.upstreams || lineage.upstream_entities || lineage.upstream || [];
+      const downstreams = lineage.downstreams || lineage.downstream_entities || lineage.downstream || [];
+      const countFacts = (value) => Array.isArray(value) ? value.length : Number.isFinite(Number(value)) ? Number(value) : value ? 1 : 0;
       const latest = (assertions.latest_results || assertions.results || [])[0];
       const latestText = latest
         ? `${latest.name || latest.assertion || "latest check"}: ${latest.status || latest.result || "unknown"}${latest.timestamp || latest.observed_at ? ` · ${latest.timestamp || latest.observed_at}` : ""}`
@@ -3775,7 +4017,7 @@
       const evidence = [
         ["owner", primaryEvidenceStatus(contract, "ownership", facts), `${ownerCount} owner${ownerCount === 1 ? "" : "s"} returned`],
         ["glossary", primaryEvidenceStatus(contract, "glossary", facts), `${termCount} approved term${termCount === 1 ? "" : "s"} returned`],
-        ["lineage", primaryEvidenceStatus(contract, "lineage", facts), `${upstreams.length} upstream / ${downstreams.length} downstream links`],
+        ["lineage", primaryEvidenceStatus(contract, "lineage", facts), `${countFacts(upstreams)} upstream / ${countFacts(downstreams)} downstream links`],
         ["assertions", primaryEvidenceStatus(contract, "assertions", facts), latestText],
         ["freshness", primaryEvidenceStatus(contract, "freshness", facts), freshnessText],
         ["incidents", primaryEvidenceStatus(contract, "incidents", facts), incidentText],
@@ -3789,7 +4031,7 @@
       const friendly = friendlyAssetLabel(run);
       subtitle.innerHTML = `<span class="evidence-asset" title="${escapeHtml(exactIdentity)}">${escapeHtml(friendly)}</span><span class="evidence-meta">${escapeHtml(run.capability || "requested action")} · Checked ${escapeHtml(evaluatedAt)}</span><details class="evidence-trace"><summary>Show exact DataHub identity</summary><code>${escapeHtml(exactIdentity)}</code></details>`;
       if (state === "blocked") {
-        const failed = Array.isArray(run.failed) ? run.failed.slice(0, 2).join(", ") : "required evidence";
+        const failed = blockingEvidenceTerms(run).slice(0, 2).join(", ") || "required evidence";
         gap.textContent = `Why blocked: ${run.reason || `MetaGate could not verify ${failed}.`}`;
       } else if (state === "allowed") {
         gap.textContent = "No blocking evidence gap returned. Scores are secondary to these current facts.";
@@ -4138,7 +4380,8 @@
 
     function repairInstruction(term, run) {
       const urn = run.urn || run.entity_urn || run.asset_urn || "<DATASET_URN>";
-      const asset = String(run.asset || urn).split(",").slice(-2, -1)[0] || "dataset";
+      const assetValue = String(run.asset || "").trim();
+      const asset = assetValue || (String(urn).includes(",") ? String(urn).split(",").slice(-2, -1)[0] : "dataset");
       const capability = run.capability || "autonomous-agent-action";
       const verificationUrl = new URL("/api/evaluate", window.location.origin).toString();
       const assertionTemplates = {
@@ -4331,6 +4574,7 @@ Status: current and verified`,
             <span class="repair-kind">${escapeHtml(repair.kind || "DataHub change")}</span>
           </div>
           <p class="repair-change">${escapeHtml(repair.change)}</p>
+          ${repair.why ? `<p class="repair-why"><strong>Why:</strong> ${escapeHtml(repair.why)}</p>` : ""}
           <div class="repair-copy-label">${isCommand ? "Run after repair" : "Paste into DataHub"}</div>
           <div class="repair-copy-row">
             <pre class="repair-command">${escapeHtml(repair.copy)}</pre>
@@ -4345,8 +4589,30 @@ Status: current and verified`,
       `;
     }
 
+    function blockingEvidenceTerms(run) {
+      const failedTerms = Array.isArray(run.failed) ? run.failed : [];
+      const capability = String(run.capability || "");
+      const terms = [];
+      const add = (term) => {
+        if (term && !terms.includes(term)) terms.push(term);
+      };
+      for (const gap of (Array.isArray(run.gaps) ? run.gaps : [])) {
+        if (!gap || !gap.evidence_kind) continue;
+        const blocks = Array.isArray(gap.blocks) ? gap.blocks : [];
+        const term = gap.evidence_kind === "incidents" ? "incidents.open == 0" : `${gap.evidence_kind}.present`;
+        if (blocks.includes(capability) || failedTerms.includes(term)) add(term);
+      }
+      failedTerms.forEach((term) => {
+        const value = String(term);
+        if (/^(readiness_score|confidence|action\.|official_datahub_mcp\.)/.test(value)) return;
+        if (/\.present$/.test(value) || value === "incidents.open == 0") add(value);
+      });
+      return terms;
+    }
+
     function remediationFor(run) {
-      if (run.decision === "allowed") {
+      const decision = String(run.effective_decision || run.decision || "unavailable").toLowerCase();
+      if (decision === "allowed") {
         return [];
       }
       const profile = assetProfile(run);
@@ -4395,19 +4661,48 @@ Status: current and verified`,
       const assetName = String(run.asset || "");
       const matchedAsset = Object.keys(assetMaps).find((name) => assetName === name || assetName.endsWith(name));
       const map = matchedAsset ? { ...fallback, ...assetMaps[matchedAsset] } : fallback;
-      const failedTerms = Array.isArray(run.failed) ? run.failed : [];
-      const evidenceFailures = failedTerms.filter((term) => !term.startsWith("readiness_score") && !term.startsWith("confidence"));
-      const repairs = evidenceFailures.map((term) => {
+      const failedTerms = blockingEvidenceTerms(run);
+      const capability = String(run.capability || "");
+      const gapByKind = new Map(
+        (Array.isArray(run.gaps) ? run.gaps : [])
+          .filter((gap) => gap && gap.evidence_kind)
+          .map((gap) => [String(gap.evidence_kind), gap])
+      );
+      const canonicalTerm = (kind) => kind === "incidents" ? "incidents.open == 0" : `${kind}.present`;
+      const evidenceFailures = [];
+      const addEvidenceFailure = (term, gap = null) => {
+        if (!term || evidenceFailures.some((item) => item.term === term)) return;
+        evidenceFailures.push({ term, gap });
+      };
+      // Only show evidence gaps that block this action. Scores and guardrails
+      // are outcomes, not DataHub fields a steward can paste or edit.
+      for (const gap of (Array.isArray(run.gaps) ? run.gaps : [])) {
+        if (!gap || !gap.evidence_kind) continue;
+        const blocks = Array.isArray(gap.blocks) ? gap.blocks : [];
+        const term = canonicalTerm(String(gap.evidence_kind));
+        if (blocks.includes(capability) || failedTerms.includes(term)) {
+          addEvidenceFailure(term, gap);
+        }
+      }
+      for (const term of failedTerms) {
+        if (/^(readiness_score|confidence|action\.|official_datahub_mcp\.)/.test(String(term))) continue;
+        if (/\.present$/.test(String(term)) || String(term) === "incidents.open == 0") {
+          const kind = String(term) === "incidents.open == 0" ? "incidents" : String(term).replace(/\.present$/, "");
+          addEvidenceFailure(String(term), gapByKind.get(kind) || null);
+        }
+      }
+      const repairs = evidenceFailures.map(({ term, gap }) => {
         const readableTerm = String(term)
           .replace(/[._]/g, " ")
           .replace(/\s+present$/i, "")
           .replace(/^./, (letter) => letter.toUpperCase());
-        return toRepair(run, term, map[term] || fallback[term] || [`Restore ${readableTerm}`, `Add current ${readableTerm.toLowerCase()} evidence in DataHub, then re-check.`]);
+        const recommendation = gap && (gap.recommendation || gap.message);
+        return toRepair(run, term, map[term] || fallback[term] || [`Restore ${readableTerm}`, recommendation || `Add current ${readableTerm.toLowerCase()} evidence in DataHub, then re-check.`]);
       });
-      if (!repairs.length && run.decision !== "allowed") {
+      if (!repairs.length && decision !== "allowed") {
         repairs.push(toRepair(run, "review", ["Review the blocked action", "The metadata is not strong enough for this action under the active policy. Ask the data owner to verify the evidence, then rerun MetaGate."]));
       }
-      if (repairs.length && run.decision !== "allowed") {
+      if (repairs.length && decision !== "allowed") {
         repairs.push(toRepair(run, "rerun", ["Rerun this exact check", "After the DataHub changes are visible, rerun the same asset and action. MetaGate will recalculate the score and show what changed."]));
       }
       return repairs;
@@ -4421,7 +4716,7 @@ Status: current and verified`,
       const queue = remediationFor(run).slice(0, 3);
       const miniQueue = document.querySelector(".mini-queue");
       const repairButton = document.getElementById("openRemediationDrawer");
-      const needsRepair = run.decision !== "allowed" && queue.length > 0;
+      const needsRepair = String(run.effective_decision || run.decision || "unavailable").toLowerCase() !== "allowed" && queue.length > 0;
       miniQueue.hidden = !needsRepair;
       repairButton.hidden = !needsRepair;
       document.getElementById("miniRepairQueue").innerHTML = queue
@@ -4431,7 +4726,7 @@ Status: current and verified`,
 
     function renderWorkbench(run) {
       const repair = primaryRepair(run);
-      const blocked = run.decision !== "allowed";
+      const blocked = String(run.effective_decision || run.decision || "unavailable").toLowerCase() !== "allowed";
       const status = document.getElementById("workbenchStatus");
       status.className = "pill " + run.decision;
       status.textContent = run.decision;
@@ -4450,42 +4745,56 @@ Status: current and verified`,
     }
 
     function renderDrawer(run) {
-      document.getElementById("drawerTitle").textContent = run.asset;
+      document.getElementById("drawerTitle").textContent = displayAssetLabel(run);
+      const decision = String(run.effective_decision || run.decision || "unavailable").toLowerCase();
       document.getElementById("drawerDecision").innerHTML = `
-        <h3>${run.decision === "allowed" ? "Certified action" : "Blocked action"}</h3>
+        <h3>${decision === "allowed" ? "Certified action" : "Blocked action"}</h3>
         <p>${escapeHtml(run.reason)}</p>
       `;
       document.getElementById("drawerRepairs").innerHTML = remediationFor(run)
         .map((repair, index) => renderRepairAction(repair, index))
         .join("");
-      document.getElementById("drawerAfterRepair").textContent = run.decision === "allowed"
+      document.getElementById("drawerAfterRepair").textContent = decision === "allowed"
         ? "No repair is required. The certificate can be attached to the agent approval flow."
         : "The expected result is a higher readiness score, stronger confidence, and a capability diff showing which AI actions changed from blocked to allowed.";
     }
 
     function renderRemediation(run) {
       const repairs = remediationFor(run);
-      const changeCount = run.decision === "allowed"
+      const decision = String(run.effective_decision || run.decision || "unavailable").toLowerCase();
+      const changeCount = decision === "allowed"
         ? 0
         : repairs.filter((repair) => repair.kind !== "Verification command").length;
-      document.getElementById("remediationSummary").textContent = run.decision === "allowed"
+      document.getElementById("remediationSummary").textContent = decision === "allowed"
         ? "No repair is required. Re-check when DataHub evidence changes."
         : `${changeCount} DataHub ${changeCount === 1 ? "change" : "changes"} will address the blocking evidence.`;
-      document.getElementById("remediationCount").textContent = run.decision === "allowed"
+      document.getElementById("remediationCount").textContent = decision === "allowed"
         ? "Current"
         : `${changeCount} ${changeCount === 1 ? "change" : "changes"}`;
-      copyRepairPlan.hidden = run.decision === "allowed" || repairs.length === 0;
-      document.getElementById("remediationList").innerHTML = run.decision === "allowed"
+      copyRepairPlan.hidden = decision === "allowed" || repairs.length === 0;
+      document.getElementById("repairPlanNote").textContent = decision === "allowed"
+        ? "No DataHub change is proposed. Re-check this action when the asset’s metadata changes."
+        : "Copy the steps below into DataHub, replace angle-bracket placeholders, wait for indexing, then run the exact final check. MetaGate does not mutate DataHub from this page.";
+      document.getElementById("remediationList").innerHTML = decision === "allowed"
         ? '<div class="repair-clear"><strong>No repair needed</strong><span>Re-check when DataHub evidence changes.</span></div>'
         : repairs.map((repair, index) => renderRepairAction(repair, index)).join("");
     }
 
     function renderCapabilityMatrix(run) {
+      const records = new Map((Array.isArray(run.certified_capabilities) ? run.certified_capabilities : [])
+        .map((item) => [item.capability, item]));
       const rows = [
-        ["Answer business questions", run.decision === "allowed" ? "allowed" : "allowed", "Low-risk read-only use can proceed when basic ownership/glossary evidence exists."],
-        ["Generate executive metrics", run.decision === "allowed" ? "allowed" : "blocked", run.decision === "allowed" ? "Required evidence is certified." : "Needs assertions, freshness, and stronger readiness."],
-        ["Autonomous agent action", run.decision, run.decision === "allowed" ? "All required evidence is present." : "Blocked by failed metagate terms."]
-      ];
+        ["Answer business questions", "answer-business-questions", "Low-risk read-only use still requires its own evidence threshold."],
+        ["Generate executive metrics", "generate-executive-metrics", "Metrics require stronger lineage, assertion, and freshness evidence."],
+        ["Autonomous agent action", "autonomous-agent-action", "High-risk action requires the complete evidence contract."]
+      ].map(([action, capability, fallback]) => {
+        const record = records.get(capability);
+        const decision = record ? (record.certified ? "allowed" : "blocked") : "unavailable";
+        const why = record
+          ? (record.certified ? "Required evidence is certified." : (record.reasons && record.reasons[0]) || fallback)
+          : "This capability was not returned by the current evaluation.";
+        return [action, decision, why];
+      });
       document.getElementById("capabilityMatrix").innerHTML = rows.map(([action, decision, why]) => `
         <tr>
           <td>${escapeHtml(action)}</td>
@@ -4555,9 +4864,9 @@ Status: current and verified`,
       renderConstraintContract(run);
       renderScoreTrace(run);
       renderAssessment(run);
-      document.getElementById("assetName").textContent = run.asset;
+      document.getElementById("assetName").textContent = displayAssetLabel(run);
       document.getElementById("assetUrn").textContent = run.urn;
-      document.getElementById("embeddedAssetName").textContent = run.asset;
+      document.getElementById("embeddedAssetName").textContent = displayAssetLabel(run);
       renderEmbeddedMetadata(run);
       document.getElementById("embeddedDecision").textContent = run.decision;
       document.getElementById("embeddedDecision").style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
@@ -4590,7 +4899,7 @@ Status: current and verified`,
       document.getElementById("nextText").textContent = run.decision === "allowed"
         ? "Use the certificate as evidence in the agent workflow."
         : primaryRepair(run).change;
-      renderList("failedTerms", run.failed, "None. The selected action is certified.");
+      renderList("failedTerms", blockingEvidenceTerms(run), "None. The selected action is certified.");
       renderList("evidenceList", run.evidence, "No supporting evidence found.");
       const readableStatus = document.getElementById("readableStatus");
       readableStatus.textContent = run.decision === "allowed" ? "Allowed to proceed" : "Blocked for review";
@@ -4667,7 +4976,10 @@ Status: current and verified`,
       actionResult.textContent = `Checking ${actionName} on ${run.asset}...`;
       requestAction.disabled = true;
       requestAction.textContent = "Checking...";
-      const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}`;
+      // The selected asset was already read by the catalog refresh. Reuse
+      // that short-lived evidence bundle when only the requested capability
+      // changes; Refresh still forces a new DataHub read.
+      const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(capability)}&refresh=0`;
       try {
         const response = await fetch(endpoint, { cache: "no-store", signal: evaluationController.signal });
         const payload = await response.json().catch(() => ({}));
@@ -4681,8 +4993,13 @@ Status: current and verified`,
         // timeline all belong to the selected action.
         render();
         loadIntegrationProof(runs[selectedAtRequest]);
-        document.getElementById("dataUpdate").textContent = `Checked at ${new Date().toLocaleTimeString()}`;
-        actionResult.textContent = `${actionName}: ${runs[selectedAtRequest].decision.toUpperCase()} - ${runs[selectedAtRequest].reason} Saved to the review server.`;
+        const reuseNote = payload.evaluation_mode === "saved_evidence_reuse"
+          ? " Reused the latest saved evidence; use Refresh for a new DataHub read."
+          : " Saved to the review server.";
+        document.getElementById("dataUpdate").textContent = payload.evaluation_mode === "saved_evidence_reuse"
+          ? `Checked saved evidence at ${new Date().toLocaleTimeString()}`
+          : `Checked current evidence at ${new Date().toLocaleTimeString()}`;
+        actionResult.textContent = `${actionName}: ${runs[selectedAtRequest].decision.toUpperCase()} - ${runs[selectedAtRequest].reason}.${reuseNote}`;
         requestAction.textContent = `Checked: ${runs[selectedAtRequest].decision.toUpperCase()}`;
       } catch (error) {
         if (error.name === "AbortError" || requestId !== evaluationSequence) return;
@@ -5028,6 +5345,12 @@ Status: current and verified`,
           document.getElementById("environmentTitle").textContent = liveMode ? "Connected" : "Sample data";
           const responseScopeCount = Number(payload.current_scope_count || payload.asset_count || payload.runs.length);
           currentScopeCount = responseScopeCount;
+          const contextStatus = document.getElementById("decisionContextStatus");
+          if (contextStatus) {
+            contextStatus.textContent = liveMode
+              ? `Connected catalog · ${responseScopeCount} dataset${responseScopeCount === 1 ? "" : "s"}`
+              : `Fixture catalog · ${responseScopeCount} dataset${responseScopeCount === 1 ? "" : "s"}`;
+          }
           const savedCount = Number(payload.saved_run_count || payload.runs.filter((run) => run.stale_until_rechecked).length || 0);
           const visibleCount = Number(payload.asset_count || payload.runs.length);
           const configuredCount = Number(payload.configured_asset_count || status?.configured_asset_count || 0);
@@ -5070,6 +5393,8 @@ Status: current and verified`,
             : `${liveMode ? "Live check complete" : "Sample check complete"} at ${new Date().toLocaleTimeString()}. ${visibleCount} visible result${visibleCount === 1 ? "" : "s"}.${savedNote}${scopeWarning}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action.";
         } else if (refresh.running) {
+          const contextStatus = document.getElementById("decisionContextStatus");
+          if (contextStatus) contextStatus.textContent = "Refreshing connected catalog…";
           document.getElementById("dataUpdate").textContent = "Refreshing DataHub in background. Showing the last saved result.";
           document.getElementById("actionResult").textContent = "Your current result stays visible while DataHub updates.";
         }
@@ -5091,6 +5416,10 @@ Status: current and verified`,
         document.getElementById("dataMode").textContent = activeApiBase
           ? "Connection unavailable"
           : "Sample data";
+        const contextStatus = document.getElementById("decisionContextStatus");
+        if (contextStatus) contextStatus.textContent = activeApiBase
+          ? "Review API unavailable"
+          : "Fixture catalog ready";
         environment.classList.remove("connected", "sample", "unavailable");
         environment.classList.add(activeApiBase ? "unavailable" : "sample");
         document.getElementById("dataUpdate").textContent = activeApiBase
@@ -5111,7 +5440,7 @@ Status: current and verified`,
     assetSelect.addEventListener("change", (event) => {
       evaluationSequence += 1;
       if (evaluationController) evaluationController.abort();
-      assetPickerOpen = false;
+      closeAssetPicker();
       requestAction.disabled = false;
       requestAction.textContent = "Check selected action";
       selected = Number(event.target.value);
@@ -5131,13 +5460,13 @@ Status: current and verified`,
     });
     document.addEventListener("click", (event) => {
       if (assetPickerOpen && assetPicker && !assetPicker.contains(event.target)) {
-        assetPickerOpen = false;
+        closeAssetPicker();
         renderAssetControls();
       }
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && assetPickerOpen) {
-        assetPickerOpen = false;
+        closeAssetPicker();
         renderAssetControls();
         assetPickerToggle.focus();
       }

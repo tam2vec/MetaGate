@@ -51,12 +51,14 @@ class ReviewServerTest(unittest.TestCase):
         self.assertNotEqual(run["readiness"], run["overall_readiness"])
 
     def test_review_server_rejects_missing_source_config(self):
-        with self.assertRaises(ReviewConfigError):
-            ReviewState(
-                "examples/policies/enterprise_ai.yml",
-                datahub_url=None,
-                datahub_file=None,
-            )
+        # Keep this contract test independent of a developer's live DataHub shell.
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(ReviewConfigError):
+                ReviewState(
+                    "examples/policies/enterprise_ai.yml",
+                    datahub_url=None,
+                    datahub_file=None,
+                )
 
     def test_environment_endpoint_is_treated_as_live_source(self):
         with patch.dict(os.environ, {"DATAHUB_GRAPHQL_URL": "http://datahub.test/api/graphql"}):
@@ -69,6 +71,52 @@ class ReviewServerTest(unittest.TestCase):
         self.assertEqual(state.datahub_url, "http://datahub.test/api/graphql")
         self.assertFalse(state.allow_recorded_fallback)
         self.assertTrue(state.health()["live_datahub"])
+
+    def test_live_capability_switch_reuses_saved_evidence_when_no_bundle_is_cached(self):
+        state = ReviewState(
+            "examples/policies/enterprise_ai.yml",
+            datahub_url="http://datahub.test/api/graphql",
+            datahub_file=None,
+            catalog_first=False,
+        )
+        urn = "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)"
+        state.review_store.latest_decision_for_urn = lambda requested: {
+            "urn": requested,
+            "entity_urn": requested,
+            "asset": "SampleHiveDataset",
+            "capability": "autonomous-agent-action",
+            "decision": "allowed",
+            "allowed": True,
+            "readiness": 96.0,
+            "readiness_score": 96.0,
+            "confidence": 94.0,
+            "certified_capabilities": [
+                {
+                    "capability": "answer-business-questions",
+                    "certified": True,
+                    "score": 96.0,
+                    "confidence": 94.0,
+                    "required_evidence": ["freshness", "glossary", "ownership", "policy"],
+                    "evidence_status": {
+                        "freshness": "present",
+                        "glossary": "present",
+                        "ownership": "present",
+                        "policy": "present",
+                    },
+                    "reasons": [],
+                }
+            ],
+            "gaps": [],
+            "evidence": ["owner and glossary evidence are present"],
+            "facts": {},
+        }
+        state.client.get_entity = lambda requested: (_ for _ in ()).throw(AssertionError("DataHub read should not run"))
+
+        run = state.evaluate(urn, "answer-business-questions", refresh=False)
+
+        self.assertEqual(run["decision"], "allowed")
+        self.assertEqual(run["evaluation_mode"], "saved_evidence_reuse")
+        self.assertTrue(run["stale_until_rechecked"])
 
     def test_review_server_health_and_readiness(self):
         state = ReviewState(

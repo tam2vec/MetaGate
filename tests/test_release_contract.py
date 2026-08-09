@@ -37,6 +37,82 @@ class ReleaseContractTest(unittest.TestCase):
         self.assertIn("new AbortController()", page)
         self.assertIn("requestId !== evaluationSequence", page)
         self.assertIn('signal: evaluationController.signal', page)
+        self.assertIn("&refresh=0`", page)
+        self.assertIn('if (document.body.dataset.reviewTarget !== "technical-proof") return;', page)
+
+    def test_asset_picker_closes_when_navigating_to_evidence_or_repair(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("function closeAssetPicker()", page)
+        self.assertIn("function setReviewView(targetId) {\n      closeAssetPicker();", page)
+        self.assertIn('data-target="remediation-plan"', page)
+        self.assertIn('data-target="evidence-section"', page)
+
+    def test_decision_context_fills_the_review_header_with_useful_guidance(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn('class="decision-context"', page)
+        self.assertIn("Before the agent acts", page)
+        self.assertIn('id="decisionContextStatus"', page)
+        self.assertIn("body[data-review-view=\"embed-demo\"] .environment {\n      display: none !important;", page)
+
+    def test_sidebar_has_its_own_scroll_boundary_without_filling_main_height(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("align-items: start;", page)
+        self.assertIn("position: sticky;", page)
+        self.assertIn("max-height: 100vh;", page)
+        self.assertIn("overscroll-behavior: contain;", page)
+
+    def test_small_screen_header_stacks_without_desktop_widths(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn(".topbar { display: block; }", page)
+        self.assertIn(".decision-context, .environment { width: 100%; margin-top: 12px; }", page)
+        self.assertIn(".asset-lookup { max-width: none; }", page)
+        self.assertIn(".controls, .bars, .datahub-body { grid-template-columns: 1fr; }", page)
+
+    def test_sidebar_separates_hackathon_assets_from_the_connected_catalog(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn('const HACKATHON_DATAHUB_PROFILES = [', page)
+        self.assertIn('label: "NYC Taxi"', page)
+        self.assertIn('function splitAssetGroups(groups)', page)
+        self.assertIn('label: "Hackathon DataHub assets"', page)
+        self.assertIn('label: "Other connected DataHub assets"', page)
+        self.assertIn('No official hackathon scenario is loaded in this connected DataHub yet.', page)
+        self.assertIn('function assetMatchesQuery(run, group, query)', page)
+
+    def test_sidebar_asset_groups_preserve_manual_open_state(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("const sidebarGroupOpenState = new Map();", page)
+        self.assertIn("const rememberedOpen = sidebarGroupOpenState.get(groupPanel.dataset.groupKey);", page)
+        self.assertIn("sidebarGroupOpenState.set(groupPanel.dataset.groupKey, groupPanel.open);", page)
+
+    def test_visible_asset_headings_use_the_catalog_name_without_internal_prefix(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("function displayAssetLabel(run)", page)
+        self.assertIn("return shortAssetLabel(run, group) || friendlyAssetLabel(run) || \"Asset\";", page)
+        self.assertIn('document.getElementById("assetName").textContent = displayAssetLabel(run);', page)
+        self.assertIn('document.getElementById("embeddedAssetName").textContent = displayAssetLabel(run);', page)
+        self.assertIn('document.getElementById("drawerTitle").textContent = displayAssetLabel(run);', page)
+
+    def test_optional_mcp_facts_do_not_render_as_an_empty_box(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn(".integration-mcp-facts:empty { display: none; }", page)
+        self.assertIn("externalFacts.hidden = !externalFacts.textContent.trim();", page)
+
+    def test_capability_matrix_uses_returned_capability_records(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("const records = new Map((Array.isArray(run.certified_capabilities)", page)
+        self.assertIn('"This capability was not returned by the current evaluation."', page)
+        self.assertNotIn('run.decision === "allowed" ? "allowed" : "allowed"', page)
+
+    def test_demo_positive_case_is_explicitly_fixture_backed(self):
+        script = (ROOT / "docs/demo-script.md").read_text()
+        self.assertIn("bundled DataHub-shaped fixture", script)
+        self.assertIn("positive control", script)
+        self.assertNotIn("select `SampleHiveDataset` with the same requested capability", script)
+
+    def test_evaluate_endpoint_supports_explicit_refresh_control(self):
+        review = (ROOT / "src/metagate/review.py").read_text()
+        self.assertIn('refresh_value = query.get("refresh", ["true"])[0].lower()', review)
+        self.assertIn("state.evaluate(urn, requested_capability, refresh=refresh)", review)
 
     def test_review_evidence_prefers_selected_action_status(self):
         page = (ROOT / "public-demo/index.html").read_text()
@@ -66,6 +142,32 @@ class ReleaseContractTest(unittest.TestCase):
         self.assertIn("catalog_authoritative", page)
         self.assertIn("Connected DataHub catalog", page)
         self.assertIn("&limit=0&refresh=1", page)
+
+    def test_review_page_keeps_repair_steps_evidence_first(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn("function blockingEvidenceTerms(run)", page)
+        self.assertIn("Scores and guardrails", page)
+        self.assertIn("const assetValue =", page)
+        self.assertIn("DataHub returned an incomplete fact.", page)
+        self.assertIn("MetaGate does not mutate DataHub from this page", page)
+        self.assertIn('id="repairPlanNote"', page)
+
+    def test_repair_plan_explains_why_each_change_is_needed(self):
+        page = (ROOT / "public-demo/index.html").read_text()
+        self.assertIn(".repair-why", page)
+        self.assertIn('<strong>Why:</strong>', page)
+        self.assertIn("escapeHtml(repair.why)", page)
+
+    def test_chrome_panel_keeps_evidence_compact_and_links_to_full_review(self):
+        panel = (ROOT / "examples/browser-extension/metagate-datahub-panel.js").read_text()
+        self.assertIn('class="metagate-section-label">Repair plan</h3>', panel)
+        self.assertIn('class="metagate-section-label metagate-evidence-heading">Evidence</h3>', panel)
+        self.assertIn('repairs.slice(0, 2)', panel)
+        self.assertIn('Open full evidence &amp; repair plan', panel)
+        self.assertNotIn('>Repair queue</h3>', panel)
+        extension_readme = (ROOT / "examples/browser-extension/README.md").read_text()
+        self.assertIn("compact repair plan", extension_readme)
+        self.assertIn("Evidence heading", extension_readme)
 
     def test_launchers_use_the_canonical_python_path(self):
         for name in ("start_metagate_review.sh", "start_metagate_demo.sh", "verify_metagate.sh", "judge_proof.sh"):

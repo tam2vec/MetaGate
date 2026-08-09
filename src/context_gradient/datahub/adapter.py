@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
+from threading import RLock
 import time
 from typing import Any, Dict, Iterable, Protocol
 from urllib.request import Request, urlopen
@@ -40,12 +41,29 @@ class DataHubEvidenceExtractor:
         self.client = client
         self.cache = cache
         self.max_hops = max(1, max_hops)
+        # Capability changes need the same evidence bundle but not another
+        # round-trip through every DataHub GraphQL field. Keep a short-lived
+        # process-local copy for that handoff. Explicit invalidation still
+        # forces a fresh read after a user refresh or write-back.
+        self._memory_cache_seconds = max(
+            0.0,
+            float(os.environ.get("METAGATE_MEMORY_CACHE_SECONDS", "20")),
+        )
+        self._memory_cache: dict[str, tuple[float, EvidenceBundle]] = {}
+        self._memory_cache_lock = RLock()
 
     def bundle(self, urn: str) -> EvidenceBundle:
         if self.cache:
             cached = self.cache.get(urn)
             if cached:
                 return self._bundle_from_dict(cached)
+        if self._memory_cache_seconds:
+            with self._memory_cache_lock:
+                cached = self._memory_cache.get(urn)
+                if cached and time.monotonic() - cached[0] <= self._memory_cache_seconds:
+                    return cached[1]
+                if cached:
+                    self._memory_cache.pop(urn, None)
         consistent_reader = getattr(self.client, "get_entity_consistent", None)
         entity = self._node(consistent_reader(urn) if consistent_reader else self.client.get_entity(urn))
         neighbors = {}
@@ -65,13 +83,31 @@ class DataHubEvidenceExtractor:
             if not frontier:
                 break
         bundle = EvidenceBundle(entity=entity, neighbors=neighbors)
+        if self._memory_cache_seconds:
+            with self._memory_cache_lock:
+                self._memory_cache[urn] = (time.monotonic(), bundle)
         if self.cache:
             self.cache.set(urn, self._bundle_to_dict(bundle))
         return bundle
 
     def invalidate(self, urn: str) -> None:
+        with self._memory_cache_lock:
+            self._memory_cache.pop(urn, None)
         if self.cache:
             self.cache.delete(urn)
+
+    def has_memory_bundle(self, urn: str) -> bool:
+        """Return whether a non-expired live evidence bundle is available."""
+        if not self._memory_cache_seconds:
+            return False
+        with self._memory_cache_lock:
+            cached = self._memory_cache.get(urn)
+            if not cached:
+                return False
+            if time.monotonic() - cached[0] <= self._memory_cache_seconds:
+                return True
+            self._memory_cache.pop(urn, None)
+            return False
 
     def _node(self, raw: Dict[str, Any]) -> EntityNode:
         available_kinds = set(raw.get("_available_evidence", []))

@@ -241,6 +241,34 @@
         margin: 8px 0 0;
         padding-left: 19px;
       }
+      #${PANEL_ID} .metagate-section-label {
+        margin: 12px 0 0;
+        color: #172033;
+        font-size: 13px;
+        font-weight: 850;
+      }
+      #${PANEL_ID} .metagate-compact-repair {
+        margin-top: 5px;
+        padding-left: 18px;
+      }
+      #${PANEL_ID} .metagate-compact-repair li {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        margin: 3px 0;
+        font-size: 12px;
+        line-height: 1.3;
+      }
+      #${PANEL_ID} .metagate-more-repairs {
+        margin: 4px 0 0;
+        color: #617086;
+        font-size: 11px;
+      }
+      #${PANEL_ID} .metagate-evidence-heading {
+        padding-top: 10px;
+        border-top: 1px solid #dce3ee;
+      }
       #${PANEL_ID} li {
         color: #617086;
         font-size: 13px;
@@ -286,6 +314,11 @@
     const confidence = run.confidence ?? "n/a";
     const body = panel.querySelector(".metagate-body");
     const status = panel.querySelector(".metagate-status");
+    const repairs = remediationFor(run);
+    const repairPreview = repairs.slice(0, 2);
+    const moreRepairs = repairs.length > repairPreview.length
+      ? `<div class="metagate-more-repairs">${repairs.length - repairPreview.length} more step${repairs.length - repairPreview.length === 1 ? "" : "s"} in MetaGate Review.</div>`
+      : "";
     status.remove();
     body.innerHTML = `
       <div class="metagate-decision" style="background:${backgroundFor(decision)}; color:${colorFor(decision)}">
@@ -297,9 +330,11 @@
         <div class="metagate-metric"><span>Confidence</span><strong class="${metricClass(confidence)}">${confidence}</strong></div>
       </div>
       <div class="metagate-status">${run.reason || "MetaGate evaluated this asset."}</div>
-      <h3 style="font-size:14px; margin:12px 0 0;">Repair queue</h3>
-      <ol>${remediationFor(run).map((item) => `<li>${item}</li>`).join("")}</ol>
-      <a class="metagate-link" href="${base}/review" target="_blank" rel="noreferrer">Open MetaGate Review</a>
+      <h3 class="metagate-section-label">Repair plan</h3>
+      <ol class="metagate-compact-repair">${repairPreview.map((item) => `<li>${item}</li>`).join("")}</ol>
+      ${moreRepairs}
+      <h3 class="metagate-section-label metagate-evidence-heading">Evidence</h3>
+      <a class="metagate-link" href="${base}/review" target="_blank" rel="noreferrer">Open full evidence &amp; repair plan</a>
     `;
   }
 

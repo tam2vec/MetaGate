@@ -1,6 +1,6 @@
 # Contributing
 
-Predicate is structured so the AI-readiness SDK can evolve independently from the DataHub integration.
+MetaGate is structured so the AI-readiness SDK can evolve independently from the DataHub integration.
 
 ## Local development
 

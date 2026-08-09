@@ -1,6 +1,6 @@
 # DataHub AI Readiness Skill
 
-**Predicate helps teams know when AI is allowed to act.**
+**MetaGate helps teams know when AI is allowed to act.**
 
 This is the packaged prototype shape for a DataHub Skill/plugin.
 
@@ -47,7 +47,7 @@ freshness, lineage, and unavailable-evidence rules.
 For a local smoke test after installing the repository:
 
 ```bash
-predicate-skill \
+metagate-skill \
   "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -59,4 +59,4 @@ authorizing the deployment-specific mutation and read-back query.
 
 For the asset-page UI, see `../datahub-embed/`. The Skill produces the decision
 contract; the embed renders the compact DataHub panel and links to the full
-Predicate Review.
+MetaGate Review.

@@ -16,7 +16,7 @@ class ExtensionPackagingTest(unittest.TestCase):
         self.assertTrue((ROOT / "examples/browser-extension/options.js").exists())
 
     def test_package_script_creates_bundle(self):
-        output = ROOT / "dist/Predicate-DataHub-extension.zip"
+        output = ROOT / "dist/MetaGate-DataHub-extension.zip"
         try:
             subprocess.run([str(ROOT / "scripts/package_extension.sh")], cwd=ROOT, check=True, capture_output=True, text=True)
             self.assertTrue(output.exists())

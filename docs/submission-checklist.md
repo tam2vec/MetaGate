@@ -2,7 +2,7 @@
 
 ## Repository readiness
 
-- [ ] README opens with the product claim and the Predicate Certificate concept.
+- [ ] README opens with the product claim and the MetaGate Certificate concept.
 - [ ] Badges point to version, license, Python support, and CI.
 - [ ] Architecture image renders in GitHub.
 - [ ] Demo sequence image renders in GitHub.

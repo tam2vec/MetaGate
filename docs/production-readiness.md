@@ -1,12 +1,12 @@
 # Production Readiness
 
-Predicate is still a hackathon MVP, but these controls move it toward a real
+MetaGate is still a hackathon MVP, but these controls move it toward a real
 private deployment.
 
 ## Runtime Controls
 
-- `predicate` installed CLI for evaluations
-- `predicate-review` installed API/review server
+- `metagate` installed CLI for evaluations
+- `metagate-review` installed API/review server
 - `/healthz` process/config health endpoint
 - `/readyz` decision-readiness endpoint
 - `/api/status` machine-readable product, mode, and data-source status
@@ -14,7 +14,7 @@ private deployment.
 - Render health check configured against `/healthz`
 - startup validation for policy path and data source
 - `--no-recorded-fallback` for fail-closed private deployments
-- configurable browser origin with `PREDICATE_CORS_ORIGIN`
+- configurable browser origin with `METAGATE_CORS_ORIGIN`
 
 ## Safe Defaults
 
@@ -30,13 +30,13 @@ private deployment.
 ```bash
 export DATAHUB_GRAPHQL_URL="https://datahub.example.com/api/graphql"
 export DATAHUB_TOKEN="<private-token-if-required>"
-export PREDICATE_CORS_ORIGIN="https://predicate-ui.example.com"
+export METAGATE_CORS_ORIGIN="https://metagate-ui.example.com"
 
-predicate-review \
+metagate-review \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
   --policy examples/policies/enterprise_ai.yml \
   --no-recorded-fallback \
-  --cors-origin "$PREDICATE_CORS_ORIGIN"
+  --cors-origin "$METAGATE_CORS_ORIGIN"
 ```
 
 ## Production Checklist
@@ -48,7 +48,7 @@ Before claiming production deployment:
 - [ ] `/healthz` monitored
 - [ ] `/readyz` monitored
 - [ ] recorded fallback disabled
-- [ ] browser access restricted with `PREDICATE_CORS_ORIGIN`
+- [ ] browser access restricted with `METAGATE_CORS_ORIGIN`
 - [ ] write-back mutations tested in non-production namespace
 - [ ] RBAC/override roles mapped to DataHub policies
 - [ ] audit logs retained
@@ -63,10 +63,10 @@ that a fixture is a private DataHub deployment.
 
 Use:
 
-> Predicate includes production-oriented runtime controls: health checks,
+> MetaGate includes production-oriented runtime controls: health checks,
 > startup validation, fail-closed mode, Docker healthcheck, server-side DataHub
 > token handling, restricted browser access, and gated write-back.
 
 Avoid:
 
-> Predicate is production-ready for every DataHub deployment.
+> MetaGate is production-ready for every DataHub deployment.

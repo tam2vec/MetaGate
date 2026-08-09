@@ -1,11 +1,11 @@
 # Private Deployment Adapter
 
-Predicate should be deployed beside a private DataHub instance, not as a public
+MetaGate should be deployed beside a private DataHub instance, not as a public
 service connected to private metadata.
 
 ## Default Data Access
 
-Predicate consumes metadata by default:
+MetaGate consumes metadata by default:
 
 - asset URN
 - schema and column descriptions
@@ -18,9 +18,9 @@ Predicate consumes metadata by default:
 - incidents
 - usage and downstream consumers
 - policy profile
-- previous Predicate decision records
+- previous MetaGate decision records
 
-Predicate does not need raw table rows for the default admission decision.
+MetaGate does not need raw table rows for the default admission decision.
 
 Optional sampled profiles can be added by a deployment owner, but they should be
 treated as sensitive and governed by the same access rules as DataHub metadata.
@@ -30,9 +30,9 @@ treated as sensitive and governed by the same access rules as DataHub metadata.
 ```text
 DataHub UI
   -> Request AI Readiness
-  -> Predicate API inside private network
+  -> MetaGate API inside private network
   -> DataHub GraphQL metadata read
-  -> Predicate policy evaluation
+  -> MetaGate policy evaluation
   -> Context Contract
   -> optional DataHub write-back
 ```
@@ -57,7 +57,7 @@ The point is:
 Run:
 
 ```bash
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.customer_lifetime_value,PROD)" \
   --policy examples/policies/finance-production.yml \
   --datahub-file examples/data/difficult_datahub_graph.json \

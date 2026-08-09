@@ -1,8 +1,8 @@
 # Public Demo Runbook
 
-**Predicate helps teams know when AI is allowed to act.**
+**MetaGate helps teams know when AI is allowed to act.**
 
-This runbook is the shortest path to a reproducible Predicate demo. The public
+This runbook is the shortest path to a reproducible MetaGate demo. The public
 page is either a static visual demo or a Render API-backed fixture demo; the
 real DataHub proof runs locally or inside a private DataHub deployment.
 
@@ -11,7 +11,7 @@ real DataHub proof runs locally or inside a private DataHub deployment.
 ```bash
 python -m pip install -e ".[dev]"
 PYTHONPATH=src python -m unittest discover -s tests -v
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-file examples/data/datahub_graph.json

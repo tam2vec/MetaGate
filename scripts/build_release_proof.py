@@ -1,4 +1,4 @@
-"""Build a machine-readable, honest release proof for Predicate.
+"""Build a machine-readable, honest release proof for MetaGate.
 
 The proof separates deterministic repository checks from checks that require a
 running DataHub, credentials, reviewers, or a deployment. It is safe to run
@@ -22,7 +22,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 ENV = {**os.environ, "PYTHONPATH": "src:."}
-ENV.setdefault("PYTHONPYCACHEPREFIX", "/tmp/predicate-release-pycache")
+ENV.setdefault("PYTHONPYCACHEPREFIX", "/tmp/metagate-release-pycache")
 
 
 def run(command: list[str], *, timeout: int = 180) -> dict[str, Any]:
@@ -70,11 +70,11 @@ def test_summary(output: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build Predicate's release proof bundle")
+    parser = argparse.ArgumentParser(description="Build MetaGate's release proof bundle")
     parser.add_argument(
         "--output",
-        default="/tmp/predicate-release-proof.json",
-        help="Where to write the JSON proof (default: /tmp/predicate-release-proof.json)",
+        default="/tmp/metagate-release-proof.json",
+        help="Where to write the JSON proof (default: /tmp/metagate-release-proof.json)",
     )
     args = parser.parse_args()
 
@@ -89,10 +89,29 @@ def main() -> None:
         ]
     )
     package = run(["sh", "scripts/package_extension.sh"])
-    doctor = run([PYTHON, "-m", "predicate.doctor"])
+    native_package = run(
+        [
+            PYTHON,
+            "scripts/package_native_plugin.py",
+            "--output",
+            "/tmp/metagate-datahub-preflight-adapter.zip",
+        ]
+    )
+    adversarial = run([PYTHON, "scripts/generate_adversarial_scenarios.py", "--json"])
+    doctor = run([PYTHON, "-m", "metagate.doctor"])
     doctor_payload = parse_json_output(doctor)
 
-    if os.environ.get("DATAHUB_GRAPHQL_URL") and os.environ.get("PREDICATE_LIVE_DATAHUB_URN"):
+    # Configuration alone is not proof. When an official DataHub MCP command
+    # is supplied, run the real probe and preserve its response in the proof
+    # bundle so a judge can distinguish configured from verified.
+    if os.environ.get("METAGATE_DATAHUB_MCP_COMMAND", "").strip():
+        official_mcp = run([PYTHON, "scripts/probe_datahub_mcp.py"], timeout=120)
+        official_mcp_payload = parse_json_output(official_mcp)
+    else:
+        official_mcp = None
+        official_mcp_payload = None
+
+    if os.environ.get("DATAHUB_GRAPHQL_URL") and os.environ.get("METAGATE_LIVE_DATAHUB_URN"):
         live_schema_run = run(
             [PYTHON, "-m", "unittest", "tests.test_datahub_schema", "-q"],
             timeout=240,
@@ -104,7 +123,7 @@ def main() -> None:
     else:
         live_schema = {
             "status": "not_configured",
-            "note": "Set DATAHUB_GRAPHQL_URL and PREDICATE_LIVE_DATAHUB_URN to run against a real deployment.",
+            "note": "Set DATAHUB_GRAPHQL_URL and METAGATE_LIVE_DATAHUB_URN to run against a real deployment.",
         }
 
     enforcement_payload = parse_json_output(enforcement) or {}
@@ -121,9 +140,11 @@ def main() -> None:
             and enforcement_payload.get("integration_proof", {}).get("status") == "verified"
         ),
         "extension_package": package["ok"],
+        "native_adapter_package": native_package["ok"],
+        "adversarial_scenarios": adversarial["ok"],
     }
     proof = {
-        "product": "Predicate",
+        "product": "MetaGate",
         "proof_version": "1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repository": {
@@ -145,7 +166,17 @@ def main() -> None:
             },
             "browser_extension": {
                 "status": "verified" if package["ok"] else "failed",
-                "artifact": "dist/Predicate-DataHub-extension.zip",
+                "artifact": "dist/MetaGate-DataHub-extension.zip",
+            },
+            "native_datahub_adapter": {
+                "status": "packaged" if native_package["ok"] else "failed",
+                "artifact": "/tmp/metagate-datahub-preflight-adapter.zip",
+                "registration": "deployment-specific",
+            },
+            "adversarial_scenarios": {
+                "status": "generated" if adversarial["ok"] else "failed",
+                "count": (parse_json_output(adversarial) or {}).get("count", 0),
+                "labels": "synthetic_only",
             },
         },
         "deployment_checks": {
@@ -157,11 +188,25 @@ def main() -> None:
             "live_schema_contract": live_schema,
         },
         "external_proof_required": {
-            "official_datahub_mcp": "Configure PREDICATE_DATAHUB_MCP_COMMAND and run predicate-datahub-mcp-probe.",
+            "official_datahub_mcp": (
+                "verified"
+                if official_mcp_payload and official_mcp_payload.get("status") == "verified"
+                else (
+                    "configured_but_unverified"
+                    if official_mcp
+                    else "not_configured"
+                )
+            ),
             "live_writeback": "Run the approved deployment-specific mutation with an authorized token, then verify the contract in DataHub.",
             "independent_labels": "Have independent reviewers label the held-out cases; do not manufacture labels.",
             "native_plugin": "Install the packaged browser integration or deployment-specific DataHub extension and capture it on a real asset page.",
             "public_live_datahub": "Use a reachable, permissioned DataHub service; localhost cannot be a public deployment dependency.",
+        },
+    }
+    proof["external_proof_observations"] = {
+        "official_datahub_mcp": official_mcp_payload or {
+            "status": "not_configured",
+            "note": "Set METAGATE_DATAHUB_MCP_COMMAND to run the official probe.",
         },
     }
     output = Path(args.output)

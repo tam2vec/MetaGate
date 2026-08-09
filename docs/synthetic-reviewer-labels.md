@@ -3,7 +3,7 @@
 These labels are not external benchmark proof.
 
 They are deliberately synthetic examples that show reviewers how to label
-Predicate decisions in a human, judgment-based way.
+MetaGate decisions in a human, judgment-based way.
 
 Use them for:
 

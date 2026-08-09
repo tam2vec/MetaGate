@@ -72,6 +72,11 @@ class ReadinessEngine:
             context_contract=contract,
             metadata={
                 "policy": self.policy.name,
+                "score_semantics": "policy_weighted_evidence_summary",
+                "score_note": (
+                    "Readiness and confidence summarize the evidence observed in this run; "
+                    "they are not model accuracy, data truth, or independent validation."
+                ),
                 "evidence_signals": len(evidence),
                 "connected_assets": len(bundle.neighbors) + 1,
                 "graph_coverage": score_trace["graph_coverage"],
@@ -89,7 +94,14 @@ class ReadinessEngine:
             max_age = self.policy.stale_after_days.get(item.kind)
             stale = item.stale
             age_seconds = max(0.0, (now - item.observed_at).total_seconds())
-            if max_age is not None and age_seconds > max_age * 86400:
+            # A fixture is a reproducible evidence snapshot. Its historical
+            # timestamps are evidence values, not a promise that the demo
+            # source was refreshed today. Do not let the calendar mutate a
+            # fixture result; explicit stale/failing flags still block. Live
+            # DataHub observations never carry this marker and continue to
+            # age according to policy.
+            is_reproducible_snapshot = item.details.get("freshness_semantics") == "reproducible_snapshot"
+            if max_age is not None and age_seconds > max_age * 86400 and not is_reproducible_snapshot:
                 stale = True
             normalized.append(
                 EvidenceItem(
@@ -251,7 +263,7 @@ class ReadinessEngine:
         name = item.kind.value.replace("_", " ")
         details = item.details
         if state == "unavailable":
-            return f"Predicate could not read {name} from this DataHub response, so it is unknown rather than absent."
+            return f"MetaGate could not read {name} from this DataHub response, so it is unknown rather than absent."
         if item.kind == EvidenceKind.ASSERTIONS:
             count = details.get("count", 0)
             passing = details.get("passing", 0)
@@ -315,7 +327,7 @@ class ReadinessEngine:
                         GapType.UNAVAILABLE,
                         item.kind,
                         "unavailable from this DataHub deployment",
-                        "Enable or configure the DataHub API surface for this evidence, then rerun Predicate.",
+                        "Enable or configure the DataHub API surface for this evidence, then rerun MetaGate.",
                     )
                 )
             elif self._open_incident(item):
@@ -456,23 +468,73 @@ class ReadinessEngine:
             required_items = [item for item in evidence if item.kind in required]
             capability_score = self._score(required_items) if required_items else score
             capability_confidence = self._confidence_for_items(required_items) if required_items else confidence
-            missing = [kind.value for kind in sorted(required, key=lambda item: item.value) if kind not in present]
+            evidence_status = {
+                kind.value: self._required_status(next((item for item in required_items if item.kind == kind), None))
+                for kind in sorted(required, key=lambda item: item.value)
+            }
+            missing = [kind for kind, state in evidence_status.items() if state == "absent"]
+            unavailable = [kind for kind, state in evidence_status.items() if state == "unavailable"]
+            stale = [kind for kind, state in evidence_status.items() if state == "stale"]
+            incomplete = [kind for kind, state in evidence_status.items() if state == "incomplete"]
+            contradictory = [kind for kind, state in evidence_status.items() if state == "contradictory"]
+            open_incidents = [kind for kind, state in evidence_status.items() if state == "open"]
             certified = (
                 capability_score >= policy.minimum_score
                 and capability_confidence >= policy.minimum_confidence
-                and not missing
+                and all(state == "present" for state in evidence_status.values())
             )
             reasons = []
             if missing:
                 reasons.append("Missing required evidence: " + ", ".join(missing))
+            if unavailable:
+                reasons.append("Required evidence unavailable: " + ", ".join(unavailable))
+            if stale:
+                reasons.append("Required evidence stale: " + ", ".join(stale))
+            if incomplete:
+                reasons.append("Required evidence incomplete: " + ", ".join(incomplete))
+            if contradictory:
+                reasons.append("Contradictory required evidence: " + ", ".join(contradictory))
+            if open_incidents:
+                reasons.append("Open required incidents: " + ", ".join(open_incidents))
             if capability_score < policy.minimum_score:
                 reasons.append(f"Readiness score below {policy.minimum_score}")
             if capability_confidence < policy.minimum_confidence:
                 reasons.append(f"Confidence below {policy.minimum_confidence}")
             certifications.append(
-                CapabilityCertification(policy.name, certified, round(capability_score, 2), round(capability_confidence, 2), reasons)
+                CapabilityCertification(
+                    policy.name,
+                    certified,
+                    round(capability_score, 2),
+                    round(capability_confidence, 2),
+                    reasons,
+                    sorted(evidence_status),
+                    evidence_status,
+                )
             )
         return certifications
+
+    @classmethod
+    def _required_status(cls, item: EvidenceItem | None) -> str:
+        """Keep deployment unknowns distinct from a real metadata absence."""
+        if item is None or not item.available:
+            return "unavailable"
+        if item.kind == EvidenceKind.INCIDENTS:
+            return "open" if cls._open_incident(item) else ("present" if item.present else "absent")
+        if item.contradictory:
+            return "contradictory"
+        if item.stale:
+            return "stale"
+        if not item.present:
+            return "absent"
+        if not item.complete:
+            return "incomplete"
+        if item.kind == EvidenceKind.ASSERTIONS and (
+            item.details.get("failing", 0)
+            or item.details.get("unknown", 0)
+            or item.details.get("missing_results")
+        ):
+            return "contradictory"
+        return "present"
 
     @staticmethod
     def _confidence_for_items(items: List[EvidenceItem]) -> float:

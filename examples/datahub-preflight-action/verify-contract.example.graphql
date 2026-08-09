@@ -1,4 +1,4 @@
-query ReadPredicateContract($urn: String!) {
+query ReadMetaGateContract($urn: String!) {
   entity(urn: $urn) {
     urn
     properties {

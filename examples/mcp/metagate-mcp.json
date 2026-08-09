@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "datahub-official": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-datahub@latest",
+        "--transport",
+        "stdio"
+      ],
+      "env": {
+        "DATAHUB_GMS_URL": "http://localhost:8080",
+        "DATAHUB_GMS_TOKEN": "${DATAHUB_GMS_TOKEN}"
+      }
+    },
+    "metagate": {
+      "command": "metagate-mcp",
+      "args": [
+        "--policy",
+        "examples/policies/enterprise_ai.yml",
+        "--datahub-url",
+        "http://localhost:8080/api/graphql"
+      ],
+      "env": {
+        "DATAHUB_TOKEN": "${DATAHUB_TOKEN}"
+      }
+    }
+  }
+}

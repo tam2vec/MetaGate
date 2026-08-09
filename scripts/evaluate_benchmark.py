@@ -50,9 +50,9 @@ def main():
     tn = sum(not expected and not actual for expected, actual in results)
     fp = sum(not expected and actual for expected, actual in results)
     fn = sum(expected and not actual for expected, actual in results)
-    statement = f"Predicate evaluated {len(results)} scenarios in the {args.label}."
+    statement = f"MetaGate evaluated {len(results)} scenarios in the {args.label}."
     if args.label == "curated benchmark" and len(results) == 30:
-        statement = "Predicate passes all 30 curated policy conformance checks across ready, missing, stale, incomplete and contradictory metadata states."
+        statement = "MetaGate passes all 30 curated policy conformance checks across ready, missing, stale, incomplete and contradictory metadata states."
     print(json.dumps({
         "statement": statement,
         "positive_definition": "Asset satisfies the requested capability policy.",

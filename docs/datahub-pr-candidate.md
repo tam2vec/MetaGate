@@ -1,6 +1,6 @@
 # DataHub PR Candidate
 
-**Predicate helps teams know when AI is allowed to act.**
+**MetaGate helps teams know when AI is allowed to act.**
 
 This repository is prepared as a documentation/example contribution for DataHub:
 

@@ -19,6 +19,6 @@
   "after": {
     "decision": "allowed",
     "failed_terms": [],
-    "reason": "Required action predicate terms are satisfied."
+    "reason": "Required action metagate terms are satisfied."
   }
 }

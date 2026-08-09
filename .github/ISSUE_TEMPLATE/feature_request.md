@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an improvement to Predicate
+about: Suggest an improvement to MetaGate
 title: "[Feature]: "
 labels: enhancement
 assignees: ""
@@ -12,7 +12,7 @@ What user or team problem would this solve?
 
 ## Proposed change
 
-What should Predicate do?
+What should MetaGate do?
 
 ## DataHub context
 

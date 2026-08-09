@@ -1,12 +1,12 @@
 # Good First Issues
 
-These are small, useful contributions for new Predicate contributors.
+These are small, useful contributions for new MetaGate contributors.
 
 ## Documentation
 
 - Add a screenshot of the browser extension running on a local DataHub asset page.
 - Add a short troubleshooting entry for a DataHub GraphQL schema mismatch.
-- Add a one-page guide for running Predicate against a DataHub Cloud sandbox.
+- Add a one-page guide for running MetaGate against a DataHub Cloud sandbox.
 
 ## Policies
 
@@ -23,7 +23,7 @@ These are small, useful contributions for new Predicate contributors.
 
 ## UI
 
-- Add a copy button for the action predicate JSON.
+- Add a copy button for the action metagate JSON.
 - Add a filter for allowed vs blocked assets in the public review page.
 - Add a compact view for narrow laptop screens.
 
@@ -32,4 +32,4 @@ These are small, useful contributions for new Predicate contributors.
 - Add a sample DataHub mutation document for a non-production custom property
   write-back.
 - Package the browser extension as a zipped artifact for manual Chrome install.
-- Add a Docker Compose service for the Predicate review API.
+- Add a Docker Compose service for the MetaGate review API.

@@ -1,4 +1,4 @@
-"""Run the four-action Predicate enforcement story for a demo or CI job."""
+"""Run the four-action MetaGate enforcement story for a demo or CI job."""
 
 from __future__ import annotations
 
@@ -7,15 +7,17 @@ import json
 import os
 from datetime import datetime, timezone
 
-from context_gradient.cli import _action_predicate
+from context_gradient.cli import _action_metagate
 from context_gradient.datahub.adapter import DataHubEvidenceExtractor, GraphQLDataHubClient
 from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.policy import load_policy
-from predicate.contracts import build_constraint_contract
+from metagate.contracts import build_constraint_contract
+from metagate.agent_gate import ToolCallDenied, guarded_tool_call
 from context_gradient.skill import certify as skill_certify
-from predicate.mcp_server import PredicateMCP
+from metagate.mcp_server import MetaGateMCP
+from metagate.datahub_mcp_probe import probe_datahub_mcp
 
 
 # The default story uses an asset with a deliberate quality gap. That makes
@@ -31,7 +33,7 @@ ACTIONS = (
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Show Predicate's action enforcement path.")
+    parser = argparse.ArgumentParser(description="Show MetaGate's action enforcement path.")
     parser.add_argument(
         "--urn",
         default=DEFAULT_URN,
@@ -60,7 +62,7 @@ def main() -> None:
     evaluations = []
     for action in ACTIONS:
         admission = enforce_action_guardrails(certificate, action).__dict__
-        admission["action_predicate"] = _action_predicate(certificate, policy, action, admission["allowed"], admission.get("reason"))
+        admission["action_metagate"] = _action_metagate(certificate, policy, action, admission["allowed"], admission.get("reason"))
         run = {
             **admission,
             "decision": "allowed" if admission["allowed"] else "blocked",
@@ -77,6 +79,24 @@ def main() -> None:
             "evaluated_at": evaluated_at,
         }
         run["constraint_contract"] = build_constraint_contract(run, action)
+        tool_attempt = {"attempted": True, "tool_called": False, "action": action}
+        try:
+            tool_attempt["result"] = guarded_tool_call(
+                run["constraint_contract"],
+                action=action,
+                dataset_urn=args.urn,
+                columns=["customer_id"] if action == "restricted-sql" else None,
+                tool=lambda: {"executed": True, "simulated_tool": "agent.execute"},
+            )
+            tool_attempt["tool_called"] = True
+            tool_attempt["enforcement"] = "allowed"
+        except ToolCallDenied as error:
+            tool_attempt.update({
+                "enforcement": "blocked_before_tool",
+                "reason": str(error),
+                "decision_id": error.decision_id,
+            })
+        run["tool_call"] = tool_attempt
         evaluations.append(run)
     # Exercise the two agent-facing surfaces in the same run. This is the
     # local proof that the Skill and MCP tools are not separate rule engines.
@@ -88,7 +108,7 @@ def main() -> None:
         datahub_file=source_file,
         capability="answer-business-questions",
     )
-    mcp_result = PredicateMCP(args.policy, args.datahub_url, None, source_file).evaluate({
+    mcp_result = MetaGateMCP(args.policy, args.datahub_url, None, source_file).evaluate({
         "urn": args.urn,
         "capability": "answer-business-questions",
     })
@@ -105,7 +125,7 @@ def main() -> None:
             },
         },
         "mcp": {
-            "tool": "predicate_evaluate",
+            "tool": "metagate_evaluate",
             "decision": mcp_result.get("decision"),
             "decision_id": mcp_result.get("decision_id"),
             "contract_version": mcp_result.get("constraint_contract", {}).get("contract_version"),
@@ -129,10 +149,17 @@ def main() -> None:
         and integration_proof["evidence_agreement"]
         else "attention_required"
     )
-    integration_proof["official_datahub_mcp"] = {
-        "status": "not_configured",
-        "note": "Register the official DataHub MCP server separately to prove DataHub discovery in the demo."
-    }
+    if os.environ.get("METAGATE_DATAHUB_MCP_COMMAND", "").strip():
+        integration_proof["official_datahub_mcp"] = probe_datahub_mcp(
+            args.urn,
+            os.environ.get("METAGATE_DATAHUB_MCP_COMMAND"),
+        )
+    else:
+        integration_proof["official_datahub_mcp"] = {
+            "status": "not_configured",
+            "checked_urn": args.urn,
+            "note": "Set METAGATE_DATAHUB_MCP_COMMAND to include the official DataHub MCP call in this proof."
+        }
     decisions = [
         {
             "action": item["capability"],

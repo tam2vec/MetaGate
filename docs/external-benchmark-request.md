@@ -1,14 +1,14 @@
 # External Benchmark Request
 
 Use this when asking a reviewer, data steward, mentor, or judge-adjacent expert
-to label Predicate decisions independently.
+to label MetaGate decisions independently.
 
 ## What to ask for
 
 Ask the reviewer to judge whether each requested AI action should be allowed or
 blocked based only on the sanitized asset metadata shown to them.
 
-Do not ask them whether Predicate is impressive. Ask them whether the decision
+Do not ask them whether MetaGate is impressive. Ask them whether the decision
 is correct.
 
 ## Minimum useful review
@@ -24,10 +24,10 @@ is correct.
 Send this:
 
 ```text
-I am benchmarking Predicate, an AI admission controller for DataHub metadata.
+I am benchmarking MetaGate, an AI admission controller for DataHub metadata.
 
 For each row, please decide whether the requested AI action should be allowed or
-blocked. Please do not use Predicate's answer when labeling. Use your own
+blocked. Please do not use MetaGate's answer when labeling. Use your own
 judgment from the sanitized metadata evidence.
 
 What to return for each asset:
@@ -83,7 +83,7 @@ Include these kinds of assets:
 | Lineage present but missing column lineage | Tests action-specific risk |
 | Finance or privacy-impacting asset | Tests high-risk thresholds |
 | Streaming asset | Tests non-table metadata expectations |
-| Fully governed asset | Confirms Predicate can allow, not only block |
+| Fully governed asset | Confirms MetaGate can allow, not only block |
 
 ## Scoring after labels
 
@@ -102,16 +102,16 @@ Report:
 - unexpected blocks
 - most important disagreement
 
-Unexpected allows are the most serious because they mean Predicate allowed an
+Unexpected allows are the most serious because they mean MetaGate allowed an
 action a human reviewer would have blocked.
 
 ## Honest wording before labels exist
 
 Use:
 
-> Predicate passes 30/30 curated conformance checks. Independent benchmark
+> MetaGate passes 30/30 curated conformance checks. Independent benchmark
 > labeling is prepared and ready for external reviewers.
 
 Do not use:
 
-> Predicate is 100% accurate.
+> MetaGate is 100% accurate.

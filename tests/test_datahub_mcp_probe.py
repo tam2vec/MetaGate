@@ -5,8 +5,8 @@ import textwrap
 import unittest
 from pathlib import Path
 
-from predicate.datahub_mcp_probe import DataHubMCPProbe
-from predicate.mcp_evidence import normalize_mcp_entity_output, normalize_mcp_query_output
+from metagate.datahub_mcp_probe import DataHubMCPProbe
+from metagate.mcp_evidence import normalize_mcp_entity_output, normalize_mcp_query_output
 
 
 class DataHubMCPProbeTest(unittest.TestCase):
@@ -88,6 +88,41 @@ class DataHubMCPProbeTest(unittest.TestCase):
         self.assertEqual(result["query_call"]["query_count"], 1)
         self.assertEqual(result["query_call"]["latest_query_at"], "2026-08-05T12:00:00Z")
         self.assertNotIn("secret", json.dumps(result["query_call"]))
+
+    def test_probe_supports_newline_framed_mcp_server(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server = Path(directory) / "mcp-server-datahub.py"
+            server.write_text(textwrap.dedent(
+                """
+                import json, sys
+                def read():
+                    return json.loads(sys.stdin.buffer.readline())
+                def send(value):
+                    sys.stdout.buffer.write((json.dumps(value, separators=(',', ':')) + '\\n').encode())
+                    sys.stdout.buffer.flush()
+                while True:
+                    request = read()
+                    if request.get('id') is None:
+                        continue
+                    method = request.get('method')
+                    if method == 'initialize':
+                        result = {'serverInfo': {'name': 'newline-datahub-mcp', 'version': 'test'}}
+                    elif method == 'tools/list':
+                        result = {'tools': [
+                            {'name': 'search', 'inputSchema': {'properties': {}}},
+                            {'name': 'get_entities', 'inputSchema': {'properties': {'urns': {'type': 'array'}}}},
+                            {'name': 'get_lineage', 'inputSchema': {'properties': {}}},
+                            {'name': 'list_schema_fields', 'inputSchema': {'properties': {}}},
+                        ]}
+                    else:
+                        result = {'content': [{'type': 'text', 'text': json.dumps({'entities': [{'urn': 'urn:test:asset'}]})}]}
+                    send({'jsonrpc': '2.0', 'id': request['id'], 'result': result})
+                """
+            ))
+            result = DataHubMCPProbe(f"{sys.executable} {server}", timeout_seconds=2).run("urn:test:asset")
+        self.assertEqual(result["status"], "verified")
+        self.assertEqual(result["server_info"]["name"], "newline-datahub-mcp")
+        self.assertEqual(result["entity_call"]["status"], "ok")
 
     def test_normalizer_rejects_unparseable_or_wrong_asset_content(self):
         result = normalize_mcp_entity_output(

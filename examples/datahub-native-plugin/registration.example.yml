@@ -1,0 +1,11 @@
+name: metagate-preflight
+description: Fail-closed DataHub Action adapter for AI action requests.
+event: dataset.preflight.requested
+handler: metagate.preflight
+endpoint: http://metagate-review:8765/api/datahub-action
+authentication: deployment-managed
+writeback: disabled-by-default
+notes:
+  - Register this endpoint using the action/webhook mechanism available in the deployed DataHub version.
+  - Keep DataHub and MetaGate on a private network; never put a DataHub token in browser JavaScript.
+  - The adapter is real and executable, but it is not a claim that MetaGate is merged into DataHub core.

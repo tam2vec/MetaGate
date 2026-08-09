@@ -7,7 +7,7 @@
   ],
   "payload_shape": {
     "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",
-    "certificate": "{... Predicate Certificate JSON ...}"
+    "certificate": "{... MetaGate Certificate JSON ...}"
   },
-  "safety_note": "Predicate performs no live DataHub write unless deployment-supported mutation documents are explicitly configured."
+  "safety_note": "MetaGate performs no live DataHub write unless deployment-supported mutation documents are explicitly configured."
 }

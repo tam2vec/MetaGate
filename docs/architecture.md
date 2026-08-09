@@ -1,11 +1,11 @@
 # Architecture
 
-**Predicate helps teams know when AI is allowed to act.**
+**MetaGate helps teams know when AI is allowed to act.**
 
 ```mermaid
 flowchart TD
   A["DataHub"] --> B["Metadata change events"]
-  B --> C["Predicate scanner"]
+  B --> C["MetaGate scanner"]
   C --> D["Affected graph resolver"]
   D --> E["Multi-hop evidence collector"]
   E --> F["Policy engine"]
@@ -13,7 +13,7 @@ flowchart TD
   G --> H["Confidence engine"]
   G --> I["Capability certification"]
   G --> J["Gap and impact analysis"]
-  G --> K["Predicate Certificate"]
+  G --> K["MetaGate Certificate"]
   H --> K
   I --> K
   J --> K

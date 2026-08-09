@@ -1,6 +1,6 @@
 # Public API Demo
 
-The hosted page calls the Predicate API by default. The API has two explicit
+The hosted page calls the MetaGate API by default. The API has two explicit
 modes: `fixture` for a safe public fallback, and `live` for a real DataHub
 deployment. It never presents fixture data as live DataHub evidence.
 
@@ -8,7 +8,7 @@ deployment. It never presents fixture data as live DataHub evidence.
 
 ```text
 Netlify public page
-  -> Predicate API on Render
+  -> MetaGate API on Render
      -> DataHub GraphQL (live mode) OR labelled fixture (fixture mode)
 ```
 
@@ -31,13 +31,13 @@ provided.
 6. Copy the deployed service URL, for example:
 
 ```text
-https://predicate-ixz0.onrender.com
+https://metagate-ixz0.onrender.com
 ```
 
 Test the API:
 
 ```bash
-curl https://predicate-ixz0.onrender.com/api/runs
+curl https://metagate-ixz0.onrender.com/api/runs
 ```
 
 You should see JSON with `runs`.
@@ -47,7 +47,7 @@ You should see JSON with `runs`.
 Only do this after you have a reachable DataHub deployment. In Render, set:
 
 ```text
-PREDICATE_DEMO_MODE=live
+METAGATE_DEMO_MODE=live
 DATAHUB_GRAPHQL_URL=https://your-datahub-host/api/graphql
 DATAHUB_TOKEN=<read-only-token>
 ```
@@ -56,8 +56,8 @@ DATAHUB_TOKEN=<read-only-token>
 the browser URL. Redeploy Render, then verify the source before presenting it:
 
 ```bash
-curl -s https://predicate-ixz0.onrender.com/api/status | python3 -m json.tool
-curl -s https://predicate-ixz0.onrender.com/api/runs | python3 -m json.tool
+curl -s https://metagate-ixz0.onrender.com/api/status | python3 -m json.tool
+curl -s https://metagate-ixz0.onrender.com/api/runs | python3 -m json.tool
 ```
 
 The status must say `"mode": "live-datahub-api"`, `"live_datahub": true`,
@@ -74,7 +74,7 @@ There are two safe options.
 Open the public page with:
 
 ```text
-https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com
+https://leafy-maamoul-4acf4b.netlify.app/?api=https://metagate-ixz0.onrender.com
 ```
 
 The current page already uses this Render API by default; the query parameter
@@ -85,7 +85,7 @@ is useful when testing another API.
 In `public-demo/index.html`, set:
 
 ```js
-const PUBLIC_API_BASE = "https://predicate-ixz0.onrender.com";
+const PUBLIC_API_BASE = "https://metagate-ixz0.onrender.com";
 ```
 
 Then redeploy Netlify.
@@ -101,7 +101,7 @@ When Render is still in fixture mode:
 
 After the status check passes in live mode:
 
-> The public page calls Predicate on every load; Predicate reads this DataHub
+> The public page calls MetaGate on every load; MetaGate reads this DataHub
 > GraphQL deployment and blocks fixture fallback.
 
 Avoid:

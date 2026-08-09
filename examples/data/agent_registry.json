@@ -1,0 +1,52 @@
+{
+  "catalog_version": "1.0",
+  "source": "metagate-local-agent-registry",
+  "agents": [
+    {
+      "urn": "urn:li:aiAgent:metagate-review-agent",
+      "name": "MetaGate Review Agent",
+      "description": "Requests governed AI action decisions from MetaGate.",
+      "skills": ["urn:li:agentSkill:metagate-preflight"],
+      "tools": ["urn:li:api:metagate.evaluate"],
+      "consumes_datasets": ["*"]
+    }
+  ],
+  "skills": [
+    {
+      "urn": "urn:li:agentSkill:metagate-preflight",
+      "name": "MetaGate Preflight",
+      "description": "Checks current DataHub evidence before an agent uses a dataset.",
+      "tools": ["urn:li:api:metagate.evaluate"],
+      "actions": [
+        "answer-business-questions",
+        "generate-executive-metrics",
+        "autonomous-agent-action",
+        "modify-dataset",
+        "restricted-sql"
+      ]
+    }
+  ],
+  "apis": [
+    {
+      "urn": "urn:li:api:metagate.evaluate",
+      "name": "MetaGate evaluate",
+      "subtype": "REST_ENDPOINT",
+      "service": "urn:li:service:metagate-review-api",
+      "path": "/api/evaluate",
+      "method": "GET",
+      "contract": {
+        "input": ["urn", "capability"],
+        "output": ["decision", "constraint_contract", "evidence", "decision_id"]
+      }
+    }
+  ],
+  "services": [
+    {
+      "urn": "urn:li:service:metagate-review-api",
+      "name": "MetaGate Review API",
+      "subtype": "REST",
+      "apis": ["urn:li:api:metagate.evaluate"],
+      "base_url": "http://127.0.0.1:8765"
+    }
+  ]
+}

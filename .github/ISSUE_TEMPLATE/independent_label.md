@@ -1,6 +1,6 @@
 ---
 name: Independent benchmark label
-about: Submit an external review of a Predicate decision
+about: Submit an external review of a MetaGate decision
 title: "[Label]: "
 labels: benchmark, validation
 assignees: ""
@@ -18,7 +18,7 @@ urn:li:dataset:(...)
 autonomous-agent-action
 ```
 
-## Predicate decision
+## MetaGate decision
 
 - [ ] allowed
 - [ ] blocked
@@ -28,7 +28,7 @@ autonomous-agent-action
 - [ ] allowed
 - [ ] blocked
 
-## Do you agree with Predicate?
+## Do you agree with MetaGate?
 
 - [ ] yes
 - [ ] no

@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: predicate-review-api-live
+    name: metagate-review-api-live
     runtime: docker
     plan: free
     healthCheckPath: /healthz
     envVars:
-      - key: PREDICATE_DEMO_MODE
+      - key: METAGATE_DEMO_MODE
         value: live
       - key: DATAHUB_GRAPHQL_URL
         sync: false

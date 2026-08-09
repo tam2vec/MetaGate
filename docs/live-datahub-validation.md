@@ -11,7 +11,7 @@ Real DataHub entity -> metadata retrieval -> multi-hop traversal
 -> capability change -> DataHub write-back
 ```
 
-Predicate's live evidence boundary is explicit:
+MetaGate's live evidence boundary is explicit:
 
 | Evidence | Live source | If the deployment does not expose it |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ readiness, confidence, evidence count, and reason for each asset.
 export DATAHUB_GRAPHQL_URL=https://datahub.example/api/graphql
 export DATAHUB_TOKEN="<read-only-token>"
 
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.revenue,PROD)" \
   --policy examples/policies/finance-production.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -76,7 +76,7 @@ is opt-in locally but required in CI:
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -q
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
-export PREDICATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
+export METAGATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
 PYTHONPATH=src python3 -m unittest tests.test_datahub_schema -v
 ```
 
@@ -91,7 +91,7 @@ protected.
 `examples/benchmark/independent-label-template.csv` now contains 30 blank
 review templates
 covering allowed, blocked, and borderline judgments. The blank human fields
-are intentional: Predicate must not invent reviewer labels. A reviewer fills
+are intentional: MetaGate must not invent reviewer labels. A reviewer fills
 `human_label` with `allowed`, `blocked`, or `borderline`, adds their role and
 plain-language reason, then runs:
 
@@ -107,7 +107,7 @@ claim before that happens.
 
 ## Persistent review history and local overrides
 
-Predicate Review stores decisions, review notes, and override records in
+MetaGate Review stores decisions, review notes, and override records in
 `.context-gradient/review.sqlite3`. Restarting the service does not erase the
 history. Inspect it through:
 
@@ -125,7 +125,7 @@ production deployments should map it to DataHub authentication and policy.
 
 Use a non-production namespace first. The default path uses DataHub's supported
 Python REST SDK rather than guessing a GraphQL mutation. It preserves existing
-dataset properties, upserts one `predicate.ai_context_contract` property, polls
+dataset properties, upserts one `metagate.ai_context_contract` property, polls
 DataHub until that property is readable, and fails unless the read-back exactly
 matches the contract that was written:
 
@@ -143,13 +143,13 @@ PYTHONPATH=src python3 scripts/writeback_datahub.py \
 ```
 
 The successful JSON receipt includes `transport: "datahub-rest-sdk"`,
-`property_name: "predicate.ai_context_contract"`, and
+`property_name: "metagate.ai_context_contract"`, and
 `verified_readback: true`. Open the same dataset in DataHub and inspect its
 Properties tab to see the written property. The command is intentionally
 read/write: use a least-privilege token and a non-production dataset.
 
 If your deployment does not expose the DatasetProperties REST aspect, use the
-deployment-specific GraphQL path below. Predicate still requires both a
+deployment-specific GraphQL path below. MetaGate still requires both a
 mutation document and a read-back query:
 
 ```bash
@@ -207,7 +207,7 @@ least-privilege token for write-back and keep evaluation tokens read-only.
 ## Three-minute demo
 
 1. An agent requests a risky action.
-2. Predicate blocks it.
+2. MetaGate blocks it.
 3. The evidence-policy-decision report explains why.
 4. Metadata is repaired inside DataHub.
 5. The scanner recomputes affected assets.

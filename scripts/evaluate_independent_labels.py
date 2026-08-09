@@ -29,12 +29,12 @@ def _expected_gate(label: str) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Score independently labeled Predicate decisions.")
+    parser = argparse.ArgumentParser(description="Score independently labeled MetaGate decisions.")
     parser.add_argument("--labels", default="examples/benchmark/independent-label-template.csv")
     parser.add_argument("--output", default="examples/outputs/independent-label-report.json")
     parser.add_argument(
         "--datahub-file",
-        help="Recompute Predicate decisions from a graph fixture before comparing them to labels.",
+        help="Recompute MetaGate decisions from a graph fixture before comparing them to labels.",
     )
     parser.add_argument("--policy", help="Policy used with --datahub-file")
     parser.add_argument("--max-hops", type=int, default=DEFAULT_MAX_HOPS)
@@ -68,9 +68,9 @@ def main() -> None:
                     row["evaluation_error"] = str(error)
                     continue
                 decision = enforce_action_guardrails(certificate, row["capability"])
-                row["predicate_decision"] = "allowed" if decision.allowed else "blocked"
-                row["predicate_readiness"] = certificate["readiness_score"]
-                row["predicate_confidence"] = certificate["confidence"]
+                row["metagate_decision"] = "allowed" if decision.allowed else "blocked"
+                row["metagate_readiness"] = certificate["readiness_score"]
+                row["metagate_confidence"] = certificate["confidence"]
                 row["human_decision"] = row["human_label"]
                 row["human_agrees"] = "yes"
 
@@ -94,11 +94,11 @@ def main() -> None:
 
     completed = [
         row for row in rows
-        if row.get("predicate_decision") and row.get("human_decision")
+        if row.get("metagate_decision") and row.get("human_decision")
     ]
     if not completed:
         raise SystemExit(
-            "No completed labels found. Fill predicate_decision/human_decision "
+            "No completed labels found. Fill metagate_decision/human_decision "
             "or provide --datahub-file and --policy."
         )
 
@@ -111,12 +111,12 @@ def main() -> None:
 
     matches = [
         row for row in completed
-        if row["predicate_decision"].strip().lower() == _expected_gate(row["human_decision"])
+        if row["metagate_decision"].strip().lower() == _expected_gate(row["human_decision"])
         and (not row.get("human_agrees") or _truthy(row["human_agrees"]))
     ]
     disagreements = [
         row for row in completed
-        if row["predicate_decision"].strip().lower() != _expected_gate(row["human_decision"])
+        if row["metagate_decision"].strip().lower() != _expected_gate(row["human_decision"])
         or (row.get("human_agrees") and not _truthy(row["human_agrees"]))
     ]
     report = {
@@ -138,12 +138,12 @@ def main() -> None:
             {
                 "asset_urn": row.get("asset_urn"),
                 "capability": row.get("capability"),
-                "predicate_decision": row.get("predicate_decision"),
+                "metagate_decision": row.get("metagate_decision"),
                 "human_decision": row.get("human_decision"),
                 "human_label": row.get("human_label"),
                 "labeler_role": row.get("labeler_role"),
-                "readiness": row.get("predicate_readiness"),
-                "confidence": row.get("predicate_confidence"),
+                "readiness": row.get("metagate_readiness"),
+                "confidence": row.get("metagate_confidence"),
             }
             for row in completed
         ],

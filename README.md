@@ -1,4 +1,4 @@
-# Predicate
+# MetaGate
 
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](pyproject.toml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
@@ -10,12 +10,12 @@
 Enterprise data already has a control plane: owners, glossary terms, lineage,
 assertions, freshness, incidents, usage, and policy. AI agents mostly ignore it.
 
-Predicate turns that metadata into a deterministic action check:
+MetaGate turns that metadata into a deterministic action check:
 
 ```json
 {
   "action": "autonomous-agent-action",
-  "predicate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
+  "metagate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
   "result": false,
   "failed_terms": ["assertions.present"],
   "decision": "blocked"
@@ -26,30 +26,42 @@ No metadata proof, no AI action.
 
 ## The Demo
 
-Predicate is an AI admission controller for DataHub. Ask whether an agent may
-explain, summarize, modify, or act on a data asset; Predicate returns allowed or
+MetaGate is an AI admission controller for DataHub. Ask whether an agent may
+explain, summarize, modify, or act on a data asset; MetaGate returns allowed or
 blocked with the exact missing evidence.
 
 | Proof | Link |
 | --- | --- |
-| Public Predicate Review | [Open the hosted review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) |
+| Public MetaGate Review | [Open the hosted review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://metagate-ixz0.onrender.com) |
 | Local DataHub runbook | [Live DataHub Validation](docs/live-datahub-validation.md) |
 | Browser extension prototype | [DataHub Panel Prototype](examples/browser-extension/README.md) |
-| Agent integration | [Predicate MCP server](examples/mcp/README.md) |
+| Agent integration | [MetaGate MCP server](examples/mcp/README.md) |
+| Agent Registry + Service Catalog governance | [Verified execution chain](docs/agent-registry-service-catalog.md) |
 | Hackathon DataHub sources | [Load and review the provided datasets](docs/hackathon-datahub-sources.md) |
+| Judge rubric alignment | [Elicit rubric to MetaGate proof map](docs/rubric-alignment.md) |
+| Data readiness foundation | [Paper alignment and quality boundaries](docs/data-readiness-paper-alignment.md) |
+| Production proof runbook | [Tool gate, repair loop, MCP, write-back, and adversarial proof](docs/production-proof.md) |
 
 The hosted page is API-backed and labels its source. In the current safe
 fixture mode it says `Mode: public API fixture`; after a reachable DataHub is
 configured on Render it says `Mode: live DataHub API`. The real proof path
 must always be verified through `/api/status`, not inferred from appearance.
 
+MetaGate also verifies the execution path before a governed action runs:
+registered agent -> authorized skill -> registered tool/API -> owning service.
+The requested capability must be in the skill's allowed action list, and the
+same chain is carried into the agent constraint contract and enforced again at
+the tool boundary. The local demo catalog mirrors DataHub's Agent Registry and
+Service Catalog vocabulary; it is explicitly labeled as a local adapter rather
+than a claim that the OSS quickstart has Cloud-only registry entities.
+
 ## Judge path: five minutes
 
 1. Start DataHub with the [Quickstart Guide](https://docs.datahub.com/docs/quickstart).
 2. Load a rich graph: `datahub datapack load showcase-ecommerce --force`.
-3. Start Predicate with `./scripts/start_predicate_review.sh`.
+3. Start MetaGate with `./scripts/start_metagate_review.sh`.
 4. Open the review page and choose **Hackathon DataHub resources** -> **Find loaded assets**.
-5. Predicate automatically discovers and scores the datasets currently loaded
+5. MetaGate automatically discovers and scores the datasets currently loaded
    in DataHub. Select a discovered URN and request an AI action. The decision, evidence,
    failed terms, and remediation come from that asset's current DataHub metadata.
 
@@ -61,7 +73,7 @@ and the hackathon's NYC Taxi, Healthcare, and Fiction Retail scenarios. See the
 [resource lab guide](docs/hackathon-datahub-sources.md) for the full source list.
 
 For a repeatable presentation without Docker or a live DataHub, use
-`./scripts/start_predicate_demo.sh`. It serves the same six-asset proof fixture
+`./scripts/start_metagate_demo.sh`. It serves the same six-asset proof fixture
 every time and labels itself as a fixture. It is not a substitute for the live
 DataHub run; it is the reliable fallback for a judge who needs to see the full
 decision flow immediately.
@@ -72,7 +84,7 @@ decision flow immediately.
 python3 -m pip install -e ".[datahub]"
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
 
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -84,7 +96,7 @@ explicit `--enable-writeback` flag plus deployment-approved mutation documents.
 
 The live adapter asks DataHub for assertion run history, active incident
 status, usage buckets, fine-grained lineage, and freshness assertion results.
-When a deployment does not expose one of those fields, Predicate labels it
+When a deployment does not expose one of those fields, MetaGate labels it
 `unavailable` and lowers confidence; it does not call the evidence “missing”
 or quietly reuse a recorded demo result.
 
@@ -100,7 +112,7 @@ Example result:
 
 ## What Judges Should Notice
 
-- Predicate reads DataHub metadata and converts it into deterministic go/no-go
+- MetaGate reads DataHub metadata and converts it into deterministic go/no-go
   decisions for AI actions.
 - It can allow one asset and block another under the same policy.
 - It explains the failed terms, not just a generic score.
@@ -108,12 +120,15 @@ Example result:
   Docker path, tests, and curated benchmark.
 - It is read-only by default; write-back is explicit and deployment-gated.
 - Review decisions, notes, and steward overrides persist locally in SQLite.
+- A blocked `/api/tool-call` request fails closed before the tool callback runs.
+- The review page exposes a repair-loop proof and 60 synthetic adversarial cases;
+  synthetic scenarios are clearly separate from independent human labels.
 
-## Production Path: Predicate Preflight
+## Production Path: MetaGate Preflight
 
 The tight production story is:
 
-> Predicate is a DataHub preflight gate. Before an AI
+> MetaGate is a DataHub preflight gate. Before an AI
 > workflow touches a dataset, it checks whether the metadata is decision-ready,
 > writes a governed Context Contract back into DataHub, and either constrains
 > the agent or blocks it with an auditable reason.
@@ -122,8 +137,8 @@ Proof layers:
 
 | Layer | Artifact |
 | --- | --- |
-| DataHub preflight action | [Predicate Preflight](examples/datahub-preflight-action/README.md) |
-| Agent tool integration | [Predicate MCP server](examples/mcp/README.md) |
+| DataHub preflight action | [MetaGate Preflight](examples/datahub-preflight-action/README.md) |
+| Agent tool integration | [MetaGate MCP server](examples/mcp/README.md) |
 | Context Contract write-back shape | [AI Context Contract aspect](examples/datahub-preflight-action/context-contract-aspect.json) |
 | Private deployment adapter | [Private Deployment Adapter](docs/private-deployment-adapter.md) |
 | Unsafe-answer benchmark framing | [Unsafe-Answer Reduction Benchmark](docs/unsafe-answer-reduction-benchmark.md) |
@@ -131,7 +146,7 @@ Proof layers:
 
 ## Proof From Local DataHub
 
-Predicate was validated against a local DataHub quickstart seeded with sample
+MetaGate was validated against a local DataHub quickstart seeded with sample
 metadata.
 
 | DataHub asset | Capability | Decision | Why |
@@ -148,21 +163,40 @@ For a harder run, see [Difficult DataHub Run](docs/difficult-datahub-run.md).
 From the project folder, start the live review once:
 
 ```bash
-./scripts/start_predicate_review.sh
+./scripts/start_metagate_review.sh
 ```
 
-In live mode this enables automatic discovery of the current DataHub dataset
-catalog, scoring up to 1,000 dataset URNs per refresh. Loading another DataHub
-pack and pressing **Refresh DataHub check** updates the catalog without
-another per-asset terminal command.
+If MetaGate was installed to start at login, it runs from a copied runtime at
+`~/MetaGateRuntime`. After changing source files, replace that runtime with:
+
+```bash
+METAGATE_FORCE_RESTART=1 ./scripts/start_metagate_review.sh
+```
+
+The launcher prints its build ID and asset scope. If the page ever shows an
+older build, run the installer again; it copies the current project, restarts
+the login service, and waits for `/healthz` before reporting success:
+
+```bash
+./scripts/install_metagate_autostart.sh
+```
+
+In live mode the connected DataHub catalog is authoritative. MetaGate
+paginates DataHub's dataset search and evaluates every dataset returned on
+each refresh (`METAGATE_MAX_ASSETS=0` means no cap). It does not inject the
+six proof URNs into a live catalog run. If discovery fails or returns no
+datasets, the page shows the catalog problem and does not silently substitute
+fixture data. The six proof assets are available only in the explicit fixture
+demo. Loading another DataHub pack and pressing **Refresh DataHub check**
+rescans the catalog; no per-asset terminal command is required.
 
 Before presenting the demo, check the four local prerequisites in one shot:
 
 ```bash
-predicate-doctor
+metagate-doctor
 ```
 
-It reports DataHub GraphQL, the review API, the extension source, Predicate's
+It reports DataHub GraphQL, the review API, the extension source, MetaGate's
 local MCP server, and the optional official DataHub MCP separately. The
 official server is not considered configured until its separate probe succeeds.
 A failed required check is a setup problem, not a blocked dataset.
@@ -172,7 +206,7 @@ use **Refresh DataHub check** in the page. You do not rerun a separate CLI
 command for every asset.
 
 ```bash
-predicate-review \
+metagate-review \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
   --policy examples/policies/enterprise_ai.yml
 ```
@@ -187,6 +221,30 @@ makes a stale deployment or an incomplete DataHub catalog visible instead of
 silently changing the scorecard.
 CLI and Review use the same direct-lineage scope by default. Override both with
 the same `--max-hops` value if a deeper graph is needed.
+
+The review page also exposes three proof endpoints so the behavior can be
+verified without reading a long terminal transcript:
+
+```bash
+# Evidence-first decision: facts, statuses, gaps, and constraint contract
+curl -sG http://127.0.0.1:8765/api/evidence \
+  --data-urlencode 'urn=urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)' \
+  --data-urlencode 'capability=autonomous-agent-action' | python3 -m json.tool
+
+# Evaluate the connected catalog with the same policy and scope as Review
+curl -sG http://127.0.0.1:8765/api/scan \
+  --data-urlencode 'capability=autonomous-agent-action' \
+  --data-urlencode 'limit=0' | python3 -m json.tool
+
+# Prove blocked requests never invoke the tool callback
+curl -sG http://127.0.0.1:8765/api/enforcement-demo \
+  --data-urlencode 'urn=urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)' \
+  | python3 -m json.tool
+```
+
+The UI buttons **Scan connected DataHub** and **Prove tool gate** call these
+same endpoints. A scan keeps the selected decision visible while it runs;
+blocked actions are reported as `tool_not_invoked`, not as a simulated success.
 
 Human review notes submitted in the local Review app are appended to
 `.context-gradient/review-notes.jsonl` and can be read through `/api/reviews`.
@@ -205,12 +263,12 @@ To run the opt-in test against the actual deployment used for the demo:
 
 ```bash
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
-export PREDICATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
+export METAGATE_LIVE_DATAHUB_URN="urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
 PYTHONPATH=src python3 -m unittest tests.test_datahub_schema -v
 ```
 
 The live test is skipped when `DATAHUB_GRAPHQL_URL` or
-`PREDICATE_LIVE_DATAHUB_URN` is absent. Run it with the local DataHub
+`METAGATE_LIVE_DATAHUB_URN` is absent. Run it with the local DataHub
 containers up; a green fixture test is not a substitute for this deployment
 check.
 
@@ -248,16 +306,16 @@ Real in this MVP:
 
 - CLI and SDK decision engine
 - Live reads from local DataHub GraphQL
-- Local API-backed Predicate Review app
+- Local API-backed MetaGate Review app
 - Packaged browser extension that detects DataHub asset URNs
 - MCP server and DataHub Skill-compatible entrypoint for agent integrations
 - Dockerized review API path
 - Safe write-back payloads and receipts
-- Installed commands: `predicate`, `predicate-review`, `predicate-mcp`, and
-  `predicate-doctor`
+- Installed commands: `metagate`, `metagate-review`, `metagate-mcp`, and
+  `metagate-doctor`
 - Tests, curated benchmark, contribution guide, release notes, and docs
 
-For a single local check, run `./scripts/verify_predicate.sh`. It runs the
+For a single local check, run `./scripts/verify_metagate.sh`. It runs the
 tests, rebuilds the extension package, and reports whether DataHub and the
 review API are reachable.
 
@@ -267,7 +325,7 @@ For a judge-ready release snapshot, run:
 ./scripts/judge_proof.sh
 ```
 
-This writes a machine-readable proof bundle to `/tmp/predicate-release-proof.json`.
+This writes a machine-readable proof bundle to `/tmp/metagate-release-proof.json`.
 It records the commit, test count, curated benchmark, four-action enforcement
 story, extension package, local prerequisite status, and any external proof
 that still requires a real deployment or human reviewer. It never labels an
@@ -290,7 +348,7 @@ Deployment-specific proof:
   freshness, usage, and policy
 - Capability-based certification
 - Readiness and confidence scoring
-- Predicate Certificate output
+- MetaGate Certificate output
 - Gap classification: missing, stale, incomplete, contradictory
 - Remediation planning
 - Policy simulation
@@ -300,7 +358,7 @@ Deployment-specific proof:
 
 ## Security Model
 
-Predicate is designed to be safe by default:
+MetaGate is designed to be safe by default:
 
 - read-only evaluation unless write-back mutations are explicitly configured
 - DataHub token stays server-side in local/private deployments
@@ -311,7 +369,7 @@ Predicate is designed to be safe by default:
 ## SDK
 
 ```python
-from predicate import ReadinessEngine, load_policy
+from metagate import ReadinessEngine, load_policy
 from context_gradient.datahub.adapter import DataHubEvidenceExtractor
 from context_gradient.datahub.mock_client import FileDataHubClient
 

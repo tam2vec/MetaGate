@@ -1,7 +1,7 @@
 import unittest
 
 from context_gradient.sdk.admission import enforce_action_guardrails
-from predicate.contracts import build_constraint_contract
+from metagate.contracts import build_constraint_contract
 
 
 def certificate(*, latest_results=None, freshness=None, allowed=None):

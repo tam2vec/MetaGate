@@ -2,11 +2,11 @@
 
 ## Project name
 
-Predicate
+MetaGate
 
 ## Short description
 
-Predicate is an AI admission controller for DataHub: it turns metadata evidence
+MetaGate is an AI admission controller for DataHub: it turns metadata evidence
 into go/no-go decisions that decide which agent actions are safe.
 
 ## Long description
@@ -15,9 +15,9 @@ Enterprise metadata catalogs were built so people could understand data. AI
 agents need something stricter: a deterministic way to know whether metadata is
 complete, current, and governed enough for a specific action.
 
-Predicate certifies DataHub assets for AI use. It reads evidence such as
+MetaGate certifies DataHub assets for AI use. It reads evidence such as
 ownership, glossary terms, lineage, assertions, incidents, freshness, usage, and
-policy tags, then produces a Predicate Certificate. The certificate says which
+policy tags, then produces a MetaGate Certificate. The certificate says which
 capabilities are allowed, which are blocked, and why.
 
 The core idea is simple: do not ask an AI agent to guess whether it can be
@@ -26,7 +26,7 @@ metadata graph.
 
 ## Features
 
-- Predicate Certificates for DataHub assets.
+- MetaGate Certificates for DataHub assets.
 - Capability-level admission control for agent actions.
 - Deterministic evidence-to-policy-to-decision explanations.
 - Concrete remediation plans for missing assertions, stale freshness,
@@ -35,7 +35,7 @@ metadata graph.
 - Readiness diffs that show how metadata repairs change certified capabilities.
 - Context contracts that expose machine-readable permissions to agents.
 - DataHub-style graph traversal through fixture, adapter, or live GraphQL mode.
-- Browser extension prototype that auto-runs Predicate when a local DataHub asset
+- Browser extension prototype that auto-runs MetaGate when a local DataHub asset
   page opens.
 - Dockerized review API path for private demos.
 - DataHub embed prototype showing the intended asset-page side panel.
@@ -46,14 +46,14 @@ metadata graph.
 
 ## Technical architecture
 
-Predicate has four layers:
+MetaGate has four layers:
 
 1. DataHub evidence extraction collects ownership, glossary, lineage,
    assertions, incidents, freshness, usage, and policy metadata.
 2. The readiness engine evaluates that evidence against a YAML policy profile.
 3. The admission layer converts the certificate into allowed or blocked agent
    capabilities.
-4. Reporting and integration layers emit Predicate Certificates, context
+4. Reporting and integration layers emit MetaGate Certificates, context
    contracts, explainability reports, readiness diffs, audit entries, and
    write-back payloads.
 
@@ -65,13 +65,13 @@ examples, and architecture documentation.
 ## Originality
 
 Most metadata tooling focuses on discovery, documentation, or quality checks.
-Predicate treats metadata as an AI control plane. Its contribution is the
-Predicate Certificate: a reusable, deterministic contract that decides whether a
+MetaGate treats metadata as an AI control plane. Its contribution is the
+MetaGate Certificate: a reusable, deterministic contract that decides whether a
 specific AI action should be allowed based on graph evidence and policy.
 
 ## Impact
 
-Predicate helps teams adopt AI agents without giving them blanket access
+MetaGate helps teams adopt AI agents without giving them blanket access
 to change production data systems. It creates a clear path from metadata quality
 work to measurable AI readiness: repair the metadata, rerun certification, and
 show exactly which capabilities changed.
@@ -80,7 +80,7 @@ show exactly which capabilities changed.
 
 ```bash
 python -m pip install -e ".[dev]"
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-file examples/data/datahub_graph.json
@@ -92,7 +92,7 @@ For live DataHub mode:
 export DATAHUB_GRAPHQL_URL="https://your-datahub.example/api/graphql"
 export DATAHUB_TOKEN="<token>"
 
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL"
@@ -106,7 +106,7 @@ that suite. This is not presented as production accuracy. Real deployment
 validation should follow
 `docs/live-datahub-validation.md`.
 
-Predicate was also run against a local DataHub quickstart seeded with sample
+MetaGate was also run against a local DataHub quickstart seeded with sample
 metadata. The same policy produced both allowed and blocked outcomes across
 different DataHub assets. The public hosted page is a sanitized static demo of
 the intended embedded experience; the local review server is the live

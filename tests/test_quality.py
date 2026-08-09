@@ -329,9 +329,9 @@ class QualityTest(unittest.TestCase):
 
         self.assertTrue(receipt["verified_readback"])
         self.assertEqual(receipt["transport"], "datahub-rest-sdk")
-        self.assertEqual(receipt["property_name"], "predicate.ai_context_contract")
+        self.assertEqual(receipt["property_name"], "metagate.ai_context_contract")
         self.assertEqual(graph.aspect.customProperties["existing.key"], "keep-me")
-        self.assertIn("predicate.ai_context_contract", graph.aspect.customProperties)
+        self.assertIn("metagate.ai_context_contract", graph.aspect.customProperties)
 
     def test_writeback_does_not_create_tasks_before_readback(self):
         class DelayedReadback:
@@ -353,7 +353,7 @@ class QualityTest(unittest.TestCase):
                     raise AssertionError("remediation task created before read-back")
 
         client = DelayedReadback()
-        with patch.dict("os.environ", {"PREDICATE_WRITEBACK_READBACK_INTERVAL": "0"}):
+        with patch.dict("os.environ", {"METAGATE_WRITEBACK_READBACK_INTERVAL": "0"}):
             receipt = DataHubWriteback(client).publish(
                 URN,
                 {"decision": "blocked", "gaps": [{"evidence_kind": "freshness", "type": "missing", "recommendation": "Add a freshness SLA."}]},

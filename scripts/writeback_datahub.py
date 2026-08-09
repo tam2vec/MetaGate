@@ -1,4 +1,4 @@
-"""Evaluate one asset and write/read back its Predicate contract in DataHub."""
+"""Evaluate one asset and write/read back its MetaGate contract in DataHub."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 
-from context_gradient.cli import _action_predicate
+from context_gradient.cli import _action_metagate
 from context_gradient.datahub.adapter import (
     DataHubEvidenceExtractor,
     DataHubRestWritebackClient,
@@ -20,7 +20,7 @@ from context_gradient.sdk.policy import load_policy
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Predicate DataHub write-back with read-after-write verification.")
+    parser = argparse.ArgumentParser(description="MetaGate DataHub write-back with read-after-write verification.")
     parser.add_argument("urn")
     parser.add_argument("--policy", required=True)
     parser.add_argument("--datahub-url", default=os.environ.get("DATAHUB_GRAPHQL_URL"), required=not os.environ.get("DATAHUB_GRAPHQL_URL"))
@@ -44,8 +44,8 @@ def main() -> None:
     policy = load_policy(args.policy)
     certificate = ReadinessEngine(policy).certify(DataHubEvidenceExtractor(client).bundle(args.urn)).as_dict()
     decision = enforce_action_guardrails(certificate, args.capability).__dict__
-    decision["action_predicate"] = _action_predicate(certificate, policy, args.capability, decision["allowed"])
-    certificate["predicate_decision"] = decision["action_predicate"]
+    decision["action_metagate"] = _action_metagate(certificate, policy, args.capability, decision["allowed"])
+    certificate["metagate_decision"] = decision["action_metagate"]
     if args.transport == "rest":
         gms_url = args.datahub_gms_url or args.datahub_url.removesuffix("/api/graphql")
         writeback_client = DataHubRestWritebackClient(gms_url, token=os.environ.get("DATAHUB_TOKEN"))
@@ -54,7 +54,16 @@ def main() -> None:
         os.environ["DATAHUB_CERTIFICATE_QUERY"] = Path(args.verify_query_file).read_text()
         writeback_client = client
     receipt = DataHubWriteback(writeback_client).publish(args.urn, certificate)
-    print(json.dumps({"product": "Predicate", "writeback": receipt, "decision": decision}, indent=2, sort_keys=True))
+    result = {"product": "MetaGate", "writeback": receipt, "decision": decision}
+    receipt_path = Path(
+        os.environ.get(
+            "METAGATE_WRITEBACK_RECEIPT",
+            str(Path(__file__).resolve().parents[1] / ".context-gradient/writeback-receipt.json"),
+        )
+    )
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(result, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":

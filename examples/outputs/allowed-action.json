@@ -4,9 +4,9 @@
   "capability": "autonomous-agent-action",
   "allowed": true,
   "reason": "Capability is certified by the active policy.",
-  "action_predicate": {
+  "action_metagate": {
     "action": "autonomous-agent-action",
-    "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+    "metagate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
     "result": true,
     "failed_terms": [],
     "decision": "allowed"

@@ -1,6 +1,6 @@
 # Capability Matrix
 
-Predicate certifies actions, not a single global “AI ready” label. Each
+MetaGate certifies actions, not a single global “AI ready” label. Each
 capability is gated by the metadata evidence named in its active policy.
 
 | Capability | Required metadata | Example status |

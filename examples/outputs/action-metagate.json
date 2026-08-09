@@ -1,0 +1,11 @@
+{
+  "action": "autonomous-agent-action",
+  "metagate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+  "result": false,
+  "failed_terms": [
+    "assertions.present",
+    "readiness_score >= policy.minimum_score",
+    "confidence >= policy.minimum_confidence"
+  ],
+  "decision": "blocked"
+}

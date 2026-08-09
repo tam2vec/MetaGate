@@ -15,7 +15,13 @@ class FileDataHubClient:
 
     def get_entity(self, urn: str) -> Dict[str, Any]:
         self.data = json.loads(self.path.read_text())
-        return self.data["entities"][urn]
+        entity = dict(self.data["entities"][urn])
+        # Fixture timestamps describe a reproducible snapshot, not a live
+        # DataHub observation. The extractor uses this marker to avoid turning
+        # a passing demo into a different result merely because the calendar
+        # advanced; explicit stale/failing flags remain authoritative.
+        entity["_metagate_source"] = "local_fixture"
+        return entity
 
     def list_dataset_urns(self) -> list[str]:
         self.data = json.loads(self.path.read_text())
@@ -27,7 +33,11 @@ class FileDataHubClient:
     def get_neighbors(self, urn: str) -> Iterable[Dict[str, Any]]:
         entity = self.get_entity(urn)
         neighbor_urns = set(entity.get("upstreams", []) + entity.get("downstreams", []))
-        return [self.data["entities"][neighbor] for neighbor in neighbor_urns if neighbor in self.data["entities"]]
+        return [
+            {**self.data["entities"][neighbor], "_metagate_source": "local_fixture"}
+            for neighbor in neighbor_urns
+            if neighbor in self.data["entities"]
+        ]
 
     def write_certificate(self, urn: str, certificate: Dict[str, Any]) -> None:
         payload = self._read_output()

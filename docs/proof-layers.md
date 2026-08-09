@@ -1,6 +1,6 @@
 # Proof Layers
 
-Predicate is the hackathon project name. The production pattern is a DataHub
+MetaGate is the hackathon project name. The production pattern is a DataHub
 preflight gate: before an AI workflow touches a dataset, the gate checks whether
 the metadata is decision-ready, writes a governed Context Contract back into
 DataHub, and either constrains the agent or blocks it with an auditable reason.
@@ -19,9 +19,9 @@ Production shape:
 
 1. User opens a DataHub dataset.
 2. User clicks **Request AI Readiness**.
-3. DataHub sends the asset URN and requested capability to Predicate.
-4. Predicate reads DataHub metadata through GraphQL.
-5. Predicate returns a Context Contract.
+3. DataHub sends the asset URN and requested capability to MetaGate.
+4. MetaGate reads DataHub metadata through GraphQL.
+5. MetaGate returns a Context Contract.
 6. DataHub shows `PROCEED`, `CAUTION`, or `BLOCKED`.
 
 Hackathon proof:
@@ -32,7 +32,7 @@ Hackathon proof:
 
 Honest claim:
 
-> Predicate proves the automatic preflight UX through a browser extension
+> MetaGate proves the automatic preflight UX through a browser extension
 > prototype. A packaged DataHub plugin is the next integration step.
 
 ## 2. Real DataHub-Backed Demo
@@ -53,7 +53,7 @@ Hackathon proof:
 
 - local DataHub quickstart
 - seeded public/sample metadata
-- Predicate CLI/API reads DataHub GraphQL
+- MetaGate CLI/API reads DataHub GraphQL
 - public site uses sanitized fixture data instead of exposing a DataHub token
 
 Honest claim:
@@ -72,7 +72,7 @@ Artifact:
 
 Production shape:
 
-Predicate writes an **AI Context Contract** custom aspect or equivalent metadata
+MetaGate writes an **AI Context Contract** custom aspect or equivalent metadata
 field onto the DataHub asset:
 
 ```json
@@ -85,7 +85,7 @@ field onto the DataHub asset:
     "Do not allow autonomous agent action.",
     "Allow read-only business question answering only if policy permits."
   ],
-  "decision_record": "predicate://decision/cg-2026-08-01-0001",
+  "decision_record": "metagate://decision/cg-2026-08-01-0001",
   "evaluated_at": "2026-08-01T00:00:00Z"
 }
 ```
@@ -98,7 +98,7 @@ Hackathon proof:
 
 Honest claim:
 
-> Predicate is read-only by default. It can generate the governed Context
+> MetaGate is read-only by default. It can generate the governed Context
 > Contract payload; live DataHub write-back is enabled only when the deployment
 > owner supplies a supported mutation.
 
@@ -120,21 +120,21 @@ Evaluation setup:
 
 1. Create 10-20 analytics questions across the demo datasets.
 2. Label each as `safe`, `risky`, or `blocked`.
-3. Run a baseline AI answer without Predicate gating.
-4. Run the same request with Predicate gating.
-5. Count unsafe answers prevented by Predicate.
+3. Run a baseline AI answer without MetaGate gating.
+4. Run the same request with MetaGate gating.
+5. Count unsafe answers prevented by MetaGate.
 
 Report:
 
 - total questions
 - unsafe baseline answers
-- unsafe answers after Predicate gating
+- unsafe answers after MetaGate gating
 - unsafe-answer reduction
 - conservative blocks
 
 Honest claim:
 
-> Predicate passes 30/30 curated policy conformance checks. Independent labels
+> MetaGate passes 30/30 curated policy conformance checks. Independent labels
 > are prepared and should measure unsafe-answer reduction.
 
 ## 5. Private Deployment Adapter
@@ -147,8 +147,8 @@ Artifact:
 
 Production shape:
 
-Predicate runs inside the enterprise boundary. It consumes metadata and optional
-sampled profiles by default, not raw rows. A private deployment points Predicate
+MetaGate runs inside the enterprise boundary. It consumes metadata and optional
+sampled profiles by default, not raw rows. A private deployment points MetaGate
 at DataHub GraphQL and supplies policy thresholds.
 
 Checks use:
@@ -169,7 +169,7 @@ Hackathon proof:
 
 Honest claim:
 
-> Predicate can run against private DataHub instances because the decision is
+> MetaGate can run against private DataHub instances because the decision is
 > based on governed metadata, not raw table contents by default.
 
 ## 6. Auth And RBAC Enforcement Model
@@ -197,5 +197,5 @@ Hackathon proof:
 
 Honest claim:
 
-> Predicate defines the enforcement model and safe defaults. Production auth and
+> MetaGate defines the enforcement model and safe defaults. Production auth and
 > RBAC are deployment responsibilities wired through DataHub policy controls.

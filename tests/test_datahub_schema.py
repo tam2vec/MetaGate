@@ -1,7 +1,7 @@
 """Checks against the GraphQL shapes used by a real DataHub deployment.
 
 The live test is opt-in because the repository must remain runnable without a
-DataHub server. Set DATAHUB_GRAPHQL_URL and PREDICATE_LIVE_DATAHUB_URN to run
+DataHub server. Set DATAHUB_GRAPHQL_URL and METAGATE_LIVE_DATAHUB_URN to run
 it against the deployment used for a demo.
 """
 
@@ -79,14 +79,14 @@ class DataHubSchemaContractTest(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    os.environ.get("DATAHUB_GRAPHQL_URL") and os.environ.get("PREDICATE_LIVE_DATAHUB_URN"),
-    "set DATAHUB_GRAPHQL_URL and PREDICATE_LIVE_DATAHUB_URN for a live DataHub check",
+    os.environ.get("DATAHUB_GRAPHQL_URL") and os.environ.get("METAGATE_LIVE_DATAHUB_URN"),
+    "set DATAHUB_GRAPHQL_URL and METAGATE_LIVE_DATAHUB_URN for a live DataHub check",
 )
 class LiveDataHubSchemaIntegrationTest(unittest.TestCase):
     def test_deployment_returns_a_dataset_shape(self):
         client = GraphQLDataHubClient(os.environ["DATAHUB_GRAPHQL_URL"])
-        entity = client.get_entity(os.environ["PREDICATE_LIVE_DATAHUB_URN"])
-        self.assertEqual(entity["urn"], os.environ["PREDICATE_LIVE_DATAHUB_URN"])
+        entity = client.get_entity(os.environ["METAGATE_LIVE_DATAHUB_URN"])
+        self.assertEqual(entity["urn"], os.environ["METAGATE_LIVE_DATAHUB_URN"])
         self.assertIn("ownership", entity)
         self.assertIn("assertions", entity)
         self.assertIn("incidents", entity)

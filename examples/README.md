@@ -15,7 +15,7 @@ Use these examples in the demo and submission.
 
 ## Outputs
 
-- `outputs/certificate.json`: Predicate Certificate.
+- `outputs/certificate.json`: MetaGate Certificate.
 - `outputs/context-contract.json`: AI Context Contract returned to an agent or
   written back to DataHub.
 - `outputs/explainability-report.json`: evidence-to-policy-to-decision report.
@@ -33,7 +33,7 @@ Use these examples in the demo and submission.
 
 - `datahub-ai-readiness-skill/`: installable reference plugin structure for a
   DataHub AI readiness skill.
-- `datahub-embed/`: compact Predicate side-panel prototype and JSON contract
+- `datahub-embed/`: compact MetaGate side-panel prototype and JSON contract
   for a DataHub asset page integration.
 - `datahub-preflight-action/`: Context Gradient Preflight action contract and
   AI Context Contract aspect shape.

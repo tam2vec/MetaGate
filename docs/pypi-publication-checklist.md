@@ -5,12 +5,12 @@ tested from a clean environment.
 
 ## Package metadata
 
-- [ ] `pyproject.toml` package name is `predicate`.
+- [ ] `pyproject.toml` package name is `metagate`.
 - [ ] Version is `0.1.0`.
 - [ ] README renders correctly as the long description.
 - [ ] License is Apache-2.0.
 - [ ] Python requirement is `>=3.9`.
-- [ ] Console script is `predicate`.
+- [ ] Console script is `metagate`.
 - [ ] Optional dependencies are documented: `dev` and `datahub`.
 
 ## Local build
@@ -24,10 +24,10 @@ python -m twine check dist/*
 ## Test install
 
 ```bash
-python -m venv /tmp/predicate-test
-source /tmp/predicate-test/bin/activate
+python -m venv /tmp/metagate-test
+source /tmp/metagate-test/bin/activate
 python -m pip install dist/context_gradient-0.1.0-py3-none-any.whl
-predicate --help
+metagate --help
 deactivate
 ```
 
@@ -35,7 +35,7 @@ deactivate
 
 ```bash
 python -m twine upload --repository testpypi dist/*
-python -m pip install --index-url https://test.pypi.org/simple/ predicate
+python -m pip install --index-url https://test.pypi.org/simple/ metagate
 ```
 
 ## Production PyPI
@@ -48,4 +48,4 @@ python -m twine upload dist/*
 
 - [ ] Add the PyPI URL to the Devpost submission.
 - [ ] Add an install badge to the README if desired.
-- [ ] Verify `pip install predicate` in a clean environment.
+- [ ] Verify `pip install metagate` in a clean environment.

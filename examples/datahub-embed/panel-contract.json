@@ -7,9 +7,9 @@
   "readiness_score": 91.22,
   "confidence": 86.25,
   "policy": "enterprise-ai",
-  "action_predicate": {
+  "action_metagate": {
     "action": "autonomous-agent-action",
-    "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+    "metagate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
     "result": false,
     "failed_terms": [
       "assertions.present",

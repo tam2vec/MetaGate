@@ -1,7 +1,7 @@
 import unittest
 
-from predicate.hackathon_resources import resource_catalog
-from predicate.review import ReviewState
+from metagate.hackathon_resources import annotate_scenario_resources, resource_catalog
+from metagate.review import ReviewState
 
 
 class HackathonResourcesTest(unittest.TestCase):
@@ -18,6 +18,20 @@ class HackathonResourcesTest(unittest.TestCase):
         self.assertEqual("https://docs.datahub.com/docs/dev-guides/agent-context/agent-context", catalog["agent-context-kit"]["url"])
         self.assertEqual("datahub datapack load showcase-ecommerce --force", catalog["showcase-ecommerce"]["load_command"])
         self.assertIn("static-assets/tree/main/datasets/nyc-taxi", catalog["nyc-taxi"]["url"])
+        self.assertEqual("raw -> staging -> mart (linear)", catalog["nyc-taxi"]["pipeline_shape"])
+        self.assertEqual(["healthcare.db"], catalog["healthcare"]["database_files"])
+        self.assertEqual("10 flat tables (no views)", catalog["fiction-retail"]["pipeline_shape"])
+
+    def test_scenarios_are_loaded_only_when_matching_urns_exist(self):
+        resources = annotate_scenario_resources(resource_catalog(), [
+            "urn:li:dataset:(urn:li:dataPlatform:postgres,nyc_taxi_mart,PROD)",
+            "urn:li:dataset:(urn:li:dataPlatform:postgres,unrelated,PROD)",
+        ])
+        scenarios = {item["id"]: item for item in resources if item["kind"] == "scenario"}
+        self.assertEqual(["urn:li:dataset:(urn:li:dataPlatform:postgres,nyc_taxi_mart,PROD)"], scenarios["nyc-taxi"]["loaded_urns"])
+        self.assertTrue(scenarios["nyc-taxi"]["reviewable"])
+        self.assertEqual([], scenarios["healthcare"]["loaded_urns"])
+        self.assertEqual("not_loaded", scenarios["healthcare"]["ingestion_status"])
 
     def test_fixture_discovery_lists_real_dataset_urns(self):
         state = ReviewState(

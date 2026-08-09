@@ -43,7 +43,7 @@ jobs:
       - name: Run live schema contract
         env:
           DATAHUB_GRAPHQL_URL: http://localhost:8080/api/graphql
-          PREDICATE_LIVE_DATAHUB_URN: urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)
+          METAGATE_LIVE_DATAHUB_URN: urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)
         run: PYTHONPATH=src:. python -m unittest tests.test_datahub_schema -v
       - name: Collect DataHub logs on failure
         if: failure()

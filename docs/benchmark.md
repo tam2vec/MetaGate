@@ -14,7 +14,7 @@ The benchmark defines a positive as: **the asset satisfies the requested
 capability policy**. The command reports cases, the conformance pass rate for
 the curated checks, unexpected allows, and unexpected blocks.
 
-Current result: Predicate passes all 30 curated policy conformance
+Current result: MetaGate passes all 30 curated policy conformance
 checks across ready, missing, stale, incomplete, and contradictory metadata
 states. The current run has 0 unexpected allows and 0 unexpected blocks.
 

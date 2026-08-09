@@ -1,7 +1,7 @@
-"""DataHub Skill-compatible entrypoint for Predicate.
+"""DataHub Skill-compatible entrypoint for MetaGate.
 
 The Skill uses the same extractor and action guardrails as the CLI, review
-server, and Predicate MCP server.
+server, and MetaGate MCP server.
 """
 
 from __future__ import annotations
@@ -17,14 +17,14 @@ from context_gradient.datahub.mock_client import FileDataHubClient
 from context_gradient.sdk.admission import enforce_action_guardrails
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.policy import load_policy
-from predicate.contracts import build_constraint_contract
+from metagate.contracts import build_constraint_contract
 
 
 DEFAULT_CAPABILITY = "autonomous-agent-action"
 
 
 def _decision_payload(certificate: dict[str, Any], capability: str) -> dict[str, Any]:
-    """Attach the shared Predicate decision contract to a certificate."""
+    """Attach the shared MetaGate decision contract to a certificate."""
     decision = enforce_action_guardrails(certificate, capability)
     now = datetime.now(timezone.utc)
     decision_payload = {
@@ -117,7 +117,7 @@ def certify_and_write(
 
 def main() -> None:
     """Small JSON CLI for Skill smoke tests and agent runners."""
-    parser = argparse.ArgumentParser(prog="predicate-skill")
+    parser = argparse.ArgumentParser(prog="metagate-skill")
     parser.add_argument("urn", help="DataHub entity URN")
     parser.add_argument("--policy", required=True, help="YAML policy profile")
     parser.add_argument("--datahub-url", help="DataHub GraphQL endpoint")

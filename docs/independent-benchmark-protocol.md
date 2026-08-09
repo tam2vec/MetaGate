@@ -1,7 +1,7 @@
 # Independent Benchmark Protocol
 
 The built-in 30-case benchmark is a curated conformance suite. It proves that
-Predicate behaves as intended on known ready, missing, stale, incomplete, and
+MetaGate behaves as intended on known ready, missing, stale, incomplete, and
 contradictory metadata states.
 
 For an external benchmark, use independently labeled assets.
@@ -27,7 +27,7 @@ Required columns:
 | `human_label` | `allowed` or `blocked` |
 | `labeler_role` | Who labeled it, such as data steward or governance owner |
 | `label_reason` | Human reason for the label |
-| `expected_failed_terms` | Expected blocked predicate terms, if any |
+| `expected_failed_terms` | Expected blocked metagate terms, if any |
 | `notes` | Sanitized context |
 
 ## Recommended set
@@ -42,16 +42,16 @@ Required columns:
 
 Until this file is filled by reviewers outside the project rules, say:
 
-> Predicate passes 30/30 curated conformance checks. Independent benchmark
+> MetaGate passes 30/30 curated conformance checks. Independent benchmark
 > labeling is prepared but not yet completed.
 
 After labels are complete, report:
 
 - total labeled assets
-- agreement rate between Predicate and human labels
+- agreement rate between MetaGate and human labels
 - unexpected allows
 - unexpected blocks
 - examples of false allows or false blocks
 
-Unexpected allows matter most because they mean Predicate allowed an action a
+Unexpected allows matter most because they mean MetaGate allowed an action a
 human reviewer would have blocked.

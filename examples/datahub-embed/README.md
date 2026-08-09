@@ -1,7 +1,7 @@
-# Predicate DataHub Embed Prototype
+# MetaGate DataHub Embed Prototype
 
 This folder shows the intended product integration: DataHub remains the asset
-page, and Predicate appears as an AI action panel beside the metadata.
+page, and MetaGate appears as an AI action panel beside the metadata.
 
 The MVP can run three ways:
 
@@ -18,7 +18,7 @@ custom internal DataHub fork.
 On a DataHub asset page, users should see only the compact decision first:
 
 ```text
-Predicate
+MetaGate
 AI action: autonomous-agent-action
 Decision: BLOCKED
 Reason: Missing required evidence: assertions
@@ -27,7 +27,7 @@ Confidence: 86.25
 Open Full Review
 ```
 
-The full review opens only when the user wants evidence, failed predicate terms,
+The full review opens only when the user wants evidence, failed metagate terms,
 policy thresholds, JSON, or remediation guidance.
 
 ## Contract
@@ -42,9 +42,9 @@ The panel consumes the same output emitted by the CLI:
   "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
   "readiness_score": 91.22,
   "confidence": 86.25,
-  "action_predicate": {
+  "action_metagate": {
     "action": "autonomous-agent-action",
-    "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+    "metagate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
     "result": false,
     "failed_terms": [
       "assertions.present",
@@ -58,17 +58,17 @@ The panel consumes the same output emitted by the CLI:
 
 ## Files
 
-- `predicate-panel.js`: dependency-free browser panel renderer.
+- `metagate-panel.js`: dependency-free browser panel renderer.
 - `panel-contract.json`: example response contract.
-- `predicate-datahub-extension.json`: packaged prototype manifest describing
+- `metagate-datahub-extension.json`: packaged prototype manifest describing
   mount location, API endpoints, permissions, and safe defaults.
 
 ## Production path
 
-For a production DataHub deployment, the panel should call a small Predicate API:
+For a production DataHub deployment, the panel should call a small MetaGate API:
 
 ```text
-GET /predicate/evaluate?urn=<asset-urn>&capability=autonomous-agent-action
+GET /metagate/evaluate?urn=<asset-urn>&capability=autonomous-agent-action
 ```
 
 That API can call the SDK, read DataHub GraphQL, and return the JSON contract
@@ -78,14 +78,14 @@ configured and tested.
 ## Prototype mount sketch
 
 ```html
-<script src="./predicate-panel.js"></script>
+<script src="./metagate-panel.js"></script>
 <script>
   fetch("/api/evaluate?urn=" + encodeURIComponent(window.__DATAHUB_URN__) + "&capability=autonomous-agent-action")
     .then((response) => response.json())
     .then((decision) => {
       document
         .querySelector("[data-testid='entity-profile-sidebar']")
-        .appendChild(window.PredicatePanel.create(decision));
+        .appendChild(window.MetaGatePanel.create(decision));
     });
 </script>
 ```

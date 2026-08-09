@@ -1,7 +1,7 @@
 services:
-  predicate:
+  metagate:
     build: .
     environment:
       DATAHUB_GRAPHQL_URL: ${DATAHUB_GRAPHQL_URL:-http://host.docker.internal:8080/api/graphql}
       DATAHUB_TOKEN: ${DATAHUB_TOKEN:-}
-    command: ["predicate", "--help"]
+    command: ["metagate", "--help"]

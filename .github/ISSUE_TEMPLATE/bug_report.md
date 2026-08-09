@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible Predicate problem
+about: Report a reproducible MetaGate problem
 title: "[Bug]: "
 labels: bug
 assignees: ""
@@ -18,18 +18,18 @@ Describe the problem.
 
 ## Expected behavior
 
-What should Predicate have done?
+What should MetaGate have done?
 
 ## Actual behavior
 
-What did Predicate do instead?
+What did MetaGate do instead?
 
 ## Environment
 
 - Python version:
 - DataHub version or local fixture:
 - Policy file:
-- Predicate version or commit:
+- MetaGate version or commit:
 
 ## Logs or output
 

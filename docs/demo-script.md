@@ -1,20 +1,20 @@
 # Three-Minute Demo Script
 
-This script is written for a judge who has never seen Predicate.
+This script is written for a judge who has never seen MetaGate.
 
 ## Setup
 
 Open these before recording:
 
 - DataHub asset page for `fct_users_created`
-- Predicate public page or local review app
-- Terminal in the Predicate repo
+- MetaGate public page or local review app
+- Terminal in the MetaGate repo
 - README on GitHub
 
 Keep the language honest:
 
 > The public page is a sanitized demo. The real proof path is local/private
-> DataHub GraphQL plus the Predicate CLI/API.
+> DataHub GraphQL plus the MetaGate CLI/API.
 
 ## 0:00-0:20 - The Problem
 
@@ -29,11 +29,11 @@ Say:
 
 ## 0:20-0:45 - The Product
 
-Screen: Predicate README, then Predicate Review.
+Screen: MetaGate README, then MetaGate Review.
 
 Say:
 
-> Predicate is an AI admission controller for DataHub. It turns metadata into a
+> MetaGate is an AI admission controller for DataHub. It turns metadata into a
 > deterministic action check. No metadata proof, no AI action.
 
 Show this idea:
@@ -41,7 +41,7 @@ Show this idea:
 ```json
 {
   "action": "autonomous-agent-action",
-  "predicate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
+  "metagate": "ownership.present && lineage.present && assertions.present && incidents.open == 0",
   "result": false,
   "failed_terms": ["assertions.present"],
   "decision": "blocked"
@@ -57,7 +57,7 @@ Run:
 ```bash
 export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
 
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -66,7 +66,7 @@ predicate \
 
 Say:
 
-> This is reading the local DataHub GraphQL endpoint. Predicate blocks
+> This is reading the local DataHub GraphQL endpoint. MetaGate blocks
 > autonomous action on this asset because assertions are missing and the score
 > and confidence are below policy thresholds.
 
@@ -84,7 +84,7 @@ Screen: terminal.
 Run:
 
 ```bash
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -93,13 +93,13 @@ predicate \
 
 Say:
 
-> Predicate is not just a blocker. Under the same policy, this asset is allowed
+> MetaGate is not just a blocker. Under the same policy, this asset is allowed
 > because the required evidence is present. The point is controlled action, not
 > blanket denial.
 
 ## 1:45-2:15 - Human Review Experience
 
-Screen: Predicate Review page.
+Screen: MetaGate Review page.
 
 Say:
 
@@ -117,17 +117,17 @@ Click:
 
 Say:
 
-> This is where Predicate becomes operational. It does not say """add metadata."""
+> This is where MetaGate becomes operational. It does not say """add metadata."""
 > It says which checks to add, why they matter, and what should unlock after the
 > repair.
 
 ## 2:15-2:35 - Stress Case
 
-Screen: Predicate Review finance asset or difficult run docs.
+Screen: MetaGate Review finance asset or difficult run docs.
 
 Say:
 
-> For a harder case, Predicate includes a finance-critical asset. It blocks
+> For a harder case, MetaGate includes a finance-critical asset. It blocks
 > autonomous action because glossary terms are incomplete, column lineage is
 > incomplete, assertions conflict, freshness is stale, and finance policy has
 > stricter thresholds.
@@ -163,8 +163,8 @@ Screen: README proof links.
 
 Say:
 
-> Predicate gives AI agents a metadata-backed permission layer. The output is
-> simple: allowed or blocked. The proof is explicit: which predicate terms passed,
+> MetaGate gives AI agents a metadata-backed permission layer. The output is
+> simple: allowed or blocked. The proof is explicit: which metagate terms passed,
 > which failed, who needs to repair them, and when the action can be rerun.
 
 ## If Something Breaks
@@ -172,13 +172,13 @@ Say:
 Use this backup line:
 
 > The live DataHub endpoint is unavailable in this recording, so I am switching
-> to the bundled DataHub-shaped fixture. That proves the Predicate engine and
+> to the bundled DataHub-shaped fixture. That proves the MetaGate engine and
 > output contract; the local DataHub runbook shows the live GraphQL path.
 
 Backup command:
 
 ```bash
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-file examples/data/datahub_graph.json \

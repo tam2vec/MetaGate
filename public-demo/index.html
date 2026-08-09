@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Predicate Review</title>
+  <title>MetaGate Review</title>
   <style>
     :root {
       --ink: #172033;
@@ -17,7 +17,7 @@
       --green: #13824c;
       --red: #bc3030;
       --yellow: #a96d10;
-      --shadow: 0 14px 34px rgba(18, 31, 52, .08);
+      --shadow: 0 2px 8px rgba(18, 31, 52, .05);
     }
     * { box-sizing: border-box; }
     body {
@@ -80,6 +80,57 @@
       background: #f3f7ff;
       color: #142033;
     }
+    body[data-review-view="embed-demo"] #scoreboard,
+    body[data-review-view="embed-demo"] .action-workbench,
+    body[data-review-view="embed-demo"] #full-review,
+    body[data-review-view="embed-demo"] #remediation-plan,
+    body[data-review-view="embed-demo"] #hackathon-resources,
+    body[data-review-view="embed-demo"] #writeback-section,
+    body[data-review-view="embed-demo"] #security-section,
+    body[data-review-view="embed-demo"] #human-review,
+    body[data-review-view="embed-demo"] #runs-view,
+    body[data-review-view="scoreboard"] #evidence-first,
+    body[data-review-view="scoreboard"] #embed-demo,
+    body[data-review-view="scoreboard"] .action-workbench,
+    body[data-review-view="scoreboard"] #full-review,
+    body[data-review-view="scoreboard"] #remediation-plan,
+    body[data-review-view="scoreboard"] #hackathon-resources,
+    body[data-review-view="scoreboard"] #writeback-section,
+    body[data-review-view="scoreboard"] #security-section,
+    body[data-review-view="scoreboard"] #human-review,
+    body[data-review-view="scoreboard"] #runs-view,
+    body[data-review-view="detail"] #evidence-first,
+    body[data-review-view="detail"] #scoreboard,
+    body[data-review-view="detail"] #embed-demo,
+    body[data-review-view="detail"] .action-workbench {
+      display: none;
+    }
+    .action-workbench {
+      display: none !important;
+    }
+    body:not([data-review-target="technical-proof"]) #technical-proof {
+      display: none;
+    }
+    body:not([data-review-target="technical-proof"]) .proof-actions,
+    body:not([data-review-target="technical-proof"]) #scanResult,
+    body:not([data-review-target="technical-proof"]) #enforcementResult,
+    body:not([data-review-target="technical-proof"]) .environment {
+      display: none;
+    }
+    body:not([data-review-target="technical-proof"]) .topbar {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    body[data-review-target="full-review"] .advanced-feature-block,
+    body[data-review-target="full-review"] #hackathon-resources,
+    body[data-review-target="full-review"] .insight-grid,
+    body[data-review-target="full-review"] #evidence-section,
+    body[data-review-target="full-review"] .evidence-chart,
+    body[data-review-target="full-review"] .bars {
+      display: none;
+    }
+    body[data-review-view="detail"] #full-review {
+      display: block;
+    }
     .sidebar-note {
       margin-top: auto;
       border: 1px solid rgba(255,255,255,.1);
@@ -94,6 +145,76 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-top: 14px;
+    }
+    .runs-view {
+      min-width: 0;
+    }
+    .runs-view-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .runs-view-head h2 {
+      margin: 4px 0 0;
+      font-size: 25px;
+    }
+    .runs-view-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+    .runs-list-view {
+      display: grid;
+      gap: 10px;
+    }
+    .run-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+    .run-row:hover, .run-row.active {
+      border-color: var(--blue);
+      box-shadow: 0 4px 14px rgba(49, 95, 216, .12);
+    }
+    .run-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+    .run-copy strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .run-copy code {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .run-copy small {
+      overflow: hidden;
+      color: var(--muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .run-empty {
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      padding: 22px;
+      color: var(--muted);
+      background: var(--soft);
     }
     .resource-item {
       border: 1px solid var(--line);
@@ -112,6 +233,26 @@
     .resource-discovery button { margin: 5px 6px 0 0; border: 1px solid var(--blue); border-radius: 6px; padding: 7px 10px; background: white; color: var(--blue); font: inherit; font-size: 13px; cursor: pointer; }
     .resource-discovery button:hover { background: #eef4ff; }
     .resource-discovery .resource-error { color: var(--red); }
+    .resource-status-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .resource-status { border: 1px solid var(--line); border-radius: 6px; padding: 10px; background: white; }
+    .resource-status.loaded { border-color: #86c9a1; background: #f1fbf5; }
+    .resource-status.pending { border-color: #ead7a1; background: #fffaf0; }
+    .resource-status strong { display: block; color: var(--ink); }
+    .resource-status small { display: block; margin-top: 4px; color: var(--muted); line-height: 1.35; }
+    .resource-asset-groups { display: grid; gap: 8px; margin-top: 12px; }
+    .resource-asset-group { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: white; }
+    .resource-asset-group summary { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 12px; cursor: pointer; color: var(--ink); font-weight: 700; list-style: none; }
+    .resource-asset-group summary::-webkit-details-marker { display: none; }
+    .resource-asset-group summary::before { content: ">"; display: inline-block; margin-right: 7px; color: var(--blue); transition: transform 120ms ease; }
+    .resource-asset-group[open] summary::before { transform: rotate(90deg); }
+    .resource-asset-group summary span:first-child { flex: 1; min-width: 0; }
+    .resource-asset-group summary small { color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .resource-asset-items { display: grid; gap: 6px; max-height: 280px; overflow: auto; padding: 8px; border-top: 1px solid var(--line); }
+    .resource-asset-button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin: 0 !important; padding: 8px 10px !important; text-align: left; }
+    .resource-asset-button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .resource-asset-button small { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
+    .resource-asset-button.selected { background: #eef4ff; box-shadow: inset 3px 0 0 var(--blue); }
+    .resource-asset-button.checking { background: #fff8e8; border-color: #d49b27; }
     .resource-item code { display: block; margin-top: 9px; padding: 7px 8px; overflow-wrap: anywhere; background: #f4f6fb; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); font-size: 12px; }
     .resource-proof { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f8fbff; }
     .resource-proof h4 { margin: 0 0 10px; }
@@ -124,11 +265,226 @@
       padding: 10px;
       background: rgba(255,255,255,.04);
     }
+    .sidebar-assets-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .sidebar-assets-head .nav-label { margin: 0; }
+    .asset-filter {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 6px;
+      background: rgba(0,0,0,.16);
+      color: #eef4ff;
+      padding: 7px 8px;
+      font: inherit;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+    .asset-filter::placeholder { color: #9eb0ca; }
+    .asset-filter:focus { outline: 2px solid #7aa2e8; outline-offset: 1px; }
+    .asset-catalog {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px;
+      background: rgba(255,255,255,.018);
+      overflow: hidden;
+    }
+    .asset-catalog > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      color: #f2f6ff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      list-style: none;
+    }
+    .asset-catalog > summary::-webkit-details-marker { display: none; }
+    .asset-catalog > summary::before { content: "⌄"; color: #9eb0ca; margin-right: 3px; }
+    .asset-catalog-count {
+      flex: 0 0 auto;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      color: #c8d7ec;
+      font-size: 10px;
+    }
+    .asset-catalog-body { padding: 0 5px 5px; }
+    .asset-empty { padding: 10px; color: #9eb0ca; font-size: 11px; line-height: 1.35; }
+    .asset-picker {
+      position: relative;
+    }
+    .asset-picker-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 11px 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .asset-picker-toggle:hover,
+    .asset-picker-toggle:focus-visible { border-color: var(--blue); outline: 2px solid #d9e6ff; outline-offset: 1px; }
+    .asset-picker-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .asset-picker-chevron { flex: 0 0 auto; color: var(--muted); font-size: 18px; line-height: 1; }
+    .asset-picker-menu {
+      position: absolute;
+      z-index: 20;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      max-width: min(720px, calc(100vw - 32px));
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 14px 30px rgba(21, 35, 58, .18);
+    }
+    .asset-picker-menu[hidden] { display: none; }
+    .asset-picker-catalog-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 7px 8px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .asset-picker-catalog-label strong { color: var(--ink); font-size: 11px; letter-spacing: 0; text-transform: none; }
+    .asset-picker-group { border: 0; border-radius: 6px; overflow: hidden; }
+    .asset-picker-group + .asset-picker-group { margin-top: 6px; }
+    .asset-picker-group summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--soft);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      list-style: none;
+    }
+    .asset-picker-group summary::-webkit-details-marker { display: none; }
+    .asset-picker-group summary::before { content: "›"; color: var(--blue); font-size: 17px; line-height: 10px; transition: transform .15s ease; }
+    .asset-picker-group[open] summary::before { transform: rotate(90deg); }
+    .asset-picker-group summary > span:first-of-type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .asset-picker-group-count { flex: 0 0 auto; color: var(--muted); font-size: 11px; }
+    .asset-picker-items { display: grid; gap: 3px; padding: 4px; }
+    .asset-picker-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 9px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .asset-picker-item:hover,
+    .asset-picker-item.active { border-color: #cbdaf4; background: #f1f6ff; }
+    .asset-picker-item-label { min-width: 0; overflow-wrap: anywhere; font-size: 13px; line-height: 1.2; font-weight: 700; }
+    .asset-picker-item-context { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .evidence-trace { margin-top: 5px; font-size: 10px; }
+    .evidence-trace summary { display: inline-block; color: var(--blue); cursor: pointer; font-weight: 700; }
+    .evidence-trace code { display: block; margin-top: 4px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--soft); color: #34435a; font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+    /* The custom picker is the only visible asset selector. Keep the native
+       select out of layout so a long catalog cannot open a giant browser menu. */
+    .native-asset-select {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      overflow: hidden !important;
+      clip: rect(0 0 0 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+    }
     .sidebar-assets .asset-list {
       padding: 0;
       gap: 7px;
       max-height: 360px;
       overflow-y: auto;
+    }
+    .sidebar-assets .asset-group {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 7px;
+      background: rgba(255,255,255,.025);
+      overflow: hidden;
+    }
+    .sidebar-assets .asset-group + .asset-group { margin-top: 7px; }
+    .sidebar-assets .asset-catalog-body { padding: 5px; }
+    .sidebar-assets .asset-catalog > summary {
+      color: #f3f7ff;
+      background: rgba(255,255,255,.04);
+    }
+    .sidebar-assets .asset-group summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      color: #dbe5f5;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      list-style: none;
+    }
+    .sidebar-assets .asset-group summary::-webkit-details-marker { display: none; }
+    .sidebar-assets .asset-group summary::before {
+      content: "›";
+      display: inline-block;
+      margin-right: 5px;
+      color: #8ea5c5;
+      font-size: 17px;
+      line-height: 10px;
+      transform: rotate(0deg);
+      transition: transform .15s ease;
+    }
+    .sidebar-assets .asset-group[open] summary::before { transform: rotate(90deg); }
+    .sidebar-assets .asset-group summary > span:first-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sidebar-assets .asset-group-count {
+      flex: 0 0 auto;
+      min-width: 20px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.1);
+      color: #a9bbd5;
+      text-align: center;
+      font-size: 10px;
+    }
+    .sidebar-assets .asset-group-items {
+      display: grid;
+      gap: 5px;
+      padding: 0 5px 5px;
     }
     .sidebar-assets .asset-button {
       color: #dbe5f5;
@@ -193,6 +549,18 @@
       padding: 12px 14px;
       min-width: 230px;
     }
+    .scope-proof {
+      display: block;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .scope-proof.ok { color: #18794e; }
+    .scope-proof.warning { color: #a85b00; }
+    .scope-proof.error { color: var(--red); }
     .refresh-button {
       margin-top: 8px;
       border: 1px solid #c8d5ef;
@@ -254,6 +622,30 @@
       font-weight: 700;
       line-height: 1.35;
     }
+    .proof-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 9px;
+    }
+    .proof-actions .refresh-button {
+      margin-top: 0;
+    }
+    .proof-actions button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+    .compact-proof {
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    .compact-proof strong { color: var(--ink); }
+    .compact-proof .proof-ok { color: var(--green); }
+    .compact-proof .proof-blocked { color: var(--red); }
     .environment strong {
       display: block;
       font-size: 14px;
@@ -264,12 +656,82 @@
       font-size: 13px;
       margin-top: 3px;
     }
+    .environment .runtime-proof {
+      color: #38598f;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
     .scoreboard {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
       margin: 18px 0;
     }
+    .evidence-first {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 16px 0 12px;
+    }
+    .evidence-first-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    .evidence-first-head > div:last-child { margin-left: auto; }
+    .evidence-first-head > div:first-child { min-width: 0; flex: 1 1 280px; max-width: 100%; }
+    .evidence-first-head > div:last-child { flex: 0 0 auto; }
+    .evidence-first-head h2 { margin: 0 0 4px; font-size: 18px; overflow-wrap: anywhere; }
+    .evidence-first-head p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; word-break: break-word; }
+    #primaryEvidenceSubtitle { min-width: 0; max-width: 100%; }
+    #primaryEvidenceSubtitle .evidence-asset,
+    #primaryEvidenceSubtitle .evidence-meta { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+    .evidence-asset { display: block; font-weight: 700; overflow-wrap: anywhere; }
+    .evidence-meta { display: block; margin-top: 2px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .evidence-first-decision {
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .evidence-first-decision.allowed { background: #e5f6ec; color: var(--green); }
+    .evidence-first-decision.blocked { background: #fff0f0; color: var(--red); }
+    .evidence-first-decision.checking { background: #fff7df; color: #9b6500; }
+    .evidence-first-decision.unavailable { background: #f0f3f9; color: var(--muted); }
+    .evidence-first-facts {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .evidence-first-fact {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      min-height: 65px;
+    }
+    .evidence-first-fact strong { display: block; font-size: 12px; text-transform: capitalize; }
+    .evidence-first-fact small { display: block; color: var(--muted); line-height: 1.3; margin-top: 4px; font-size: 11px; }
+    .evidence-first-gap {
+      margin-top: 10px;
+      padding: 9px 10px;
+      border-left: 3px solid var(--blue);
+      background: var(--soft);
+      font-size: 12px;
+      color: var(--ink);
+    }
+    .mcp-trace-card { margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--soft); padding: 8px 10px; }
+    .mcp-trace-card summary { cursor: pointer; font-weight: 700; font-size: 12px; }
+    .mcp-trace-card pre { margin: 8px 0 0; max-height: 180px; overflow: auto; white-space: pre-wrap; font-size: 11px; line-height: 1.35; }
     .embed-demo {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 330px;
@@ -361,7 +823,7 @@
       font-size: 12px;
       overflow-wrap: anywhere;
     }
-    .predicate-panel {
+    .metagate-panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -549,6 +1011,31 @@
       align-items: center;
       font-weight: 750;
     }
+    .saved-mark {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 7px;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: #f6f8fc;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .sidebar-assets .saved-mark {
+      color: #b8c5d8;
+      border-color: rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+    }
+    .sidebar-assets .asset-button.active .saved-mark,
+    .sidebar-assets .asset-button:hover .saved-mark {
+      color: #5f6d80;
+      border-color: #d7e0ef;
+      background: #f6f8fc;
+    }
     .urn {
       display: block;
       color: var(--muted);
@@ -591,8 +1078,11 @@
       align-items: center;
       margin-bottom: 10px;
     }
+    .decision-title > div:first-child { min-width: 0; flex: 1 1 280px; }
     .decision-title h2 {
       font-size: 25px;
+      min-width: 0;
+      max-width: 100%;
       overflow-wrap: anywhere;
     }
     .asset-urn {
@@ -796,7 +1286,7 @@
     .integration-proof-status.verified { color: var(--green); }
     .integration-proof-status.attention_required, .integration-proof-status.unavailable { color: var(--red); }
     .integration-proof-summary { margin: 7px 0 12px; color: var(--muted); font-size: 13px; line-height: 1.35; }
-    .integration-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .integration-proof-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
     .integration-proof-fact { border: 1px solid var(--line); border-radius: 6px; padding: 10px; min-width: 0; }
     .integration-proof-fact span { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; }
     .integration-proof-fact strong { display: block; margin-top: 4px; font-size: 13px; overflow-wrap: anywhere; }
@@ -804,8 +1294,23 @@
     .integration-proof-fact strong.attention_required, .integration-proof-fact strong.unavailable { color: var(--red); }
     .integration-proof-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.35; }
     .integration-mcp-facts { margin: 10px 0 0; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .proof-layer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+    .proof-layer { border: 1px solid var(--line); border-radius: 8px; padding: 16px; background: #fff; min-width: 0; }
+    .proof-layer-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .proof-layer-head h3 { margin: 0; }
+    .proof-layer p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .proof-status { border-radius: 999px; padding: 5px 8px; color: var(--muted); background: #eef2f7; font-size: 11px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+    .proof-status.ready { color: var(--green); background: #e8f7ef; }
+    .proof-status.simulated { color: #9a6500; background: #fff5dc; }
+    .proof-status.attention, .proof-status.unavailable { color: var(--red); background: #fff0ef; }
+    .proof-steps { margin: 12px 0 0; padding-left: 20px; }
+    .proof-steps li { color: var(--ink); font-size: 12px; margin: 6px 0; }
+    .proof-layer details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+    .proof-layer summary { color: var(--ink); font-size: 12px; font-weight: 800; cursor: pointer; }
+    .proof-layer pre { max-height: 220px; overflow: auto; margin: 10px 0 0; padding: 10px; border-radius: 6px; background: #172238; color: #e7efff; font-size: 11px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
     @media (max-width: 760px) {
       .integration-proof-grid { grid-template-columns: 1fr; }
+      .proof-layer-grid { grid-template-columns: 1fr; }
     }
     .score-trace {
       margin-top: 16px;
@@ -876,7 +1381,7 @@
       margin: 5px 0;
       font-size: 14px;
     }
-    .predicate {
+    .metagate {
       background: #101725;
       color: #edf3ff;
       border-radius: 8px;
@@ -1131,6 +1636,59 @@
       display: grid;
       gap: 10px;
     }
+    .repair-plan-panel {
+      margin-top: 18px;
+      border: 2px solid #b9c9e8;
+      border-radius: 8px;
+      background: #fff;
+      padding: 18px;
+    }
+    .remediation-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .remediation-head h2 {
+      margin: 2px 0 4px;
+      font-size: 24px;
+    }
+    .remediation-head p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .repair-count {
+      flex: 0 0 auto;
+      border: 1px solid #b9c9e8;
+      border-radius: 999px;
+      background: #f4f7fb;
+      color: var(--ink);
+      padding: 6px 10px;
+      font-weight: 750;
+      font-size: 12px;
+    }
+    .repair-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .copy-plan-button {
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      padding: 7px 11px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .copy-plan-button:hover,
+    .copy-plan-button.copied {
+      background: #194fc4;
+    }
     .remediation-item {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -1156,6 +1714,167 @@
       color: var(--muted);
       font-size: 13px;
       line-height: 1.4;
+    }
+    .repair-action {
+      border: 1px solid #ccd7e8;
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+    }
+    .repair-action-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .repair-action-head strong {
+      display: block;
+      font-size: 15px;
+    }
+    .repair-kind,
+    .repair-copy-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .repair-copy-label {
+      margin: 12px 0 5px;
+      color: var(--muted);
+    }
+    .repair-change {
+      margin: 8px 0 0;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .repair-copy-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 7px;
+    }
+    .repair-command {
+      display: block;
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      padding: 9px 10px;
+      border: 1px solid #d7e0ef;
+      border-radius: 6px;
+      background: #f7f9fd;
+      color: #24344f !important;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .repair-plan-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .repair-placeholder-note {
+      margin: 7px 0 0;
+      color: #785b16;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .repair-clear {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border: 1px solid #b8dfc9;
+      border-radius: 8px;
+      padding: 14px;
+      background: #f2fbf6;
+    }
+    .repair-clear strong {
+      color: var(--green);
+      font-size: 15px;
+    }
+    .repair-clear span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .technical-proof-page {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+    .technical-proof-intro {
+      margin-bottom: 18px;
+    }
+    .technical-proof-intro h2 {
+      margin: 2px 0 4px;
+    }
+    .technical-proof-intro p {
+      margin: 0;
+      color: var(--muted);
+    }
+    .repair-copy {
+      flex: 0 0 auto;
+      border: 1px solid var(--blue);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--blue);
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .repair-copy:hover,
+    .repair-copy.copied {
+      background: var(--blue);
+      color: #fff;
+    }
+    .repair-location {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted) !important;
+      font-size: 12px !important;
+    }
+    .repair-location-link {
+      color: var(--blue);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .repair-location-link:hover { text-decoration: underline; }
+    .repair-action-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+    .repair-action-footer span {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .repair-destination,
+    .repair-done {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .drawer .repair-copy-row { margin-top: 8px; }
+    @media (max-width: 760px) {
+      .remediation-head,
+      .repair-copy-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .repair-head-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .repair-copy { width: 100%; }
     }
     .matrix {
       width: 100%;
@@ -1249,6 +1968,186 @@
       font-size: 13px;
       line-height: 1.4;
     }
+
+    /* Product pass: keep the decision surface quiet and move proof into its own views. */
+    body[data-review-view="embed-demo"] #evidence-first,
+    body[data-review-view="embed-demo"] .proof-actions,
+    body[data-review-view="embed-demo"] #scanResult,
+    body[data-review-view="embed-demo"] #enforcementResult {
+      display: none;
+    }
+    body[data-review-view="embed-demo"] .topbar {
+      align-items: center;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    body[data-review-view="embed-demo"] .environment {
+      min-width: 0;
+      padding: 0;
+      box-shadow: none;
+      background: transparent;
+      border: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    body[data-review-view="embed-demo"] .environment::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7b879b;
+      flex: 0 0 auto;
+    }
+    body[data-review-view="embed-demo"] .environment.connected::before {
+      background: #16834a;
+    }
+    body[data-review-view="embed-demo"] .environment.sample::before {
+      background: #b46a00;
+    }
+    body[data-review-view="embed-demo"] .environment.unavailable::before {
+      background: #c23434;
+    }
+    body[data-review-view="embed-demo"] .environment > strong,
+    body[data-review-view="embed-demo"] .environment > span:not(#dataMode) {
+      display: none;
+    }
+    body[data-review-view="embed-demo"] .environment #dataMode {
+      margin: 0;
+      display: inline;
+    }
+    body[data-review-view="embed-demo"] .asset-lookup {
+      max-width: 680px;
+    }
+    .panel-kicker,
+    .nav-label {
+      letter-spacing: 0;
+    }
+    .panel-kicker {
+      text-transform: none;
+      font-weight: 700;
+    }
+    .datahub-page,
+    .metagate-panel,
+    .panel,
+    .metric,
+    .evidence-first {
+      box-shadow: none;
+    }
+    .datahub-top {
+      align-items: flex-start;
+      min-width: 0;
+    }
+    .datahub-top > div:last-child {
+      min-width: 0;
+    }
+    .datahub-top h2 {
+      max-width: 100%;
+      color: var(--ink);
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .metagate-panel > div:first-child h2,
+    .mini-queue > strong {
+      color: var(--ink);
+    }
+    .datahub-body {
+      gap: 0 20px;
+    }
+    .metadata-box {
+      min-height: auto;
+      padding: 14px 0;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+    }
+    .compact-decision {
+      border: 0;
+      border-left: 4px solid var(--blue);
+      border-radius: 0;
+      background: transparent;
+      padding: 4px 0 4px 14px;
+    }
+    .compact-decision .panel-kicker {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .compact-decision strong {
+      font-size: 28px;
+    }
+    .compact-grid {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      gap: 0;
+    }
+    .compact-metric {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 12px 0;
+    }
+    .compact-metric + .compact-metric {
+      border-left: 1px solid var(--line);
+      padding-left: 14px;
+    }
+    .metric-value {
+      padding: 0;
+      border-radius: 0;
+      background: transparent !important;
+    }
+    .mini-queue {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+    .review-caption {
+      display: none;
+    }
+    .review-link {
+      min-height: 38px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .nav-item {
+      border-color: transparent;
+      background: transparent;
+      margin-bottom: 3px;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,.07);
+    }
+    .sidebar-note {
+      border: 0;
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-radius: 0;
+      padding: 14px 0 0;
+    }
+    .action-workbench .queue-grid {
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+    .action-workbench .queue-card {
+      min-height: auto;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      padding: 16px 0;
+    }
+    .action-workbench .risk-chip,
+    .action-workbench .owner-chip,
+    .action-workbench .repair-chip,
+    .action-workbench .verify-chip {
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      color: var(--muted);
+    }
     @media (max-width: 1020px) {
       .shell, .workspace, .two-col, .proof-strip, .embed-demo, .product-grid, .diff-box, .queue-grid { grid-template-columns: 1fr; }
       aside { display: none; }
@@ -1258,46 +2157,91 @@
       .topbar, .decision-hero { display: block; }
       .environment, .decision-box { width: 100%; margin-top: 12px; }
       .scoreboard, .controls, .bars, .insight-grid, .datahub-body { grid-template-columns: 1fr; }
+      .evidence-first-head { display: block; }
+      .evidence-first-decision { display: inline-block; margin-top: 8px; }
+      .evidence-first-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .action-row { grid-template-columns: 1fr; }
       .action-row .request-button { width: 100%; }
       h1 { font-size: 28px; }
       .resource-grid { grid-template-columns: 1fr; }
+      .asset-filter { font-size: 12px; }
+      .datahub-top {
+        padding: 14px;
+        gap: 12px;
+      }
+      .platform-icon {
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+      }
+      .datahub-top h2 {
+        font-size: 19px;
+      }
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        padding: 0 10px;
+      }
+      .tab {
+        min-width: 0;
+        padding: 10px 4px;
+        font-size: 12px;
+        line-height: 1.2;
+        white-space: normal;
+      }
+      .compact-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .repair-action-footer { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body>
+<body data-review-view="embed-demo">
   <div class="shell">
     <aside>
-      <div class="brand"><span class="mark">P</span>Predicate</div>
+      <div class="brand"><span class="mark">M</span>MetaGate</div>
       <div>
         <div class="nav-label">Workspace</div>
-        <button class="nav-item active" type="button" data-target="embed-demo">Embed Prototype</button>
-        <button class="nav-item" type="button" data-target="full-review">Decision Details</button>
-        <button class="nav-item" type="button" data-target="remediation-plan">Policy Checks</button>
-        <button class="nav-item" type="button" data-target="evidence-section">DataHub Evidence</button>
-        <button class="nav-item" type="button" data-target="writeback-section">Decision Diff</button>
-        <button class="nav-item" type="button" data-target="security-section">Security Model</button>
-        <button class="nav-item" type="button" data-target="hackathon-resources">Hackathon Resources</button>
+        <button class="nav-item active" type="button" data-target="embed-demo">Decision</button>
+        <button class="nav-item" type="button" data-target="remediation-plan">Repair plan</button>
+        <button class="nav-item" type="button" data-target="evidence-section">Evidence</button>
       </div>
       <div>
-        <div class="nav-label">Proof</div>
-        <button class="nav-item" type="button" data-target="scoreboard">30/30 Benchmark</button>
-        <button class="nav-item" type="button" data-target="assetList">Live DataHub Runs</button>
+        <div class="nav-label">Records</div>
+        <button class="nav-item" type="button" data-target="runs-view">History</button>
+        <button class="nav-item" type="button" data-target="writeback-section">Changes</button>
+      </div>
+      <div>
+        <div class="nav-label">Validation</div>
+        <button class="nav-item" type="button" data-target="technical-proof">Proof &amp; audit</button>
+        <button class="nav-item" type="button" data-target="scoreboard">Policy tests</button>
+      </div>
+      <div>
+        <div class="nav-label">Help</div>
+        <button class="nav-item" type="button" data-target="hackathon-resources">Resources</button>
       </div>
       <div class="sidebar-assets">
-        <div class="nav-label">Assets</div>
+        <div class="sidebar-assets-head"><div class="nav-label">Assets</div><span id="assetCatalogCount" class="asset-group-count">0</span></div>
+        <input id="assetFilter" class="asset-filter" type="search" placeholder="Filter this catalog" aria-label="Filter connected DataHub assets" autocomplete="off">
         <div id="assetList" class="asset-list"></div>
       </div>
-      <div class="sidebar-note">Local mode reads DataHub. Public mode uses safe demo data.</div>
+      <div class="sidebar-note">Connected to your DataHub catalog.</div>
     </aside>
     <main>
       <div class="topbar">
         <div>
-          <h1>Predicate Review</h1>
-          <p class="subtitle">A quick go/no-go check before AI uses a dataset.</p>
-          <button id="refreshData" class="refresh-button" type="button">Refresh DataHub check</button>
+          <h1>MetaGate</h1>
+          <p class="subtitle">AI permission checks for DataHub assets.</p>
+          <button id="refreshData" class="refresh-button" type="button">Refresh</button>
+          <div class="proof-actions" aria-label="Connected DataHub proof actions">
+            <button id="scanDataHub" class="refresh-button" type="button">Scan catalog</button>
+            <button id="runEnforcementDemo" class="refresh-button" type="button">Test enforcement</button>
+          </div>
+          <div id="scanResult" class="compact-proof" aria-live="polite"></div>
+          <div id="enforcementResult" class="compact-proof" aria-live="polite"></div>
           <div class="asset-lookup">
-            <label for="urnInput">Check another DataHub asset</label>
+            <label for="urnInput">Check a dataset</label>
             <div class="asset-lookup-row">
               <input id="urnInput" type="text" placeholder="Paste a dataset URN" autocomplete="off">
               <button id="evaluateAsset" class="refresh-button" type="button">Check asset</button>
@@ -1305,29 +2249,56 @@
           </div>
         </div>
         <div class="environment">
-          <strong id="environmentTitle">Public static visual demo</strong>
+          <strong id="environmentTitle">Connection</strong>
           <span id="environmentProof">Source: local DataHub</span>
-          <span>Review: Predicate API</span>
-          <span id="dataMode">Mode: sanitized fixture fallback (not live)</span>
-          <span id="dataUpdate">Showing the latest sanitized fixture result.</span>
+          <span>Review: MetaGate API</span>
+          <span id="dataMode">Not connected</span>
+          <span id="dataUpdate">Waiting for DataHub.</span>
+          <span id="scopeProof" class="scope-proof">Scope: checking configured assets...</span>
+          <span id="runtimeProof" class="runtime-proof">Runtime: checking process identity...</span>
           <span id="actionResult" class="action-log">Ready.</span>
         </div>
       </div>
 
-      <section id="scoreboard" class="scoreboard" aria-label="Proof metrics">
-        <div class="metric"><strong id="assetCount">0</strong><span id="assetCountLabel">assets in the current run</span></div>
-        <div class="metric"><strong id="financeCount">0</strong><span>finance stress-test assets</span></div>
-        <div class="metric"><strong id="allowedCount">0</strong><span>allowed autonomous actions</span></div>
-        <div class="metric"><strong>30/30</strong><span>curated policy checks passing</span></div>
+      <section id="currentCheck" class="evidence-first" aria-label="Current evidence and decision">
+        <div class="evidence-first-head">
+          <div>
+            <div class="panel-kicker">Decision</div>
+            <h2>Current check</h2>
+            <p id="primaryEvidenceSubtitle">Waiting for a current DataHub evaluation.</p>
+          </div>
+          <div id="primaryEvidenceDecision" class="evidence-first-decision unavailable">Waiting</div>
+        </div>
+        <div id="primaryEvidenceFacts" class="evidence-first-facts"></div>
+        <div id="primaryEvidenceGap" class="evidence-first-gap">The decision will appear after an asset is evaluated.</div>
       </section>
 
-      <section id="embed-demo" class="embed-demo" aria-label="Intended DataHub embedded Predicate panel">
+      <section id="scoreboard" class="scoreboard" aria-label="Proof metrics">
+        <div class="metric"><strong id="assetCount">&mdash;</strong><span id="assetCountLabel">datasets in the current run</span></div>
+        <div class="metric"><strong id="blockedCount">&mdash;</strong><span>blocked autonomous actions</span></div>
+        <div class="metric"><strong id="allowedCount">&mdash;</strong><span>allowed autonomous actions</span></div>
+        <div class="metric"><strong>30</strong><span>policy tests passed</span></div>
+      </section>
+
+      <section id="runs-view" class="panel runs-view" aria-label="Live DataHub runs">
+        <div class="runs-view-head">
+          <div>
+            <div class="panel-kicker">History</div>
+            <h2>Recent checks</h2>
+            <p>Saved evaluations from this catalog.</p>
+          </div>
+          <span id="runsCount" class="pill unavailable">0 assets</span>
+        </div>
+        <div id="runsListView" class="runs-list-view"></div>
+      </section>
+
+      <section id="embed-demo" class="embed-demo" aria-label="DataHub asset decision">
         <div class="datahub-page">
           <div class="datahub-top">
             <div class="platform-icon">Hive</div>
             <div>
               <h2 id="embeddedAssetName"></h2>
-              <div class="datahub-meta">Dataset - PROD - prototype DataHub asset page</div>
+              <div class="datahub-meta">DataHub dataset</div>
             </div>
           </div>
           <div class="tabs">
@@ -1341,10 +2312,10 @@
           </div>
         </div>
 
-        <aside class="predicate-panel" aria-label="Predicate side panel">
+        <aside class="metagate-panel" aria-label="MetaGate side panel">
           <div>
-            <div class="panel-kicker">Predicate</div>
-            <h2>AI action check</h2>
+            <div class="panel-kicker">Requested action</div>
+            <h2>Decision</h2>
           </div>
           <div class="compact-decision">
             <span class="panel-kicker">Autonomous agent action</span>
@@ -1356,21 +2327,21 @@
             <div class="compact-metric"><span>Confidence</span><strong id="embeddedConfidence"></strong></div>
           </div>
           <div class="mini-queue">
-            <strong>Immediate repair queue</strong>
+            <strong>Next steps</strong>
             <ol id="miniRepairQueue"></ol>
           </div>
           <div class="panel-actions">
-            <button id="openRemediationDrawer" class="review-link" type="button">Create Repair Plan</button>
+            <button id="openRemediationDrawer" class="review-link" type="button">Review fixes</button>
           </div>
           <p class="review-caption">Open a dataset, request an AI action, and get a clear answer with the next step.</p>
         </aside>
       </section>
 
-      <section class="action-workbench" aria-label="Predicate action workbench">
+      <section class="action-workbench" aria-label="Repair plan">
         <div class="workbench-head">
           <div>
-            <h2>Action Workbench</h2>
-            <p>See the risk, owner, fix, and rerun step.</p>
+            <h2>Repair plan</h2>
+            <p>What failed, who owns it, and what to change.</p>
           </div>
           <span id="workbenchStatus" class="pill blocked">blocked</span>
         </div>
@@ -1416,8 +2387,15 @@
 
           <div class="controls">
             <div>
-              <label for="assetSelect">Selected asset</label>
-              <select id="assetSelect"></select>
+              <label for="assetPickerToggle">Selected asset</label>
+              <div id="assetPicker" class="asset-picker">
+                <button id="assetPickerToggle" class="asset-picker-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose a connected DataHub asset">
+                  <span id="assetPickerValue" class="asset-picker-value">Choose a DataHub asset</span>
+                  <span class="asset-picker-chevron" aria-hidden="true">⌄</span>
+                </button>
+                <div id="assetPickerMenu" class="asset-picker-menu" role="listbox" hidden></div>
+              </div>
+              <select id="assetSelect" class="native-asset-select" aria-hidden="true" tabindex="-1"></select>
             </div>
             <div>
               <label for="capabilitySelect">Requested AI action</label>
@@ -1451,11 +2429,11 @@
 
           <div id="evidence-section" class="two-col">
             <div>
-              <h3 class="section-title">Failed terms</h3>
+              <h3 class="section-title">Blocking evidence</h3>
               <ul id="failedTerms"></ul>
             </div>
             <div>
-              <h3 class="section-title">Evidence found</h3>
+              <h3 class="section-title">Evidence used</h3>
               <ul id="evidenceList"></ul>
             </div>
           </div>
@@ -1463,14 +2441,36 @@
             <h3>Evidence coverage</h3>
             <div id="evidenceChart"></div>
           </div>
+          <section id="remediation-plan" class="repair-plan-panel compact-remediation" aria-label="Repair plan">
+            <div class="remediation-head">
+              <div>
+                <div class="panel-kicker">Fix the block</div>
+                <h2>Repair plan</h2>
+                <p id="remediationSummary">Waiting for an evaluation.</p>
+              </div>
+              <div class="repair-head-actions">
+                <span id="remediationCount" class="repair-count">Waiting</span>
+                <button id="copyRepairPlan" class="copy-plan-button" type="button" hidden>Copy full plan</button>
+              </div>
+            </div>
+            <div id="remediationList" class="remediation-list"></div>
+            <p class="repair-plan-note">Paste the supplied values into DataHub, wait for indexing, then run the final check.</p>
+          </section>
+
+          <section id="technical-proof" class="technical-proof-page" aria-label="Proof and audit">
+            <header class="technical-proof-intro">
+              <div class="panel-kicker">Technical receipts</div>
+              <h2>Proof &amp; audit</h2>
+              <p>Agent permissions, integration checks, score math, and the decision trace.</p>
+            </header>
           <section class="contract-card" aria-live="polite" aria-label="Agent constraint contract">
             <div class="contract-head">
-              <div><div class="panel-kicker">Agent boundary</div><h3>What this agent may do</h3></div>
+              <div><div class="panel-kicker">Enforcement receipt</div><h3>Agent permissions</h3></div>
               <span id="contractDecision" class="contract-decision">unavailable</span>
             </div>
             <div class="contract-grid">
-              <div class="contract-fact"><span>Allowed</span><strong id="contractAllowed">Waiting for evidence</strong></div>
-              <div class="contract-fact"><span>Approval</span><strong id="contractApproval">Unknown</strong></div>
+              <div class="contract-fact"><span>Permitted action</span><strong id="contractAllowed">Waiting for evidence</strong></div>
+              <div class="contract-fact"><span>Human approval</span><strong id="contractApproval">Unknown</strong></div>
               <div class="contract-fact"><span>Evidence</span><strong id="contractEvidence">Not checked</strong></div>
               <div class="contract-fact"><span>Decision ID</span><strong id="contractDecisionId">Not recorded</strong></div>
             </div>
@@ -1478,17 +2478,50 @@
           </section>
           <section class="integration-proof" aria-live="polite" aria-label="Agent integration proof">
             <div class="integration-proof-head">
-              <h3>Agent integration proof</h3>
+              <h3>Integration checks</h3>
               <span id="integrationProofStatus" class="integration-proof-status">waiting</span>
             </div>
             <p id="integrationProofSummary" class="integration-proof-summary">Run a connected evaluation to compare the agent entry points.</p>
+            <div class="integration-proof-grid registry-proof-grid">
+              <div class="integration-proof-fact"><span>Agent</span><strong id="integrationAgentProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>Skill</span><strong id="integrationRegistrySkillProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>Tool</span><strong id="integrationToolProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>Service</span><strong id="integrationServiceProof">Waiting</strong></div>
+            </div>
+            <p id="integrationRegistryNote" class="integration-proof-note">The agent, skill, tool, and service must be registered and linked before a governed action can run.</p>
             <div class="integration-proof-grid">
               <div class="integration-proof-fact"><span>Skill path</span><strong id="integrationSkillProof">Waiting</strong></div>
-              <div class="integration-proof-fact"><span>Predicate MCP</span><strong id="integrationMcpProof">Waiting</strong></div>
+              <div class="integration-proof-fact"><span>MetaGate MCP</span><strong id="integrationMcpProof">Waiting</strong></div>
               <div class="integration-proof-fact"><span>Agreement</span><strong id="integrationAgreementProof">Waiting</strong></div>
             </div>
             <p id="integrationExternalMcp" class="integration-proof-note">The official DataHub MCP remains a separate optional server; this panel does not pretend it ran unless it is configured.</p>
             <div id="integrationExternalMcpFacts" class="integration-mcp-facts" hidden></div>
+            <details class="mcp-trace-card">
+              <summary>Official DataHub MCP trace</summary>
+              <pre id="integrationMcpTrace">No MCP call recorded.</pre>
+            </details>
+          </section>
+          <section class="proof-layer-grid" aria-label="Operational proof">
+            <article class="proof-layer">
+              <div class="proof-layer-head">
+                <h3>Repair loop proof</h3>
+                <span id="repairProofStatus" class="proof-status">Waiting</span>
+              </div>
+              <p id="repairProofSummary">Repair, indexing check, and re-check appear here.</p>
+              <ol id="repairProofSteps" class="proof-steps"></ol>
+              <p id="repairProofNote" class="integration-proof-note"></p>
+            </article>
+            <article class="proof-layer">
+              <div class="proof-layer-head">
+                <h3>Adversarial gate</h3>
+                <span id="adversarialProofStatus" class="proof-status">Waiting</span>
+              </div>
+              <p id="adversarialProofSummary">Generated gate cases appear here.</p>
+              <details>
+                <summary>Show representative cases</summary>
+                <pre id="adversarialProofSample"></pre>
+              </details>
+            </article>
           </section>
           <div class="score-trace">
             <h3>Score basis</h3>
@@ -1514,7 +2547,7 @@
             <div>
               <details class="advanced-detail" open>
                 <summary>Decision rule</summary>
-                <pre id="predicateBlock" class="predicate"></pre>
+                <pre id="metagateBlock" class="metagate"></pre>
               </details>
             </div>
             <div>
@@ -1527,23 +2560,18 @@
           </div>
 
           <details class="advanced-detail proof-details" open>
-            <summary>How Predicate reaches this decision</summary>
+            <summary>How MetaGate reaches this decision</summary>
             <div class="proof-strip">
-              <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>Predicate gathers ownership, lineage, definitions, quality, freshness, usage, and assertion evidence.</p></div>
+              <div class="proof-step"><span>1</span><strong>Read DataHub</strong><p>MetaGate gathers ownership, lineage, definitions, quality, freshness, usage, and assertion evidence.</p></div>
               <div class="proof-step"><span>2</span><strong>Apply policy</strong><p>The requested action is checked against explicit metadata-backed terms.</p></div>
               <div class="proof-step"><span>3</span><strong>Return decision</strong><p>The result is available here for humans and as JSON for agents or CI.</p></div>
             </div>
           </details>
-
-          <section id="remediation-plan" class="feature-card compact-remediation">
-              <h3>What to fix next</h3>
-              <div id="remediationList" class="remediation-list"></div>
-              <p class="quiet-note">Fix these in DataHub. Then rerun the check.</p>
           </section>
 
           <section id="hackathon-resources" class="feature-card">
             <h3>Hackathon DataHub resources</h3>
-            <p class="quiet-note">Load one of these resources into DataHub. Predicate can then find and review the real dataset URNs.</p>
+            <p class="quiet-note">Load one of these resources into DataHub. MetaGate can then find and review the real dataset URNs.</p>
             <div class="resource-grid">
               <div class="resource-item">
                 <h4>DataHub Docs</h4>
@@ -1573,7 +2601,7 @@
               </div>
               <div class="resource-item">
                 <h4>DataHub Core</h4>
-                <p>The open-source catalog platform that stores the graph Predicate evaluates.</p>
+                <p>The open-source catalog platform that stores the graph MetaGate evaluates.</p>
                 <a href="https://github.com/datahub-project/datahub" target="_blank" rel="noreferrer">Open Core repository</a>
               </div>
               <div class="resource-item">
@@ -1590,17 +2618,17 @@
               </div>
               <div class="resource-item">
                 <h4>NYC Taxi</h4>
-                <p>Pipeline and freshness stress case built around trip records.</p>
+                <p>~85 MB databases. Raw -> staging -> mart, with a planted freshness issue.</p>
                 <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/nyc-taxi" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
                 <h4>Healthcare</h4>
-                <p>Synthetic sensitive-data scenario with planted quality issues.</p>
+                <p>~2 MB database. Raw -> staging -> billing + demographics, with planted quality issues.</p>
                 <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/healthcare" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
                 <h4>Fiction Retail</h4>
-                <p>Clean multi-table analytics scenario for lineage and definitions.</p>
+                <p>~95 MB database. Ten flat tables for orders, fulfillment, and returns.</p>
                 <a href="https://github.com/datahub-project/static-assets/tree/main/datasets/fiction-retail" target="_blank" rel="noreferrer">Open dataset recipe</a>
               </div>
               <div class="resource-item">
@@ -1626,7 +2654,7 @@
             </div>
             <div class="resource-discovery">
               <h4>Assets currently in this DataHub</h4>
-              <p>Predicate automatically scores datasets that are loaded in the connected DataHub. Resources not loaded yet stay unscored.</p>
+              <p>Only assets actually found in DataHub are scored. A scenario stays pending until its metadata is loaded and indexed.</p>
               <button id="discoverResources" type="button">Find loaded assets</button>
               <div id="discoveredResources" class="quiet-note">Connect a live local review server to search the catalog.</div>
             </div>
@@ -1680,9 +2708,9 @@
             <section class="feature-card">
               <h3>Security & RBAC</h3>
               <div class="remediation-list">
-                <div class="remediation-item"><strong>Read-only default</strong><span>Predicate evaluates DataHub metadata without sending mutations unless write-back is explicitly configured.</span></div>
-                <div class="remediation-item"><strong>Server-side token</strong><span>DataHub tokens stay in the private Predicate API, not in the public page or browser panel.</span></div>
-                <div class="remediation-item"><strong>Separated roles</strong><span>Requester asks for an AI action, Predicate evaluates policy, metadata owner repairs evidence, approver enables write-back.</span></div>
+                <div class="remediation-item"><strong>Read-only default</strong><span>MetaGate evaluates DataHub metadata without sending mutations unless write-back is explicitly configured.</span></div>
+                <div class="remediation-item"><strong>Server-side token</strong><span>DataHub tokens stay in the private MetaGate API, not in the public page or browser panel.</span></div>
+                <div class="remediation-item"><strong>Separated roles</strong><span>Requester asks for an AI action, MetaGate evaluates policy, metadata owner repairs evidence, approver enables write-back.</span></div>
                 <div class="remediation-item"><strong>Mutation gate</strong><span>Live write-back requires deployment-approved GraphQL mutation documents.</span></div>
               </div>
             </section>
@@ -1719,7 +2747,7 @@
     // Render, but a localhost page must never silently read the public fixture.
     const PUBLIC_API_BASE = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)
       ? ""
-      : "https://predicate-ixz0.onrender.com";
+      : "https://metagate-ixz0.onrender.com";
 
     // Sanitized offline fallback. These values match the current six-asset
     // fixture and are never presented as a live DataHub result.
@@ -1734,7 +2762,7 @@
         reason: "Capability is certified by the active policy.",
         failed: [],
         evidence: ["owner, glossary, lineage, assertions, incident, freshness, usage, and policy evidence are present."],
-        predicate: { action: "autonomous-agent-action", result: true, failed_terms: [], decision: "allowed" }
+        metagate: { action: "autonomous-agent-action", result: true, failed_terms: [], decision: "allowed" }
       },
       {
         asset: "SampleHiveDataset",
@@ -1755,9 +2783,9 @@
           "column_lineage evidence is present and current.",
           "assertions evidence is present and current."
         ],
-        predicate: {
+        metagate: {
           action: "autonomous-agent-action",
-          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          metagate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
           result: true,
           failed_terms: [],
           decision: "allowed"
@@ -1781,9 +2809,9 @@
           "lineage evidence is present and current.",
           "column_lineage evidence is present and current."
         ],
-        predicate: {
+        metagate: {
           action: "autonomous-agent-action",
-          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          metagate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
           result: false,
           failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
           decision: "blocked"
@@ -1807,9 +2835,9 @@
           "lineage evidence is present and current.",
           "column_lineage evidence is present and current."
         ],
-        predicate: {
+        metagate: {
           action: "autonomous-agent-action",
-          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          metagate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
           result: false,
           failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
           decision: "blocked"
@@ -1833,9 +2861,9 @@
           "lineage evidence is present and current.",
           "column_lineage evidence is present and current."
         ],
-        predicate: {
+        metagate: {
           action: "autonomous-agent-action",
-          predicate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+          metagate: "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
           result: false,
           failed_terms: ["assertions.present", "readiness_score >= 92.0", "confidence >= 88.0"],
           decision: "blocked"
@@ -1858,9 +2886,9 @@
           "freshness evidence is stale.",
           "downstream_consumers evidence is present and current."
         ],
-        predicate: {
+        metagate: {
           action: "autonomous-agent-action",
-          predicate: "description.present && ownership.present && glossary.present && lineage.present && column_lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && downstream_consumers.present && policy.present",
+          metagate: "description.present && ownership.present && glossary.present && lineage.present && column_lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && downstream_consumers.present && policy.present",
           result: false,
           failed_terms: ["glossary.present", "column_lineage.present", "assertions.present", "freshness.present", "readiness_score >= 95.0", "confidence >= 93.0"],
           decision: "blocked"
@@ -1880,23 +2908,94 @@
     const requestAction = document.getElementById("requestAction");
     const remediationDrawer = document.getElementById("remediationDrawer");
     const openRemediationDrawer = document.getElementById("openRemediationDrawer");
+    const copyRepairPlan = document.getElementById("copyRepairPlan");
     const closeRemediationDrawer = document.getElementById("closeRemediationDrawer");
     const refreshData = document.getElementById("refreshData");
+    const scanDataHub = document.getElementById("scanDataHub");
+    const runEnforcementDemo = document.getElementById("runEnforcementDemo");
+    const scanResult = document.getElementById("scanResult");
+    const enforcementResult = document.getElementById("enforcementResult");
     const urnInput = document.getElementById("urnInput");
     const evaluateAsset = document.getElementById("evaluateAsset");
-    document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
-      item.addEventListener("click", () => {
-        const target = document.getElementById(item.dataset.target);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    const assetFilter = document.getElementById("assetFilter");
+    const assetCatalogCount = document.getElementById("assetCatalogCount");
+    const assetPicker = document.getElementById("assetPicker");
+    const assetPickerToggle = document.getElementById("assetPickerToggle");
+    const assetPickerValue = document.getElementById("assetPickerValue");
+    const assetPickerMenu = document.getElementById("assetPickerMenu");
+    function resetMainVisibility() {
+      document.querySelectorAll("main [hidden]").forEach((node) => {
+        node.hidden = false;
       });
+    }
+
+    function showOnlyMainTarget(targetId) {
+      const main = document.querySelector("main");
+      const target = document.getElementById(targetId);
+      if (!main || !target) return;
+      [...main.children].forEach((child) => {
+        child.hidden = child !== target;
+      });
+      let node = target;
+      while (node && node !== main) {
+        node.hidden = false;
+        const parent = node.parentElement;
+        if (!parent) break;
+        [...parent.children].forEach((sibling) => {
+          if (sibling !== node) sibling.hidden = true;
+        });
+        node = parent;
+      }
+    }
+
+    function setReviewView(targetId) {
+      const detailedTargets = new Set([
+        "full-review",
+        "remediation-plan",
+        "technical-proof",
+        "evidence-section",
+        "writeback-section",
+        "security-section",
+        "hackathon-resources",
+        "human-review",
+        "runs-view"
+      ]);
+      const view = targetId === "scoreboard"
+        ? "scoreboard"
+        : detailedTargets.has(targetId)
+          ? "detail"
+          : "embed-demo";
+      resetMainVisibility();
+      document.body.dataset.reviewView = view;
+      document.body.dataset.reviewTarget = targetId;
+      if (view === "scoreboard") {
+        showOnlyMainTarget("scoreboard");
+      } else if (view === "detail") {
+        showOnlyMainTarget(targetId);
+      }
+      document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
+        item.classList.toggle("active", item.dataset.target === targetId);
+      });
+      const target = document.getElementById(targetId);
+      if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+
+    document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
+      item.addEventListener("click", () => setReviewView(item.dataset.target));
     });
     let selected = 0;
+    let refreshPollTimer = null;
+    let reconnectTimer = null;
+    let reconnectAttempt = 0;
     let embeddedView = "summary";
     let activeApiBase = "";
     let assetScope = "configured review scope";
+    let currentScopeCount = 0;
+    let scoreMetricsAvailable = !(initialApiBase || window.location.protocol !== "file:");
     let integrationProofKey = "";
     let evaluationSequence = 0;
     let evaluationController = null;
+    let assetPickerOpen = false;
     const capabilityThresholds = {
       "answer-business-questions": { score: 78, confidence: 75 },
       "generate-executive-metrics": { score: 84, confidence: 80 },
@@ -1927,7 +3026,7 @@
         approval.textContent = "Unknown";
         evidence.textContent = "Not available in recorded mode";
         decisionId.textContent = "Not recorded";
-        nextStep.textContent = "Run this asset through the live Predicate Review API to create a traceable agent boundary.";
+        nextStep.textContent = "Run this asset through the live MetaGate Review API to create a traceable agent boundary.";
         return;
       }
       const state = String(contract.decision || run.decision || "unavailable").toLowerCase();
@@ -1935,10 +3034,16 @@
       decision.className = `contract-decision ${state}`;
       allowed.textContent = contract.allowed_action || "No action allowed";
       approval.textContent = contract.required_human_approval ? "Required" : "Not required";
-      const statuses = Object.values(contract.evidence || {}).map((item) => item && item.status).filter(Boolean);
+      const required = Array.isArray(contract.required_evidence) ? contract.required_evidence : [];
+      const statusMap = contract.evidence_status || {};
+      const statuses = required.map((item) => statusMap[item] || "unavailable");
       const unavailableCount = statuses.filter((item) => item === "unavailable").length;
       const absentCount = statuses.filter((item) => item === "absent").length;
-      evidence.textContent = unavailableCount ? `${unavailableCount} unavailable` : absentCount ? `${absentCount} absent` : "Verified facts";
+      const staleCount = statuses.filter((item) => item === "stale").length;
+      const incompleteCount = statuses.filter((item) => item === "incomplete").length;
+      evidence.textContent = required.length
+        ? `${required.length} required signals · ${unavailableCount ? unavailableCount + " unavailable" : absentCount ? absentCount + " absent" : staleCount ? staleCount + " stale" : incompleteCount ? incompleteCount + " incomplete" : "all verified"}`
+        : "Required signals not returned";
       decisionId.textContent = contract.decision_id || "Not recorded";
       nextStep.textContent = contract.next_step || "Keep the contract current when DataHub metadata changes.";
     }
@@ -1949,37 +3054,56 @@
       const skill = document.getElementById("integrationSkillProof");
       const mcp = document.getElementById("integrationMcpProof");
       const agreement = document.getElementById("integrationAgreementProof");
+      const agent = document.getElementById("integrationAgentProof");
+      const registrySkill = document.getElementById("integrationRegistrySkillProof");
+      const tool = document.getElementById("integrationToolProof");
+      const service = document.getElementById("integrationServiceProof");
+      const registryNote = document.getElementById("integrationRegistryNote");
       const external = document.getElementById("integrationExternalMcp");
       const externalFacts = document.getElementById("integrationExternalMcpFacts");
-      if (!status || !summary || !skill || !mcp || !agreement || !external || !externalFacts) return;
+      const traceNode = document.getElementById("integrationMcpTrace");
+      if (!status || !summary || !skill || !mcp || !agreement || !agent || !registrySkill || !tool || !service || !registryNote || !external || !externalFacts || !traceNode) return;
       if (!proof) {
         status.textContent = "Waiting";
         status.className = "integration-proof-status";
         summary.textContent = "Run a connected evaluation to compare the agent entry points.";
-        [skill, mcp, agreement].forEach((node) => { node.textContent = "Waiting"; node.className = ""; });
+        [skill, mcp, agreement, agent, registrySkill, tool, service].forEach((node) => { node.textContent = "Waiting"; node.className = ""; });
+        registryNote.textContent = "The agent, skill, tool, and service must be registered and linked before a governed action can run.";
         externalFacts.hidden = true;
+        traceNode.textContent = "No MCP call recorded.";
         return;
       }
       const state = proof.status || "unavailable";
       const skillDecision = proof.skill && proof.skill.decision ? proof.skill.decision.toUpperCase() : "Unavailable";
-      const mcpDecision = proof.predicate_mcp && proof.predicate_mcp.decision ? proof.predicate_mcp.decision.toUpperCase() : "Unavailable";
+      const mcpDecision = proof.metagate_mcp && proof.metagate_mcp.decision ? proof.metagate_mcp.decision.toUpperCase() : "Unavailable";
       const agreementText = proof.same_decision ? `Same decision: ${skillDecision}` : "Paths need attention";
+      const registry = proof.agent_registry || {};
+      const registryVerified = registry.status === "verified";
+      const registryLabel = (value, fallback) => value ? String(value).replace(/^urn:li:[^:]+:/, "") : fallback;
       status.textContent = state.replace(/_/g, " ");
       status.className = `integration-proof-status ${state}`;
       summary.textContent = state === "verified"
-        ? `Skill and Predicate MCP returned the same ${skillDecision} result for this asset.`
+        ? `Skill and MetaGate MCP returned the same ${skillDecision} result for this asset.`
         : (proof.message || "The two entry points did not produce a verified match.");
       skill.textContent = skillDecision;
       mcp.textContent = mcpDecision;
       agreement.textContent = agreementText;
+      agent.textContent = registryLabel(registry.agent_urn, "Not verified");
+      registrySkill.textContent = registryLabel(registry.skill_urn, "Not verified");
+      tool.textContent = registryLabel(registry.tool_urn, "Not verified");
+      service.textContent = registryLabel(registry.service_urn, "Not verified");
+      [agent, registrySkill, tool, service].forEach((node) => { node.className = registryVerified ? "verified" : "unavailable"; });
+      registryNote.textContent = registryVerified
+        ? "Verified chain: the registered agent is linked to this skill, tool, and owning service."
+        : ((registry.blocking_reasons || [])[0] || "The execution chain was not verified; risky actions remain blocked.");
       skill.className = proof.skill && proof.skill.status === "ok" ? "verified" : "unavailable";
-      mcp.className = proof.predicate_mcp && proof.predicate_mcp.status === "ok" ? "verified" : "unavailable";
+      mcp.className = proof.metagate_mcp && proof.metagate_mcp.status === "ok" ? "verified" : "unavailable";
       agreement.className = proof.same_decision ? "verified" : "attention_required";
       const official = proof.official_datahub_mcp || {};
       if (official.status === "verified") {
         const entityCall = official.entity_call || {};
         external.textContent = entityCall.entity_found
-          ? "Official DataHub MCP returned this asset and Predicate processed its facts below."
+          ? "Official DataHub MCP returned this asset and MetaGate processed its facts below."
           : "Official DataHub MCP responded, but the requested asset was not found in its result.";
       } else if (official.status === "attention_required") {
         external.textContent = official.error
@@ -1989,6 +3113,17 @@
         external.textContent = official.note
           || "Official DataHub MCP is optional and has not been configured for this run.";
       }
+      const rawTrace = proof.mcp_trace || official.trace || official.calls || [];
+      const trace = Array.isArray(rawTrace) ? rawTrace : (rawTrace && typeof rawTrace === "object" ? [rawTrace] : []);
+      const safeTrace = trace.map((call) => {
+        if (!call || typeof call !== "object") return { status: "unknown" };
+        return Object.fromEntries(["tool", "method", "status", "started_at", "duration_ms", "result", "error"]
+          .filter((key) => call[key] !== undefined)
+          .map((key) => [key, call[key]]));
+      });
+      traceNode.textContent = safeTrace.length
+        ? JSON.stringify(safeTrace, null, 2)
+        : "No MCP call recorded. Configure METAGATE_DATAHUB_MCP_COMMAND to run the official DataHub MCP server.";
       const entityCall = official.entity_call || {};
       const facts = entityCall.facts || {};
         const evidence = entityCall.evidence || {};
@@ -2027,15 +3162,91 @@
         const endpoint = `${activeApiBase}/api/integration-proof?urn=${encodeURIComponent(run.urn)}&capability=${encodeURIComponent(run.capability)}`;
         const response = await fetch(endpoint, { cache: "no-store" });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
         renderIntegrationProof(payload);
       } catch (error) {
         renderIntegrationProof({ status: "unavailable", message: "Integration proof needs the updated Review API. Restart the local server or redeploy the public API." });
       }
     }
 
+    function renderProofLayers(repair, adversarial) {
+      const repairStatus = document.getElementById("repairProofStatus");
+      const repairSummary = document.getElementById("repairProofSummary");
+      const repairSteps = document.getElementById("repairProofSteps");
+      const repairNote = document.getElementById("repairProofNote");
+      const adversarialStatus = document.getElementById("adversarialProofStatus");
+      const adversarialSummary = document.getElementById("adversarialProofSummary");
+      const adversarialSample = document.getElementById("adversarialProofSample");
+      if (!repairStatus || !repairSummary || !repairSteps || !repairNote || !adversarialStatus || !adversarialSummary || !adversarialSample) return;
+
+      if (!repair) {
+        repairStatus.textContent = "Unavailable";
+        repairStatus.className = "proof-status unavailable";
+        repairSummary.textContent = "The repair proof endpoint is unavailable.";
+        repairSteps.innerHTML = "";
+        repairNote.textContent = "Start the updated Review API to show the repair path.";
+      } else {
+        const before = repair.before || {};
+        const after = repair.after || {};
+        const delta = repair.score_delta || {};
+        const simulated = repair.simulation === true;
+        repairStatus.textContent = simulated ? "Simulated proof" : "Verified proof";
+        repairStatus.className = `proof-status ${simulated ? "simulated" : "ready"}`;
+        repairSummary.textContent = `${String(before.decision || "blocked").toUpperCase()} → ${String(after.decision || "allowed").toUpperCase()} · readiness ${Number(before.readiness || 0).toFixed(2)} → ${Number(after.readiness || 0).toFixed(2)} (${delta.readiness >= 0 ? "+" : ""}${Number(delta.readiness || 0).toFixed(2)})`;
+        const eventLabels = {
+          before_evaluation: "Captured the blocked decision and its evidence.",
+          repair_applied: "Applied the exact repair requested by the failed evidence.",
+          indexing_poll: "Polled DataHub until the repaired metadata became readable.",
+          after_evaluation: "Re-evaluated the same asset and recorded the outcome.",
+        };
+        repairSteps.innerHTML = (repair.audit_events || []).map((event) => {
+          const label = eventLabels[event.type] || event.type || "Audit event";
+          const state = event.status ? ` ${event.status}.` : "";
+          return `<li><strong>${escapeHtml(label)}</strong>${escapeHtml(state)}</li>`;
+        }).join("");
+        repairNote.textContent = repair.proof_note || "The repair loop has not been run.";
+      }
+
+      if (!adversarial) {
+        adversarialStatus.textContent = "Unavailable";
+        adversarialStatus.className = "proof-status unavailable";
+        adversarialSummary.textContent = "The adversarial scenario endpoint is unavailable.";
+        adversarialSample.textContent = "Start the updated Review API to show the generated cases.";
+        return;
+      }
+      const count = Number(adversarial.scenario_count || (adversarial.scenarios || []).length || 0);
+      const categories = Array.isArray(adversarial.categories) ? adversarial.categories : [];
+      adversarialStatus.textContent = `${count} cases / synthetic`;
+      adversarialStatus.className = "proof-status simulated";
+      adversarialSummary.textContent = `${count} fail-closed cases across ${categories.length} risk types. Independent human labels are still required; no reviewer answers are invented.`;
+      adversarialSample.textContent = JSON.stringify((adversarial.scenarios || []).slice(0, 6).map((item) => ({
+        id: item.id,
+        category: item.category,
+        expected_gate: item.expected_gate,
+        trigger: item.trigger,
+      })), null, 2);
+    }
+
+    async function loadProofLayers() {
+      if (!activeApiBase) {
+        renderProofLayers(null, null);
+        return;
+      }
+      try {
+        const [repairResponse, adversarialResponse] = await Promise.all([
+          fetch(`${activeApiBase}/api/repair-proof`, { cache: "no-store" }),
+          fetch(`${activeApiBase}/api/adversarial-scenarios`, { cache: "no-store" }),
+        ]);
+        const repair = repairResponse.ok ? await repairResponse.json() : null;
+        const adversarial = adversarialResponse.ok ? await adversarialResponse.json() : null;
+        renderProofLayers(repair, adversarial);
+      } catch (error) {
+        renderProofLayers(null, null);
+      }
+    }
+
     function reviewKey(run) {
-      return `predicate-review:${run.urn}:${run.capability}`;
+      return `metagate-review:${run.urn}:${run.capability}`;
     }
 
     function renderHumanReview(run) {
@@ -2102,11 +3313,31 @@
     }
 
     function friendlyApiError(error) {
-      const message = error && error.message ? error.message : "Predicate could not complete the check.";
+      const message = error && error.message ? error.message : "MetaGate could not complete the check.";
       if (/connection refused|errno 61|localhost:8080|api\/graphql/i.test(message)) {
-        return "DataHub is not running at localhost:8080. Start DataHub, then press Refresh DataHub check.";
+        return "DataHub is not running. Start DataHub, then refresh.";
       }
       return message;
+    }
+
+    function scheduleLiveReconnect() {
+      if (reconnectTimer || document.hidden || !activeApiBase) return;
+      const delay = Math.min(5000, 1000 + (reconnectAttempt * 1000));
+      reconnectAttempt = Math.min(reconnectAttempt + 1, 4);
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        loadLiveRuns(false, true).catch(() => {});
+      }, delay);
+      document.getElementById("dataUpdate").textContent = `MetaGate is reconnecting. Retrying in ${Math.ceil(delay / 1000)}s...`;
+      document.getElementById("actionResult").textContent = "Your last verified result stays visible while the local service reconnects.";
+    }
+
+    function clearLiveReconnect() {
+      reconnectAttempt = 0;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
     }
 
     function escapeHtml(value) {
@@ -2118,42 +3349,529 @@
         .replace(/'/g, "&#039;");
     }
 
+    function dataHubAssetUrl(run, tab = "Summary") {
+      const urn = run && (run.urn || run.entity_urn || run.asset_urn);
+      if (!urn) return "";
+      const configured = new URLSearchParams(window.location.search).get("datahubUi");
+      const localDefault = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ? "http://localhost:9002"
+        : "";
+      const base = (configured || localDefault).replace(/\/$/, "");
+      const destination = tab || "Summary";
+      return base ? `${base}/dataset/${encodeURIComponent(urn)}/${destination}` : "";
+    }
+
+    async function copyRepairLine(button) {
+      const text = button.closest(".repair-action")
+        ?.querySelector(".repair-command")
+        ?.textContent
+        ?.trim() || button.dataset.copyRepair || "";
+      if (!text) return;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        const original = button.textContent;
+        button.textContent = "Copied";
+        button.classList.add("copied");
+        setTimeout(() => {
+          button.textContent = original;
+          button.classList.remove("copied");
+        }, 1400);
+      } catch (error) {
+        button.textContent = "Select text";
+      }
+    }
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-copy-repair]");
+      if (button) copyRepairLine(button);
+    });
+
+    async function copyFullRepairPlan() {
+      const run = runs[selected];
+      if (!run) return;
+      const repairs = remediationFor(run);
+      if (!repairs.length) return;
+      const text = [
+        `MetaGate repair plan`,
+        `Asset: ${run.urn || run.asset}`,
+        `Action: ${run.capability || "autonomous-agent-action"}`,
+        "",
+        ...repairs.map((repair, index) => [
+          `${index + 1}. ${repair.title}`,
+          `Why: ${repair.why}`,
+          `Change: ${repair.change}`,
+          repair.kind === "Verification command" ? "Run:" : "Paste into DataHub:",
+          repair.copy,
+          `Open: ${repair.href || repair.location}`,
+          `Done when: ${repair.verification}`
+        ].join("\n"))
+      ].join("\n\n");
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.opacity = "0";
+          document.body.appendChild(area);
+          area.select();
+          document.execCommand("copy");
+          area.remove();
+        }
+        copyRepairPlan.textContent = "Plan copied";
+        copyRepairPlan.classList.add("copied");
+        setTimeout(() => {
+          copyRepairPlan.textContent = "Copy full plan";
+          copyRepairPlan.classList.remove("copied");
+        }, 1400);
+      } catch (error) {
+        copyRepairPlan.textContent = "Copy failed";
+      }
+    }
+
     function fillWidth(value) {
       return value === null || value === undefined ? "0%" : Math.max(0, Math.min(100, Number(value))) + "%";
+    }
+
+    function datasetNameFor(run) {
+      const urn = String(run && run.urn || "");
+      const match = urn.match(/^urn:li:dataset:\(urn:li:dataPlatform:[^,]+,(.*),[^,]+\)$/);
+      return String(run && run.asset || (match ? match[1] : urn) || "Asset");
+    }
+
+    function humanizeAssetPart(value) {
+      return String(value || "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+        .trim();
+    }
+
+    function assetGroupFor(run) {
+      const name = datasetNameFor(run);
+      const lower = name.toLowerCase();
+      const separator = lower.includes("/") ? "/" : ".";
+      let parts = name.split(/[./]/).filter(Boolean);
+      if (parts.length > 1 && /^[a-f0-9-]{6,}$/i.test(parts[0])) parts = parts.slice(1);
+
+      const knownCollections = [
+        [/order[_ -]?entry|order_details|order_history/, "order-entry", "Order Entry"],
+        [/nyc[_ -]?taxi/, "nyc-taxi", "NYC Taxi"],
+        [/healthcare|patient|billing|demographic/, "healthcare", "Healthcare"],
+        [/fiction[_ -]?retail|fulfillment|returns?/, "fiction-retail", "Fiction Retail"],
+        [/customer[_ -]?360/, "customer-360", "Customer 360"],
+        [/samplehive|samplekafka|fct_users/, "datahub-samples", "DataHub Samples"],
+        [/finance/, "finance", "Finance"],
+        [/analytics\.revenue|revenue_daily/, "analytics", "Analytics"]
+      ];
+      for (const [pattern, key, label] of knownCollections) {
+        if (pattern.test(lower)) return { key, label, namespaceParts: [], separator };
+      }
+
+      const databasePart = parts.find((part) => /(?:_db|_database)$/i.test(part));
+      if (databasePart) {
+        const clean = databasePart.replace(/(?:_db|_database)$/i, "");
+        return { key: `database::${clean.toLowerCase()}`, label: humanizeAssetPart(clean), namespaceParts: [], separator };
+      }
+
+      const ignored = new Set(["prod", "dev", "qa", "raw", "staging", "stage", "mart", "analytics", "public"]);
+      const root = parts.find((part) => !ignored.has(part.toLowerCase())) || assetPlatformFor(run);
+      return {
+        key: `catalog::${String(root).toLowerCase()}`,
+        label: humanizeAssetPart(root),
+        namespaceParts: [],
+        separator
+      };
+    }
+
+    function assetPlatformFor(run) {
+      const urn = String(run && run.urn || "");
+      const match = urn.match(/^urn:li:dataset:\(urn:li:dataPlatform:([^,]+),/);
+      const value = match ? match[1] : "DataHub";
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function assetSeparatorFor(run) {
+      return datasetNameFor(run).includes("/") ? "/" : ".";
+    }
+
+    function groupedAssets() {
+      const groups = new Map();
+      runs.forEach((run, index) => {
+        const group = assetGroupFor(run);
+        if (!groups.has(group.key)) groups.set(group.key, { ...group, items: [] });
+        groups.get(group.key).items.push({ run, index });
+      });
+      return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    function shortAssetLabel(run, group) {
+      const name = datasetNameFor(run);
+      const separator = assetSeparatorFor(run);
+      const parts = name.split(separator).filter(Boolean);
+      if (separator === "/" && group.namespaceParts.length) {
+        const suffix = parts.slice(group.namespaceParts.length).join(separator);
+        return suffix || name;
+      }
+      return humanizeAssetPart(parts[parts.length - 1] || name);
+    }
+
+    function assetContextLabel(run, group) {
+      const rawName = datasetNameFor(run);
+      const separator = assetSeparatorFor(run);
+      const parts = rawName.split(separator).filter(Boolean);
+      const prefix = parts.slice(0, -1).join(separator);
+      const platform = assetPlatformFor(run);
+      const cleanPrefix = prefix.replace(/^[a-f0-9-]{6,}[./]/i, "");
+      return cleanPrefix ? `${platform} · ${cleanPrefix}` : platform;
+    }
+
+    function friendlyAssetLabel(run) {
+      const asset = String(run && run.display_name || datasetNameFor(run)).trim();
+      const pieces = asset.split(/[./]/).filter(Boolean);
+      return humanizeAssetPart(pieces[pieces.length - 1] || asset || "Asset");
     }
 
     function renderAssetControls() {
       assetList.innerHTML = "";
       assetSelect.innerHTML = "";
-      runs.forEach((run, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = run.asset;
-        assetSelect.appendChild(option);
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "asset-button" + (index === selected ? " active" : "");
-        button.innerHTML = `
-          <span class="asset-name"><span class="asset-label" title="${escapeHtml(run.asset)}">${escapeHtml(run.asset)}</span><span class="pill ${run.decision}">${run.decision}</span></span>
-          <span class="urn">${escapeHtml(run.urn)}</span>
-        `;
-        button.addEventListener("click", () => {
-          selected = index;
-          render();
+      const allGroups = groupedAssets();
+      const query = String(assetFilter && assetFilter.value || "").trim().toLowerCase();
+      const allItems = allGroups.reduce((total, group) => total + group.items.length, 0);
+      if (assetCatalogCount) assetCatalogCount.textContent = allGroups.length;
+      const runsListView = document.getElementById("runsListView");
+      const runsCount = document.getElementById("runsCount");
+      if (runsCount) runsCount.textContent = `${allItems} asset${allItems === 1 ? "" : "s"}`;
+      if (runsListView) {
+        runsListView.innerHTML = "";
+        if (!allItems) {
+          runsListView.innerHTML = '<div class="run-empty">No DataHub checks yet.</div>';
+        } else {
+          runs.forEach((run, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "run-row" + (index === selected ? " active" : "");
+            const failed = Array.isArray(run.failed) ? run.failed.filter((term) => !String(term).startsWith("readiness_score") && !String(term).startsWith("confidence")) : [];
+            const status = run.decision || "unavailable";
+            const summary = status === "allowed"
+              ? "Required evidence is present for this action."
+              : failed.length
+                ? `${failed.length} evidence gap${failed.length === 1 ? "" : "s"} needs attention.`
+                : (run.reason || "Current evaluation");
+            button.innerHTML = `
+              <span class="run-copy">
+                <strong>${escapeHtml(friendlyAssetLabel(run))}</strong>
+                <code>${escapeHtml(run.urn || "")}</code>
+                <small>${escapeHtml(summary)}</small>
+              </span>
+              <span class="pill ${escapeHtml(status)}">${escapeHtml(status)}</span>
+            `;
+            button.addEventListener("click", () => {
+              selected = index;
+              render();
+              loadCapabilityDecision(capabilitySelect.value);
+            });
+            runsListView.appendChild(button);
+          });
+        }
+      }
+      allGroups.forEach((group) => {
+        const optionGroup = document.createElement("optgroup");
+        optionGroup.label = `${group.label} (${group.items.length})`;
+        group.items.forEach(({ run, index }) => {
+          const option = document.createElement("option");
+          option.value = index;
+          option.textContent = shortAssetLabel(run, group);
+          option.title = run.asset || run.urn;
+          optionGroup.appendChild(option);
         });
-        assetList.appendChild(button);
+        assetSelect.appendChild(optionGroup);
       });
+
+      const visibleGroups = allGroups.map((group) => ({
+        ...group,
+        items: query
+          ? group.items.filter(({ run }) => `${run.asset || ""} ${run.urn || ""} ${shortAssetLabel(run, group)}`.toLowerCase().includes(query))
+          : group.items
+      })).filter((group) => group.items.length);
+
+      if (assetPickerMenu) {
+        assetPickerMenu.innerHTML = "";
+        const pickerCatalogLabel = document.createElement("div");
+        pickerCatalogLabel.className = "asset-picker-catalog-label";
+        pickerCatalogLabel.innerHTML = `<strong>Connected DataHub</strong><span>${query ? `${visibleGroups.reduce((total, group) => total + group.items.length, 0)} matches` : `${allGroups.length} collections`}</span>`;
+        assetPickerMenu.appendChild(pickerCatalogLabel);
+        const selectedRun = runs[selected];
+        const selectedGroupKey = selectedRun ? assetGroupFor(selectedRun).key : "";
+        if (assetPickerValue) assetPickerValue.textContent = selectedRun ? friendlyAssetLabel(selectedRun) : "Choose a DataHub asset";
+        visibleGroups.forEach((group) => {
+          const groupPanel = document.createElement("details");
+          groupPanel.className = "asset-picker-group";
+          groupPanel.open = Boolean(query) || group.key === selectedGroupKey;
+          const groupSummary = document.createElement("summary");
+          groupSummary.innerHTML = `<span>${escapeHtml(group.label)}</span><span class="asset-picker-group-count">${group.items.length}</span>`;
+          groupPanel.appendChild(groupSummary);
+          groupPanel.addEventListener("toggle", () => {
+            if (!groupPanel.open || query) return;
+            assetPickerMenu.querySelectorAll(".asset-picker-group[open]").forEach((other) => {
+              if (other !== groupPanel) other.open = false;
+            });
+          });
+          const items = document.createElement("div");
+          items.className = "asset-picker-items";
+          group.items.forEach(({ run, index }) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "asset-picker-item" + (index === selected ? " active" : "");
+            button.setAttribute("role", "option");
+            button.setAttribute("aria-selected", index === selected ? "true" : "false");
+            const label = shortAssetLabel(run, group);
+            const rawName = String(run.asset || run.urn || "");
+            const context = assetContextLabel(run, group);
+            const decision = run.decision || "unavailable";
+            button.innerHTML = `<span><span class="asset-picker-item-label" title="${escapeHtml(rawName)}">${escapeHtml(label)}</span><span class="asset-picker-item-context">${escapeHtml(context || rawName)}</span></span><span class="pill ${escapeHtml(decision)}">${escapeHtml(decision)}</span>`;
+            button.addEventListener("click", () => {
+              selected = index;
+              assetPickerOpen = false;
+              render();
+              loadCapabilityDecision(capabilitySelect.value);
+            });
+            items.appendChild(button);
+          });
+          groupPanel.appendChild(items);
+          assetPickerMenu.appendChild(groupPanel);
+        });
+        assetPickerMenu.hidden = !assetPickerOpen;
+        if (assetPickerToggle) assetPickerToggle.setAttribute("aria-expanded", assetPickerOpen ? "true" : "false");
+      }
+
+      const catalog = document.createElement("details");
+      catalog.className = "asset-catalog";
+      catalog.open = true;
+      const catalogSummary = document.createElement("summary");
+      catalogSummary.innerHTML = `<span>Connected DataHub</span><span class="asset-catalog-count">${query ? `${visibleGroups.reduce((total, group) => total + group.items.length, 0)} of ${allItems}` : `${allGroups.length} groups`}</span>`;
+      catalog.appendChild(catalogSummary);
+      const catalogBody = document.createElement("div");
+      catalogBody.className = "asset-catalog-body";
+      const selectedRun = runs[selected];
+      const selectedGroupKey = selectedRun ? assetGroupFor(selectedRun).key : "";
+      visibleGroups.forEach((group) => {
+        const groupPanel = document.createElement("details");
+        groupPanel.className = "asset-group";
+        groupPanel.open = Boolean(query) || group.key === selectedGroupKey;
+        const groupSummary = document.createElement("summary");
+        groupSummary.innerHTML = `<span>${escapeHtml(group.label)}</span><span class="asset-group-count">${group.items.length}</span>`;
+        groupPanel.appendChild(groupSummary);
+        groupPanel.addEventListener("toggle", () => {
+          if (!groupPanel.open || query) return;
+          catalogBody.querySelectorAll(".asset-group[open]").forEach((other) => {
+            if (other !== groupPanel) other.open = false;
+          });
+        });
+        const items = document.createElement("div");
+        items.className = "asset-group-items";
+        group.items.forEach(({ run, index }) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "asset-button" + (index === selected ? " active" : "");
+          const label = shortAssetLabel(run, group);
+          button.innerHTML = `
+            <span class="asset-name"><span class="asset-label" title="${escapeHtml(run.asset || run.urn)}">${escapeHtml(label)}${run.saved ? '<span class="saved-mark">saved check</span>' : ''}</span><span class="pill ${run.decision}">${run.decision}</span></span>
+            <span class="urn">${escapeHtml(run.urn)}</span>
+          `;
+          button.addEventListener("click", () => {
+            selected = index;
+            render();
+            loadCapabilityDecision(capabilitySelect.value);
+          });
+          items.appendChild(button);
+        });
+        groupPanel.appendChild(items);
+        catalogBody.appendChild(groupPanel);
+      });
+      if (!visibleGroups.length) {
+        const empty = document.createElement("div");
+        empty.className = "asset-empty";
+        empty.textContent = "No matching assets in the connected catalog.";
+        catalogBody.appendChild(empty);
+      }
+      catalog.appendChild(catalogBody);
+      assetList.appendChild(catalog);
       assetSelect.value = selected;
     }
 
+    function primaryEvidenceStatus(contract, key, facts) {
+      const requiredStatus = contract && contract.evidence_status && contract.evidence_status[key];
+      if (requiredStatus) return String(requiredStatus).toLowerCase();
+      const item = contract && contract.evidence && contract.evidence[key];
+      if (item && item.status) return String(item.status).toLowerCase();
+      const value = facts && facts[key];
+      if (value && typeof value === "object" && value.status) return String(value.status).toLowerCase();
+      if (value && typeof value === "object" && value.available === false) return "unavailable";
+      if (value && typeof value === "object" && value.present === true) return "present";
+      if (value === true) return "present";
+      return "absent";
+    }
+
+    function primaryEvidenceDetail(status, presentText) {
+      if (status === "unavailable") return "DataHub did not return this signal.";
+      if (status === "stale") return "DataHub returned it, but it is outside policy freshness.";
+      if (status === "absent") return "No verified fact was found.";
+      return presentText;
+    }
+
+    function renderPrimaryEvidence(run) {
+      const subtitle = document.getElementById("primaryEvidenceSubtitle");
+      const decision = document.getElementById("primaryEvidenceDecision");
+      const factsNode = document.getElementById("primaryEvidenceFacts");
+      const gap = document.getElementById("primaryEvidenceGap");
+      if (!subtitle || !decision || !factsNode || !gap) return;
+      if (!run) {
+        subtitle.textContent = "Waiting for a current DataHub evaluation.";
+        decision.textContent = "Waiting";
+        decision.className = "evidence-first-decision unavailable";
+        factsNode.innerHTML = "";
+        gap.textContent = "The decision will appear after an asset is evaluated.";
+        return;
+      }
+      const facts = run.facts || (run.assessment && run.assessment.facts) || {};
+      const contract = run.constraint_contract || {};
+      const ownership = facts.ownership || {};
+      const glossary = facts.glossary || {};
+      const lineage = facts.lineage || {};
+      const assertions = facts.assertions || {};
+      const freshness = facts.freshness || {};
+      const incidents = facts.incidents || {};
+      const owners = ownership.owners || ownership.owner || [];
+      const terms = glossary.terms || glossary.glossary_terms || [];
+      const upstreams = lineage.upstreams || lineage.upstream_entities || [];
+      const downstreams = lineage.downstreams || lineage.downstream_entities || [];
+      const latest = (assertions.latest_results || assertions.results || [])[0];
+      const latestText = latest
+        ? `${latest.name || latest.assertion || "latest check"}: ${latest.status || latest.result || "unknown"}${latest.timestamp || latest.observed_at ? ` · ${latest.timestamp || latest.observed_at}` : ""}`
+        : "no latest result returned";
+      const freshnessText = freshness.timestamp || freshness.observed_at || freshness.last_updated
+        ? `observed ${freshness.timestamp || freshness.observed_at || freshness.last_updated}${freshness.sla ? ` · SLA ${freshness.sla}` : ""}`
+        : "no timestamp returned";
+      const openCount = incidents.open_count ?? incidents.open;
+      const incidentText = openCount !== undefined
+        ? `${openCount} open incident${Number(openCount) === 1 ? "" : "s"}`
+        : "incident count not returned";
+      const ownerCount = Array.isArray(owners) ? owners.length : owners ? 1 : 0;
+      const termCount = Array.isArray(terms) ? terms.length : terms ? 1 : 0;
+      const evidence = [
+        ["owner", primaryEvidenceStatus(contract, "ownership", facts), `${ownerCount} owner${ownerCount === 1 ? "" : "s"} returned`],
+        ["glossary", primaryEvidenceStatus(contract, "glossary", facts), `${termCount} approved term${termCount === 1 ? "" : "s"} returned`],
+        ["lineage", primaryEvidenceStatus(contract, "lineage", facts), `${upstreams.length} upstream / ${downstreams.length} downstream links`],
+        ["assertions", primaryEvidenceStatus(contract, "assertions", facts), latestText],
+        ["freshness", primaryEvidenceStatus(contract, "freshness", facts), freshnessText],
+        ["incidents", primaryEvidenceStatus(contract, "incidents", facts), incidentText],
+      ];
+      factsNode.innerHTML = evidence.map(([label, status, presentText]) => `<div class="evidence-first-fact"><strong>${escapeHtml(label)}</strong><small><b>${escapeHtml(status)}</b> · ${escapeHtml(primaryEvidenceDetail(status, presentText))}</small></div>`).join("");
+      const state = String(run.effective_decision || run.decision || "unavailable").toLowerCase();
+      decision.textContent = state;
+      decision.className = `evidence-first-decision ${state === "allowed" ? "allowed" : state === "blocked" ? "blocked" : "unavailable"}`;
+      const evaluatedAt = run.evaluated_at ? new Date(run.evaluated_at).toLocaleString() : "current result";
+      const exactIdentity = String(run.urn || run.asset || "unknown asset");
+      const friendly = friendlyAssetLabel(run);
+      subtitle.innerHTML = `<span class="evidence-asset" title="${escapeHtml(exactIdentity)}">${escapeHtml(friendly)}</span><span class="evidence-meta">${escapeHtml(run.capability || "requested action")} · Checked ${escapeHtml(evaluatedAt)}</span><details class="evidence-trace"><summary>Show exact DataHub identity</summary><code>${escapeHtml(exactIdentity)}</code></details>`;
+      if (state === "blocked") {
+        const failed = Array.isArray(run.failed) ? run.failed.slice(0, 2).join(", ") : "required evidence";
+        gap.textContent = `Why blocked: ${run.reason || `MetaGate could not verify ${failed}.`}`;
+      } else if (state === "allowed") {
+        gap.textContent = "No blocking evidence gap returned. Scores are secondary to these current facts.";
+      } else {
+        gap.textContent = "MetaGate could not produce a complete decision from the current DataHub response.";
+      }
+    }
+
     function renderScoreboard() {
-      const finance = runs.filter((run) => /finance|customer_lifetime_value/i.test(`${run.asset} ${run.urn}`));
+      const metricIds = ["assetCount", "blockedCount", "allowedCount"];
+      if (!scoreMetricsAvailable) {
+        metricIds.forEach((id) => {
+          const node = document.getElementById(id);
+          node.textContent = "\u2014";
+          node.title = "MetaGate API unavailable; no live result was counted.";
+        });
+        document.getElementById("assetCountLabel").textContent = "datasets awaiting a live check";
+        return;
+      }
       const allowed = runs.filter((run) => run.allowed === true || run.decision === "allowed");
-      document.getElementById("assetCount").textContent = runs.length;
+      const blocked = runs.filter((run) => run.allowed === false || run.decision === "blocked");
+      document.getElementById("assetCount").textContent = currentScopeCount || runs.length;
       document.getElementById("assetCountLabel").textContent = `datasets in ${assetScope}`;
-      document.getElementById("financeCount").textContent = finance.length;
+      document.getElementById("blockedCount").textContent = blocked.length;
       document.getElementById("allowedCount").textContent = allowed.length;
+      metricIds.forEach((id) => document.getElementById(id).removeAttribute("title"));
+    }
+
+    function renderScopeProof(payload, status = null) {
+      const node = document.getElementById("scopeProof");
+      if (!node) return;
+      const scopeMode = (payload && payload.scope_mode) || (status && status.scope_mode) || "";
+      const catalogFirst = scopeMode === "catalog-first"
+        || (payload && payload.catalog_authoritative === true)
+        || (status && status.catalog_authoritative === true);
+      if (catalogFirst) {
+        const catalogCount = Number(
+          (payload && payload.catalog_asset_count)
+          || (status && status.catalog_asset_count)
+          || (payload && payload.current_scope_count)
+          || currentScopeCount || 0
+        );
+        const discoveryError = (payload && payload.discovery_error) || (status && status.discovery_error);
+        currentScopeCount = catalogCount || currentScopeCount;
+        if (discoveryError && !catalogCount) {
+          node.className = "scope-proof error";
+          node.textContent = `Catalog unavailable: ${discoveryError}`;
+          return;
+        }
+        if (!catalogCount) {
+          node.className = "scope-proof warning";
+          node.textContent = "Connected DataHub returned no datasets.";
+          return;
+        }
+        node.className = "scope-proof ok";
+        node.textContent = `Connected DataHub catalog: ${catalogCount} dataset${catalogCount === 1 ? "" : "s"} loaded.`;
+        return;
+      }
+      const integrity = (payload && payload.scope_integrity) || (status && status.scope_integrity) || {};
+      const configured = Array.isArray(integrity.configured_assets)
+        ? integrity.configured_assets
+        : [];
+      const configuredCount = Number(payload && payload.configured_asset_count || status && status.configured_asset_count || configured.length || 0);
+      const current = Number(payload && payload.current_scope_count || currentScopeCount || 0);
+      const missing = Array.isArray(integrity.missing_configured_assets)
+        ? integrity.missing_configured_assets
+        : [];
+      const retained = integrity.configured_assets_retained !== false && missing.length === 0;
+      const discovered = Math.max(0, current - configuredCount);
+      currentScopeCount = current || configuredCount || currentScopeCount;
+      if (!configuredCount && !current) {
+        node.className = "scope-proof";
+        node.textContent = "Scope: waiting for the review API.";
+        return;
+      }
+      if (!retained) {
+        node.className = "scope-proof error";
+        node.textContent = `Scope incomplete: ${missing.length || Math.max(0, configuredCount - current)} configured asset${(missing.length || Math.max(0, configuredCount - current)) === 1 ? "" : "s"} missing. Restart MetaGate with the current source runtime.`;
+        return;
+      }
+      node.className = discovered ? "scope-proof ok" : "scope-proof";
+      node.textContent = `${configuredCount || current} configured proof asset${(configuredCount || current) === 1 ? "" : "s"} retained${discovered ? ` · ${discovered} additional DataHub asset${discovered === 1 ? "" : "s"} discovered` : ""}.`;
     }
 
     function renderEvidenceChart(run) {
@@ -2418,19 +4136,225 @@
         .join("");
     }
 
+    function repairInstruction(term, run) {
+      const urn = run.urn || run.entity_urn || run.asset_urn || "<DATASET_URN>";
+      const asset = String(run.asset || urn).split(",").slice(-2, -1)[0] || "dataset";
+      const capability = run.capability || "autonomous-agent-action";
+      const verificationUrl = new URL("/api/evaluate", window.location.origin).toString();
+      const assertionTemplates = {
+        fct_users_created: `Required checks for fct_users_created
+- user_id: NOT NULL
+- user_id: unique per reporting day
+- daily signup row count: inside approved range
+- signup freshness SLA: PASS
+Acceptance rule: latest result for every check is PASS.`,
+        fct_users_deleted: `Required checks for fct_users_deleted
+- deleted_at: NOT NULL
+- deleted_at: inside the reporting day
+- deletion count: inside approved range
+- deleted users: absent from active-user output
+Acceptance rule: latest result for every check is PASS.`,
+        SampleKafkaDataset: `Required stream checks
+- schema compatibility: PASS
+- consumer lag: below approved threshold
+- payload parse-failure rate: below approved threshold
+- topic freshness SLA: PASS
+Acceptance rule: latest result for every check is PASS.`,
+        customer_lifetime_value: `Required finance checks
+- predicted_lifetime_value: greater than or equal to 0
+- currency: USD
+- prediction_date: inside freshness SLA
+- model_version: present
+Acceptance rule: latest result for every check is PASS.`
+      };
+      const instructions = {
+        "assertions.present": {
+          kind: "DataHub values",
+          copy: assertionTemplates[asset] || `Required quality checks for ${asset}
+- primary key: NOT NULL
+- primary key: unique
+- row count: inside approved range
+- freshness SLA: PASS
+Acceptance rule: latest result for every check is PASS.`,
+          location: "Dataset > Quality > Create assertion",
+          tab: "Quality",
+          why: "DataHub has no current passing result that proves this dataset's values are correct.",
+          verification: "The Quality tab lists every required check and the latest result for each is PASS."
+        },
+        "freshness.present": {
+          kind: "DataHub values",
+          copy: `Freshness SLA
+Asset: ${urn}
+Maximum age: <APPROVED_LIMIT>
+Expected schedule: <CRON_OR_INTERVAL>
+Owner: <OWNER_URN>`,
+          location: "Dataset > Quality > Freshness assertion",
+          tab: "Quality",
+          why: "No verified update timestamp is inside the freshness limit for this action.",
+          verification: "The latest successful update is visible and falls inside the approved SLA."
+        },
+        "lineage.present": {
+          kind: "DataHub values",
+          copy: `Upstream dataset URN: <UPSTREAM_DATASET_URN>
+Downstream dataset URN: <DOWNSTREAM_DATASET_URN>`,
+          location: "Dataset > Lineage > Edit lineage",
+          tab: "Lineage",
+          why: "The dataset's source or impact path cannot be verified end to end.",
+          verification: "The Lineage tab shows the expected upstream source and downstream consumer."
+        },
+        "column_lineage.present": {
+          kind: "DataHub values",
+          copy: `<OUTPUT_COLUMN> -> <UPSTREAM_DATASET_URN>.<UPSTREAM_COLUMN>`,
+          location: "Dataset > Lineage > Column lineage",
+          tab: "Lineage",
+          why: "One or more output columns cannot be traced back to their source columns.",
+          verification: "Every required output column has a visible upstream column path."
+        },
+        "ownership.present": {
+          kind: "DataHub values",
+          copy: `Owner URN: urn:li:corpuser:<USERNAME>
+Ownership type: DATAOWNER`,
+          location: "Dataset > Summary > Owners",
+          tab: "Summary",
+          why: "There is no accountable steward for approving or repairing this dataset.",
+          verification: "An active owner appears on the dataset Summary page."
+        },
+        "glossary.present": {
+          kind: "DataHub values",
+          copy: `Approved term URN: urn:li:glossaryTerm:<TERM_ID>
+Definition: <APPROVED_BUSINESS_DEFINITION>
+Applies to: ${urn}`,
+          location: "Dataset > Governance > Terms",
+          tab: "Governance",
+          why: "The business meaning is not backed by an approved DataHub glossary term.",
+          verification: "The approved term appears under Governance and resolves to its definition."
+        },
+        "usage.present": {
+          kind: "Ingestion values",
+          copy: `Usage source: <QUERY_LOG_SOURCE>
+Last observed query: <ISO_TIMESTAMP>
+Ingestion status: current`,
+          location: "Dataset > Stats > Usage",
+          tab: "Stats",
+          why: "MetaGate cannot confirm that current users or jobs actually rely on this asset.",
+          verification: "The Stats tab shows a recent query or usage event for this dataset."
+        },
+        "incidents.open == 0": {
+          kind: "Resolution note",
+          copy: `Incident ID: <INCIDENT_ID>
+Root cause fixed: yes
+Resolution note: <WHAT_CHANGED>
+Resolved by: <OWNER>`,
+          location: "Dataset > Incidents > Resolve",
+          tab: "Incidents",
+          why: "An unresolved incident means the known problem is still active.",
+          verification: "The incident is marked resolved and there are no open incidents."
+        },
+        "policy.present": {
+          kind: "Policy values",
+          copy: `Policy: <APPROVED_POLICY_NAME>
+Asset: ${urn}
+Requested action: ${capability}`,
+          location: "Dataset > Governance > Policies",
+          tab: "Governance",
+          why: "No governing policy could be verified for this asset and action.",
+          verification: "The governing policy is visible and applies to this dataset."
+        },
+        review: {
+          kind: "Steward checklist",
+          copy: `Asset: ${urn}
+Requested action: ${capability}
+Review owner: <OWNER>
+Approval reason: <REASON>`,
+          location: "Dataset > Summary > Owners",
+          tab: "Summary",
+          why: "The active policy needs a human decision because required evidence is incomplete.",
+          verification: "A named owner records the decision reason and reruns the same action."
+        },
+        allowed: {
+          kind: "Monitoring rule",
+          copy: `Certificate status: CURRENT
+Re-check when: ownership, lineage, quality, freshness, or incident evidence changes`,
+          location: "MetaGate > Decision details",
+          tab: "Summary",
+          why: "The selected action is allowed now, but that decision expires when its evidence changes.",
+          verification: "A later check uses current DataHub timestamps and returns the same decision."
+        },
+        rerun: {
+          kind: "Verification command",
+          copy: `curl -sG '${verificationUrl}' \\
+  --data-urlencode 'urn=${urn}' \\
+  --data-urlencode 'capability=${capability}' \\
+  | python3 -m json.tool`,
+          location: "Terminal after DataHub finishes indexing",
+          tab: "Summary",
+          why: "This proves that the repaired DataHub evidence changed the same action request.",
+          verification: "The JSON no longer lists the repaired signal in failed or unavailable evidence."
+        }
+      };
+      const instruction = instructions[term] || {
+        kind: "DataHub values",
+        copy: `Evidence: ${term}
+Asset: ${urn}
+Status: current and verified`,
+        location: "Dataset > Governance",
+        tab: "Governance",
+        why: "A required DataHub fact is missing, stale, or unavailable.",
+        verification: "Refresh MetaGate and confirm this signal no longer appears under Blocking evidence."
+      };
+      const href = instruction.kind === "Verification command"
+        ? new URL("/review", window.location.origin).toString()
+        : dataHubAssetUrl(run, instruction.tab);
+      return {
+        ...instruction,
+        href,
+        linkLabel: instruction.kind === "Verification command" ? "Open MetaGate" : instruction.location
+      };
+    }
+
+    function toRepair(run, term, pair) {
+      const [title, body] = pair;
+      const instruction = repairInstruction(term, run);
+      return { title, change: body || instruction.change, ...instruction };
+    }
+
+    function renderRepairAction(repair, index) {
+      const isCommand = repair.kind === "Verification command";
+      const hasPlaceholders = String(repair.copy || "").includes("<");
+      const destination = repair.href
+        ? `<a class="repair-location-link" href="${escapeHtml(repair.href)}" target="_blank" rel="noreferrer">${escapeHtml(repair.linkLabel || repair.location)}</a>`
+        : escapeHtml(repair.location);
+      return `
+        <div class="repair-action">
+          <div class="repair-action-head">
+            <strong><span class="repair-number">${index + 1}</span>${escapeHtml(repair.title)}</strong>
+            <span class="repair-kind">${escapeHtml(repair.kind || "DataHub change")}</span>
+          </div>
+          <p class="repair-change">${escapeHtml(repair.change)}</p>
+          <div class="repair-copy-label">${isCommand ? "Run after repair" : "Paste into DataHub"}</div>
+          <div class="repair-copy-row">
+            <pre class="repair-command">${escapeHtml(repair.copy)}</pre>
+            <button class="repair-copy" type="button" data-copy-repair aria-label="Copy repair instruction">${isCommand ? "Copy command" : "Copy values"}</button>
+          </div>
+          ${hasPlaceholders ? '<p class="repair-placeholder-note">Replace values inside &lt;angle brackets&gt; before saving.</p>' : ''}
+          <div class="repair-action-footer">
+            <div class="repair-destination"><span>Open</span>${destination}</div>
+            <div class="repair-done"><span>Done when</span>${escapeHtml(repair.verification)}</div>
+          </div>
+        </div>
+      `;
+    }
+
     function remediationFor(run) {
       if (run.decision === "allowed") {
-        return [
-          ["Keep certificate current", "Re-evaluate this asset when DataHub ownership, lineage, assertions, incidents, or freshness metadata changes."],
-          ["Use as agent context", "Expose the Predicate Certificate to the agent approval flow so the agent receives the allowed action list, not raw blanket access."]
-        ];
+        return [];
       }
       const profile = assetProfile(run);
       const assetMaps = {
         fct_users_created: {
           "assertions.present": ["Add signup quality assertions", "Create DataHub assertions for user_id not null, user_id unique per reporting day, daily signup row count within expected range, and freshness under the signup SLA."],
           "readiness_score >= 92.0": ["Lift readiness above 92", "The fastest path is adding the signup assertions because description, owner, glossary, lineage, and column lineage are already present."],
-          "confidence >= 88.0": ["Raise confidence above 88", "Use DataHub assertion results as the evidence source, not a README note or manual claim, then rerun Predicate on fct_users_created."]
+          "confidence >= 88.0": ["Raise confidence above 88", "Use DataHub assertion results as the evidence source, not a README note or manual claim, then rerun MetaGate on fct_users_created."]
         },
         fct_users_deleted: {
           "assertions.present": ["Add deletion quality assertions", "Create assertions for deleted_at not null, deleted_at inside the reporting day, deletion count anomaly threshold, and deleted users not reappearing in active-user outputs."],
@@ -2456,36 +4380,57 @@
         "column_lineage.present": ["Complete column lineage", `Map lineage for ${profile.columns.map(([name]) => name).join(", ")} from source through downstream consumers.`],
         "glossary.present": ["Attach approved glossary terms", `Add approved business terms that define ${run.asset} and its key columns.`],
         "freshness.present": ["Repair freshness evidence", "Refresh the asset or update SLA evidence so the timestamp is inside the policy window."],
-        "readiness_score >= 92.0": ["Raise readiness score", "Repair the highest-severity metadata gaps, then rerun Predicate."],
+        "ownership.present": ["Assign an accountable owner", "Add an active DataHub owner who can approve, explain, and repair this dataset."],
+        "lineage.present": ["Connect dataset lineage", "Add the upstream source and downstream consumer needed to verify impact."],
+        "usage.present": ["Ingest current usage", "Send recent query or usage metadata so DataHub can verify that this asset is actively used."],
+        "incidents.open == 0": ["Resolve open incidents", "Record the root cause and resolution, then close every open DataHub incident."],
+        "policy.present": ["Attach the governing policy", "Link the approved policy for this dataset and requested action."],
+        "domain.present": ["Assign a DataHub domain", "Add this dataset to the business domain that owns its meaning and controls."],
+        "tags.present": ["Add governance tags", "Attach the approved sensitivity and lifecycle tags for this dataset."],
+        "readiness_score >= 92.0": ["Raise readiness score", "Repair the highest-severity metadata gaps, then rerun MetaGate."],
         "readiness_score >= 95.0": ["Meet stricter readiness threshold", "High-risk policy requires stronger metadata proof before autonomous action."],
         "confidence >= 88.0": ["Raise confidence", "Use stronger DataHub-backed evidence sources rather than manual notes."],
         "confidence >= 93.0": ["Raise confidence", "Resolve stale or contradictory evidence before trusting the metadata."]
       };
-      const map = assetMaps[run.asset] || fallback;
-      const evidenceFailures = run.failed.filter((term) => !term.startsWith("readiness_score") && !term.startsWith("confidence"));
-      const repairs = evidenceFailures.map((term) => map[term] || fallback[term] || [term, "Repair this evidence in DataHub, then rerun Predicate."]);
+      const assetName = String(run.asset || "");
+      const matchedAsset = Object.keys(assetMaps).find((name) => assetName === name || assetName.endsWith(name));
+      const map = matchedAsset ? { ...fallback, ...assetMaps[matchedAsset] } : fallback;
+      const failedTerms = Array.isArray(run.failed) ? run.failed : [];
+      const evidenceFailures = failedTerms.filter((term) => !term.startsWith("readiness_score") && !term.startsWith("confidence"));
+      const repairs = evidenceFailures.map((term) => {
+        const readableTerm = String(term)
+          .replace(/[._]/g, " ")
+          .replace(/\s+present$/i, "")
+          .replace(/^./, (letter) => letter.toUpperCase());
+        return toRepair(run, term, map[term] || fallback[term] || [`Restore ${readableTerm}`, `Add current ${readableTerm.toLowerCase()} evidence in DataHub, then re-check.`]);
+      });
       if (!repairs.length && run.decision !== "allowed") {
-        repairs.push(["Review the blocked action", "The metadata is not strong enough for this action under the active policy. Ask the data owner to verify the evidence, then rerun Predicate."]);
+        repairs.push(toRepair(run, "review", ["Review the blocked action", "The metadata is not strong enough for this action under the active policy. Ask the data owner to verify the evidence, then rerun MetaGate."]));
       }
       if (repairs.length && run.decision !== "allowed") {
-        repairs.push(["Rerun this exact check", "After the DataHub changes are visible, rerun the same asset and action. Predicate will recalculate the score and show what changed."]);
+        repairs.push(toRepair(run, "rerun", ["Rerun this exact check", "After the DataHub changes are visible, rerun the same asset and action. MetaGate will recalculate the score and show what changed."]));
       }
       return repairs;
     }
 
     function primaryRepair(run) {
-      return remediationFor(run)[0] || ["Monitor certificate", "No immediate repair needed."];
+      return remediationFor(run)[0] || toRepair(run, "allowed", ["Monitor certificate", "No immediate repair needed."]);
     }
 
     function renderMiniQueue(run) {
       const queue = remediationFor(run).slice(0, 3);
+      const miniQueue = document.querySelector(".mini-queue");
+      const repairButton = document.getElementById("openRemediationDrawer");
+      const needsRepair = run.decision !== "allowed" && queue.length > 0;
+      miniQueue.hidden = !needsRepair;
+      repairButton.hidden = !needsRepair;
       document.getElementById("miniRepairQueue").innerHTML = queue
-        .map(([title]) => `<li>${escapeHtml(title)}</li>`)
+        .map(({ title }) => `<li>${escapeHtml(title)}</li>`)
         .join("");
     }
 
     function renderWorkbench(run) {
-      const [repairTitle, repairBody] = primaryRepair(run);
+      const repair = primaryRepair(run);
       const blocked = run.decision !== "allowed";
       const status = document.getElementById("workbenchStatus");
       status.className = "pill " + run.decision;
@@ -2493,14 +4438,14 @@
       document.getElementById("riskSummary").textContent = blocked ? "Do not let the agent act yet" : "Action is certified";
       document.getElementById("riskDetail").textContent = blocked
         ? run.reason
-        : "Predicate found enough metadata proof for the selected action under the active policy.";
+        : "MetaGate found enough metadata proof for the selected action under the active policy.";
       document.getElementById("ownerTask").textContent = blocked
         ? "Assign the remediation task to the data owner or platform steward responsible for this asset."
         : "Keep the owner attached so future metadata changes have an escalation path.";
-      document.getElementById("repairSummary").textContent = repairTitle;
-      document.getElementById("repairDetail").textContent = repairBody;
+      document.getElementById("repairSummary").textContent = repair.title;
+      document.getElementById("repairDetail").textContent = repair.change;
       document.getElementById("rerunDetail").textContent = blocked
-        ? "After the repair lands in DataHub, rerun Predicate against the same URN and compare the capability diff."
+        ? "After the repair lands in DataHub, rerun MetaGate against the same URN and compare the capability diff."
         : "Use the certificate in the agent workflow and rerun when DataHub emits a metadata change.";
     }
 
@@ -2511,12 +4456,7 @@
         <p>${escapeHtml(run.reason)}</p>
       `;
       document.getElementById("drawerRepairs").innerHTML = remediationFor(run)
-        .map(([title, body]) => `
-          <div class="drawer-section">
-            <h3>${escapeHtml(title)}</h3>
-            <p>${escapeHtml(body)}</p>
-          </div>
-        `)
+        .map((repair, index) => renderRepairAction(repair, index))
         .join("");
       document.getElementById("drawerAfterRepair").textContent = run.decision === "allowed"
         ? "No repair is required. The certificate can be attached to the agent approval flow."
@@ -2524,17 +4464,27 @@
     }
 
     function renderRemediation(run) {
-      document.getElementById("remediationList").innerHTML = remediationFor(run)
-        .slice(0, 4)
-        .map(([title, body], index) => `<div class="remediation-item"><strong><span class="repair-number">${index + 1}</span>${escapeHtml(title)}</strong><span>${escapeHtml(body)}</span></div>`)
-        .join("");
+      const repairs = remediationFor(run);
+      const changeCount = run.decision === "allowed"
+        ? 0
+        : repairs.filter((repair) => repair.kind !== "Verification command").length;
+      document.getElementById("remediationSummary").textContent = run.decision === "allowed"
+        ? "No repair is required. Re-check when DataHub evidence changes."
+        : `${changeCount} DataHub ${changeCount === 1 ? "change" : "changes"} will address the blocking evidence.`;
+      document.getElementById("remediationCount").textContent = run.decision === "allowed"
+        ? "Current"
+        : `${changeCount} ${changeCount === 1 ? "change" : "changes"}`;
+      copyRepairPlan.hidden = run.decision === "allowed" || repairs.length === 0;
+      document.getElementById("remediationList").innerHTML = run.decision === "allowed"
+        ? '<div class="repair-clear"><strong>No repair needed</strong><span>Re-check when DataHub evidence changes.</span></div>'
+        : repairs.map((repair, index) => renderRepairAction(repair, index)).join("");
     }
 
     function renderCapabilityMatrix(run) {
       const rows = [
         ["Answer business questions", run.decision === "allowed" ? "allowed" : "allowed", "Low-risk read-only use can proceed when basic ownership/glossary evidence exists."],
         ["Generate executive metrics", run.decision === "allowed" ? "allowed" : "blocked", run.decision === "allowed" ? "Required evidence is certified." : "Needs assertions, freshness, and stronger readiness."],
-        ["Autonomous agent action", run.decision, run.decision === "allowed" ? "All required evidence is present." : "Blocked by failed predicate terms."]
+        ["Autonomous agent action", run.decision, run.decision === "allowed" ? "All required evidence is present." : "Blocked by failed metagate terms."]
       ];
       document.getElementById("capabilityMatrix").innerHTML = rows.map(([action, decision, why]) => `
         <tr>
@@ -2572,12 +4522,12 @@
         : run.decision === "allowed"
         ? [
           ["Now", "This decision is from the current DataHub evaluation."],
-          ["Next", "Predicate will recheck it when the asset is refreshed."]
+          ["Next", "MetaGate will recheck it when the asset is refreshed."]
         ]
         : [
           ["Now", `This decision is from the current DataHub evaluation. ${run.failed.slice(0, 2).join(" and ")} failed.`],
           ["Next", "Data owner completes the repair plan in DataHub."],
-          ["After", "Predicate reruns on the same URN and updates the capability diff."]
+          ["After", "MetaGate reruns on the same URN and updates the capability diff."]
         ];
       document.getElementById("trustTimeline").innerHTML = steps.map(([time, text]) => `
         <div class="timeline-step"><time>${escapeHtml(time)}</time><div>${escapeHtml(text)}</div></div>
@@ -2586,17 +4536,18 @@
 
     function render() {
       const run = runs[selected];
+      renderPrimaryEvidence(run);
       renderScoreboard();
       renderAssetControls();
       if (!run) {
-        document.getElementById("assetName").textContent = "Waiting for Predicate API";
+        document.getElementById("assetName").textContent = "Waiting for MetaGate API";
         document.getElementById("assetUrn").textContent = "No live evaluation is available yet.";
         document.getElementById("embeddedAssetName").textContent = "Waiting for live data";
         document.getElementById("embeddedDecision").textContent = "UNAVAILABLE";
         document.getElementById("embeddedReason").textContent = "Connect the review server to see a current DataHub decision.";
         document.getElementById("decisionText").textContent = "unavailable";
         document.getElementById("readableStatus").textContent = "Waiting for live evidence";
-        document.getElementById("actionResult").textContent = "Waiting for the Predicate Review API.";
+        document.getElementById("actionResult").textContent = "Waiting for the MetaGate Review API.";
         renderConstraintContract(null);
         return;
       }
@@ -2630,15 +4581,15 @@
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
       renderScoreTrace(run);
       renderAssessment(run);
-      const prettyPredicate = JSON.stringify(run.predicate, null, 2)
+      const prettyMetaGate = JSON.stringify(run.metagate, null, 2)
         .replace(/ && /g, " &&\\n    ");
-      document.getElementById("predicateBlock").textContent = prettyPredicate;
+      document.getElementById("metagateBlock").textContent = prettyMetaGate;
       document.getElementById("whyText").textContent = run.decision === "allowed"
         ? "The metadata is strong enough for the selected AI action to proceed."
         : "The asset has useful metadata, but the policy found missing proof before allowing autonomous action.";
       document.getElementById("nextText").textContent = run.decision === "allowed"
         ? "Use the certificate as evidence in the agent workflow."
-        : primaryRepair(run)[1];
+        : primaryRepair(run).change;
       renderList("failedTerms", run.failed, "None. The selected action is certified.");
       renderList("evidenceList", run.evidence, "No supporting evidence found.");
       const readableStatus = document.getElementById("readableStatus");
@@ -2646,7 +4597,7 @@
       readableStatus.style.color = run.decision === "allowed" ? "var(--green)" : "var(--red)";
       renderList("plainEnglish", [
         run.decision === "allowed" ? "The required evidence meets the active policy." : run.reason,
-        run.decision === "allowed" ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run)[1]
+        run.decision === "allowed" ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run).change
       ], "");
       renderRemediation(run);
       renderMiniQueue(run);
@@ -2680,16 +4631,16 @@
       renderConstraintContract(run);
       document.getElementById("scoreFill").style.width = fillWidth(run.readiness);
       document.getElementById("confidenceFill").style.width = fillWidth(run.confidence);
-      document.getElementById("predicateBlock").textContent = JSON.stringify(run.predicate, null, 2).replace(/ && /g, " &&\n    ");
+      document.getElementById("metagateBlock").textContent = JSON.stringify(run.metagate, null, 2).replace(/ && /g, " &&\n    ");
       document.getElementById("whyText").textContent = allowed
         ? "The evidence meets this action's policy."
         : "This action needs proof that the asset does not have yet.";
-      document.getElementById("nextText").textContent = allowed ? "Use the certificate as evidence in the agent workflow." : primaryRepair(run)[1];
+      document.getElementById("nextText").textContent = allowed ? "Use the certificate as evidence in the agent workflow." : primaryRepair(run).change;
       renderList("failedTerms", run.failed, "None. The selected action is certified.");
       renderList("evidenceList", run.evidence, "No supporting evidence found.");
       document.getElementById("readableStatus").textContent = allowed ? "Allowed to proceed" : "Blocked for review";
       document.getElementById("readableStatus").style.color = allowed ? "var(--green)" : "var(--red)";
-      renderList("plainEnglish", [allowed ? "The required evidence meets the active policy." : run.reason, allowed ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run)[1]], "");
+      renderList("plainEnglish", [allowed ? "The required evidence meets the active policy." : run.reason, allowed ? "Keep monitoring the evidence as the asset changes." : primaryRepair(run).change], "");
       renderMiniQueue(run);
       renderWorkbench(run);
       renderDrawer(run);
@@ -2709,7 +4660,7 @@
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       if (!run || !activeApiBase) {
         document.getElementById("dataUpdate").textContent = "Select a live API-backed review to re-evaluate capabilities.";
-        actionResult.textContent = "This page is not connected to a Predicate API yet.";
+        actionResult.textContent = "This page is not connected to a MetaGate API yet.";
         return;
       }
       document.getElementById("dataUpdate").textContent = "Checking selected capability...";
@@ -2720,7 +4671,7 @@
       try {
         const response = await fetch(endpoint, { cache: "no-store", signal: evaluationController.signal });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
         // A user can change the asset or action again before this request
         // returns. Never let an older response repaint the newer selection.
         if (requestId !== evaluationSequence || selectedAtRequest !== selected) return;
@@ -2735,7 +4686,7 @@
         requestAction.textContent = `Checked: ${runs[selectedAtRequest].decision.toUpperCase()}`;
       } catch (error) {
         if (error.name === "AbortError" || requestId !== evaluationSequence) return;
-        document.getElementById("dataUpdate").textContent = "Capability check failed. Predicate API is unavailable.";
+        document.getElementById("dataUpdate").textContent = "Capability check failed. MetaGate API is unavailable.";
         actionResult.textContent = friendlyApiError(error);
       } finally {
         if (requestId === evaluationSequence) evaluationController = null;
@@ -2746,10 +4697,118 @@
       }
     }
 
-    async function evaluateNewAsset() {
+    function focusCurrentCheck() {
+      const target = document.getElementById("currentCheck") || document.getElementById("primaryEvidenceSubtitle");
+      if (!target) return;
+      window.requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+
+    function resourceUrnParts(urn) {
+      const text = String(urn || "");
+      const match = text.match(/^urn:li:dataset:\(urn:li:dataPlatform:([^,]+),(.+),[^,)]*\)$/);
+      return { platform: match ? match[1] : "DataHub", name: match ? match[2] : text };
+    }
+
+    function resourceAssetLabel(urn) {
+      const { name } = resourceUrnParts(urn);
+      const parts = name.split(".").filter(Boolean);
+      return parts[parts.length - 1] || name;
+    }
+
+    function resourceRunUrn(run) {
+      return String(run && (run.urn || run.entity_urn || run.asset_urn) || "");
+    }
+
+    function resourceGroupKey(urn) {
+      const { platform, name } = resourceUrnParts(urn);
+      const parts = name.split(".").filter(Boolean);
+      const root = parts.length >= 2 ? parts.slice(0, 2).join(".") : "other";
+      return `${platform.toLowerCase()}|${root.toLowerCase()}`;
+    }
+
+    function resourceGroupLabel(urn) {
+      const { platform, name } = resourceUrnParts(urn);
+      const parts = name.split(".").filter(Boolean);
+      const root = parts.length >= 2 ? parts.slice(0, 2).join(".") : "Other datasets";
+      return `${platform} · ${root}`;
+    }
+
+    function showResourceCheckState(urn, message, status = "checking") {
+      const subtitle = document.getElementById("primaryEvidenceSubtitle");
+      const decision = document.getElementById("primaryEvidenceDecision");
+      const facts = document.getElementById("primaryEvidenceFacts");
+      const gap = document.getElementById("primaryEvidenceGap");
+      const assetName = resourceAssetLabel(urn);
+      if (subtitle) subtitle.innerHTML = `<span class="evidence-asset">${escapeHtml(assetName)}</span><span class="evidence-meta">Reading current DataHub evidence...</span>`;
+      if (decision) {
+        decision.textContent = status === "checking" ? "Checking" : "Unavailable";
+        decision.className = `evidence-first-decision ${status}`;
+      }
+      if (facts) facts.innerHTML = "";
+      if (gap) gap.textContent = message;
+    }
+
+    function clearResourceAssetState(urn) {
+      document.querySelectorAll("[data-resource-urn]").forEach((item) => {
+        if (item.dataset.resourceUrn !== urn) return;
+        item.classList.remove("checking");
+        item.removeAttribute("aria-busy");
+      });
+    }
+
+    function resourceAssetButtonFromEvent(event) {
+      const origin = event && event.target;
+      return origin && typeof origin.closest === "function"
+        ? origin.closest("[data-resource-urn]")
+        : null;
+    }
+
+    function handleResourceAssetClick(event) {
+      const item = resourceAssetButtonFromEvent(event);
+      if (!item) return;
+      event.preventDefault();
+      event.stopPropagation();
+      selectResourceAsset(item.dataset.resourceUrn, item);
+    }
+
+    function selectResourceAsset(urn, sourceButton) {
+      if (sourceButton) {
+        document.querySelectorAll("[data-resource-urn].selected").forEach((item) => item.classList.remove("selected"));
+        sourceButton.classList.add("selected");
+        sourceButton.classList.add("checking");
+        sourceButton.setAttribute("aria-busy", "true");
+      }
+      const existing = runs.findIndex((item) => resourceRunUrn(item) === urn);
+      if (existing >= 0) {
+        selected = existing;
+        render();
+        loadIntegrationProof(runs[existing]);
+        const run = runs[existing];
+        clearResourceAssetState(urn);
+        document.getElementById("dataUpdate").textContent = `Selected ${run.asset || resourceAssetLabel(urn)}.`;
+        document.getElementById("actionResult").textContent = `Showing ${run.asset || resourceAssetLabel(urn)}. Choose “Check selected action” for a fresh decision.`;
+        focusCurrentCheck();
+        return;
+      }
+      urnInput.value = urn;
+      document.getElementById("dataUpdate").textContent = `Checking ${resourceAssetLabel(urn)}...`;
+      document.getElementById("actionResult").textContent = `Checking ${resourceAssetLabel(urn)} against DataHub...`;
+      showResourceCheckState(urn, `Checking ${resourceAssetLabel(urn)} now. The result will appear here when DataHub responds.`);
+      focusCurrentCheck();
+      evaluateNewAsset({ scrollToResult: true });
+    }
+
+    async function evaluateNewAsset(options = {}) {
+      const shouldScroll = Boolean(options && options.scrollToResult);
       const urn = urnInput.value.trim();
       if (!urn || !activeApiBase) {
-        document.getElementById("actionResult").textContent = "Paste a DataHub dataset URN while the review API is connected.";
+        const message = !urn
+          ? "Paste a DataHub dataset URN while the review API is connected."
+          : "MetaGate is not connected to the review API. Start the local review server, then refresh DataHub.";
+        document.getElementById("actionResult").textContent = message;
+        if (urn) showResourceCheckState(urn, message, "unavailable");
+        clearResourceAssetState(urn);
+        if (shouldScroll) focusCurrentCheck();
         return;
       }
       evaluateAsset.disabled = true;
@@ -2759,8 +4818,8 @@
         const endpoint = `${activeApiBase}/api/evaluate?urn=${encodeURIComponent(urn)}&capability=${encodeURIComponent(capabilitySelect.value)}`;
         const response = await fetch(endpoint, { cache: "no-store" });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
-        const existing = runs.findIndex((item) => item.urn === urn);
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
+        const existing = runs.findIndex((item) => resourceRunUrn(item) === urn);
         if (existing >= 0) {
           runs[existing] = payload;
           selected = existing;
@@ -2772,9 +4831,13 @@
         loadIntegrationProof(payload);
         document.getElementById("actionResult").textContent = `Checked ${payload.asset}: ${payload.decision.toUpperCase()}. Saved to the review server.`;
         urnInput.value = "";
+        if (shouldScroll) focusCurrentCheck();
       } catch (error) {
         document.getElementById("actionResult").textContent = friendlyApiError(error);
+        showResourceCheckState(urn, friendlyApiError(error), "unavailable");
+        if (shouldScroll) focusCurrentCheck();
       } finally {
+        clearResourceAssetState(urn);
         evaluateAsset.disabled = false;
         evaluateAsset.textContent = "Check asset";
       }
@@ -2784,8 +4847,12 @@
       const target = document.getElementById("discoveredResources");
       const button = document.getElementById("discoverResources");
       if (!target || !button) return;
+      if (!document.documentElement.dataset.assetClickBound) {
+        document.addEventListener("click", handleResourceAssetClick, true);
+        document.documentElement.dataset.assetClickBound = "true";
+      }
       if (!activeApiBase) {
-        target.textContent = "Connect the local Predicate Review server first.";
+        target.textContent = "Connect the local MetaGate Review server first.";
         return;
       }
       button.disabled = true;
@@ -2793,23 +4860,42 @@
       try {
         const response = await fetch(`${activeApiBase}/api/resources`, { cache: "no-store" });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || `Predicate returned HTTP ${response.status}`);
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
         const urns = Array.isArray(payload.discovered_dataset_urns) ? payload.discovered_dataset_urns : [];
+        const scenarios = Array.isArray(payload.resources) ? payload.resources.filter((item) => item.kind === "scenario") : [];
         if (!urns.length) {
-          target.textContent = payload.discovery_error || "No dataset assets were found in this DataHub.";
-          target.className = payload.discovery_error ? "resource-error" : "quiet-note";
+          target.innerHTML = `<div class="resource-status-grid">${scenarios.map((scenario) =>
+            `<div class="resource-status pending"><strong>${escapeHtml(scenario.name)}</strong><small>Not loaded. MetaGate is not scoring it.</small></div>`
+          ).join("")}</div><p class="${payload.discovery_error ? "resource-error" : "quiet-note"}">${escapeHtml(payload.discovery_error || "No dataset assets were found in this DataHub.")}</p>`;
+          target.className = "";
           return;
         }
         target.className = "";
-        target.innerHTML = `<strong>${urns.length} dataset${urns.length === 1 ? "" : "s"} found.</strong> Predicate scores them automatically in the current run. Select one to inspect its evidence.` + urns.map((urn) =>
-          `<button type="button" data-resource-urn="${escapeHtml(urn)}">${escapeHtml(urn.split(",").slice(-2, -1)[0] || urn)}</button>`
-        ).join("");
-        target.querySelectorAll("[data-resource-urn]").forEach((item) => {
-          item.addEventListener("click", () => {
-            urnInput.value = item.dataset.resourceUrn;
-            evaluateNewAsset();
-          });
+        const scenarioStatuses = scenarios.map((scenario) => {
+          const loaded = Number(scenario.loaded_asset_count || 0) > 0;
+          const detail = loaded
+            ? `${scenario.loaded_asset_count} matching asset${scenario.loaded_asset_count === 1 ? "" : "s"} found.`
+            : "Not loaded. MetaGate is not scoring it.";
+          return `<div class="resource-status ${loaded ? "loaded" : "pending"}"><strong>${escapeHtml(scenario.name)}</strong><small>${escapeHtml(detail)}</small></div>`;
+        }).join("");
+        const groups = new Map();
+        urns.forEach((urn) => {
+          const key = resourceGroupKey(urn);
+          if (!groups.has(key)) groups.set(key, { label: resourceGroupLabel(urn), items: [] });
+          groups.get(key).items.push(urn);
         });
+        const groupedAssets = Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label)).map((group, index) => {
+          const items = group.items.sort((a, b) => resourceAssetLabel(a).localeCompare(resourceAssetLabel(b))).map((urn) => {
+            const run = runs.find((item) => resourceRunUrn(item) === urn);
+            const isSelected = run && runs[selected] && resourceRunUrn(runs[selected]) === urn;
+            const status = run ? String(run.decision || "checked").toUpperCase() : "NOT CHECKED";
+            return `<button class="resource-asset-button${isSelected ? " selected" : ""}" type="button" data-resource-urn="${escapeHtml(urn)}" aria-label="Inspect ${escapeHtml(resourceAssetLabel(urn))}"><span>${escapeHtml(resourceAssetLabel(urn))}</span><small>${escapeHtml(status)}</small></button>`;
+          }).join("");
+          return `<details class="resource-asset-group"${index === 0 ? " open" : ""}><summary><span>${escapeHtml(group.label)}</span><small>${group.items.length} asset${group.items.length === 1 ? "" : "s"}</small></summary><div class="resource-asset-items">${items}</div></details>`;
+        }).join("");
+        target.innerHTML = `<strong>${urns.length} dataset${urns.length === 1 ? "" : "s"} found.</strong> Choose a group, then choose an asset to inspect its evidence.` +
+          (scenarioStatuses ? `<div class="resource-status-grid">${scenarioStatuses}</div>` : "") +
+          `<div class="resource-asset-groups">${groupedAssets}</div>`;
       } catch (error) {
         target.className = "resource-error";
         target.textContent = friendlyApiError(error);
@@ -2819,8 +4905,83 @@
       }
     }
 
+    function clearProofResult(node) {
+      if (node) node.textContent = "";
+    }
+
+    async function scanConnectedDataHub() {
+      if (!activeApiBase) {
+        scanResult.textContent = "Connect the local MetaGate API first.";
+        return;
+      }
+      scanDataHub.disabled = true;
+      scanDataHub.textContent = "Scanning...";
+      scanResult.textContent = "Reading the connected catalog. Your current decision stays visible.";
+      try {
+        const endpoint = `${activeApiBase}/api/scan?capability=${encodeURIComponent(capabilitySelect.value)}&limit=0&refresh=1`;
+        const response = await fetch(endpoint, { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
+        if (!Array.isArray(payload.runs) || !payload.runs.length) throw new Error("No dataset evaluations were returned.");
+        const selectedUrn = runs[selected] && runs[selected].urn;
+        runs = payload.runs;
+        const selectedIndex = selectedUrn ? runs.findIndex((run) => run.urn === selectedUrn) : -1;
+        selected = selectedIndex >= 0 ? selectedIndex : 0;
+        assetScope = payload.catalog_authoritative
+          ? "the connected DataHub catalog"
+          : payload.discovered
+          ? "the connected DataHub"
+          : "the configured review scope";
+        render();
+        loadIntegrationProof(runs[selected]);
+        const blocked = runs.filter((run) => run.decision === "blocked").length;
+        const allowed = runs.filter((run) => run.decision === "allowed").length;
+        const currentCount = Number(payload.current_scope_count || runs.length);
+        const savedCount = Number(payload.saved_run_count || runs.filter((run) => run.saved).length || 0);
+        const savedText = savedCount ? ` · ${savedCount} saved check${savedCount === 1 ? "" : "s"} kept separately` : "";
+        currentScopeCount = currentCount;
+        renderScopeProof(payload);
+        scanResult.innerHTML = `<strong>Catalog scan complete:</strong> ${currentCount} current dataset${currentCount === 1 ? "" : "s"}${savedText} · <span class="proof-ok">${allowed} allowed</span> · <span class="proof-blocked">${blocked} blocked</span>${payload.discovery_error ? ` · ${escapeHtml(payload.discovery_error)}` : ""}`;
+        document.getElementById("actionResult").textContent = `Checked ${currentCount} current DataHub dataset${currentCount === 1 ? "" : "s"}. Results saved to the review server${savedCount ? `; ${savedCount} older check${savedCount === 1 ? "" : "s"} remain visible` : ""}.`;
+      } catch (error) {
+        scanResult.textContent = friendlyApiError(error);
+        document.getElementById("actionResult").textContent = "Catalog scan failed. The current result was kept.";
+      } finally {
+        scanDataHub.disabled = false;
+        scanDataHub.textContent = "Scan catalog";
+      }
+    }
+
+    async function showEnforcementDemo() {
+      if (!activeApiBase || !runs[selected]) {
+        enforcementResult.textContent = "Connect the local MetaGate API and select a dataset first.";
+        return;
+      }
+      runEnforcementDemo.disabled = true;
+      runEnforcementDemo.textContent = "Proving...";
+      enforcementResult.textContent = "Checking that blocked actions are refused before a tool is called.";
+      try {
+        const endpoint = `${activeApiBase}/api/enforcement-demo?urn=${encodeURIComponent(runs[selected].urn)}`;
+        const response = await fetch(endpoint, { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || `MetaGate returned HTTP ${response.status}`);
+        const results = Array.isArray(payload.results) ? payload.results : [];
+        const blocked = results.filter((item) => item.decision === "blocked" && item.tool_not_invoked).length;
+        const called = results.filter((item) => item.tool_called).length;
+        enforcementResult.innerHTML = `<strong>Tool gate verified:</strong> ${blocked} blocked action${blocked === 1 ? "" : "s"} stopped before the tool · ${called} allowed tool call${called === 1 ? "" : "s"} recorded.`;
+        document.getElementById("actionResult").textContent = "Enforcement proof complete. Blocked requests did not reach the tool.";
+      } catch (error) {
+        enforcementResult.textContent = friendlyApiError(error);
+        document.getElementById("actionResult").textContent = "Enforcement proof failed. The current decision was kept.";
+      } finally {
+        runEnforcementDemo.disabled = false;
+        runEnforcementDemo.textContent = "Test enforcement";
+      }
+    }
+
     async function loadLiveRuns(forceRefresh = false, background = false) {
       const visibleRuns = runs;
+      const environment = document.querySelector(".environment");
       if (!background) {
         refreshData.disabled = true;
         refreshData.textContent = "Updating...";
@@ -2831,86 +4992,126 @@
       const endpoint = apiBase ? `${apiBase}/api/runs` : "/api/runs";
       const refreshEndpoint = `${endpoint}${endpoint.includes("?") ? "&" : "?"}refresh=${Date.now()}`;
       if (window.location.protocol === "file:" && !apiBase) {
-        document.getElementById("dataUpdate").textContent = "Setup: connect this page to a Predicate API to read DataHub automatically.";
+        document.getElementById("dataUpdate").textContent = "Setup: connect this page to a MetaGate API to read DataHub automatically.";
         if (!background) {
           refreshData.disabled = false;
-          refreshData.textContent = "Refresh DataHub";
+          refreshData.textContent = "Refresh";
         }
         return;
       }
       try {
         const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
         const status = statusResponse.ok ? await statusResponse.json() : null;
-        // Live mode must never paint a cached decision first. An old ALLOWED
-        // result is more dangerous than a short loading state when metadata
-        // may have changed underneath it.
         const liveMode = status && status.mode === "live-datahub-api";
-        const response = await fetch(forceRefresh || liveMode ? refreshEndpoint : endpoint, { cache: "no-store" });
+        // A refresh starts the background scan. A normal poll only reads the
+        // latest saved results, so the page never waits for the whole catalog.
+        const response = await fetch(forceRefresh ? refreshEndpoint : endpoint, { cache: "no-store" });
         if (!response.ok) {
           const detail = await response.text().catch(() => "");
-          throw new Error(detail || `Predicate returned HTTP ${response.status}`);
+          throw new Error(detail || `MetaGate returned HTTP ${response.status}`);
         }
         const payload = await response.json();
-        if (!Array.isArray(payload.runs) || !payload.runs.length) {
+        if (payload.catalog_authoritative === true && payload.catalog_available === false) {
+          throw new Error(payload.discovery_error || "Connected DataHub catalog unavailable.");
+        }
+        const refresh = payload.refresh || {};
+        if (!Array.isArray(payload.runs) || (!payload.runs.length && !refresh.running)) {
           throw new Error("DataHub returned no evaluations.");
         }
+        clearLiveReconnect();
         if (Array.isArray(payload.runs) && payload.runs.length) {
+          scoreMetricsAvailable = true;
+          const selectedUrn = runs[selected] && runs[selected].urn;
           runs = payload.runs;
-          selected = 0;
-          document.getElementById("environmentTitle").textContent = liveMode ? "Live DataHub API demo" : "Public API fixture demo";
-          const resolvedCount = Number(payload.asset_count || payload.runs.length);
+          const selectedIndex = selectedUrn ? runs.findIndex((run) => run.urn === selectedUrn) : -1;
+          selected = selectedIndex >= 0 ? selectedIndex : 0;
+          document.getElementById("environmentTitle").textContent = liveMode ? "Connected" : "Sample data";
+          const responseScopeCount = Number(payload.current_scope_count || payload.asset_count || payload.runs.length);
+          currentScopeCount = responseScopeCount;
+          const savedCount = Number(payload.saved_run_count || payload.runs.filter((run) => run.stale_until_rechecked).length || 0);
+          const visibleCount = Number(payload.asset_count || payload.runs.length);
           const configuredCount = Number(payload.configured_asset_count || status?.configured_asset_count || 0);
-          const scopeLabel = configuredCount && resolvedCount !== configuredCount
-            ? `Scope: ${resolvedCount}/${configuredCount} assets`
-            : `Scope: ${resolvedCount} assets`;
+          renderScopeProof(payload, status);
+          const scopeLabel = configuredCount && responseScopeCount !== configuredCount
+            ? `Current scope: ${responseScopeCount}/${configuredCount}`
+            : `Current scope: ${responseScopeCount}`;
+          const savedLabel = savedCount ? ` · ${savedCount} saved check${savedCount === 1 ? "" : "s"}` : "";
           const buildLabel = payload.build_id || status?.build_id;
-          document.getElementById("environmentProof").textContent = `${liveMode ? "Source: live DataHub" : "Source: six-asset demo fixture"} · ${scopeLabel}${buildLabel ? ` · ${buildLabel}` : ""}`;
+          document.getElementById("environmentProof").textContent = `${liveMode ? "DataHub GraphQL" : "Sample catalog"} · ${scopeLabel}${savedLabel}${buildLabel ? ` · ${buildLabel}` : ""}`;
+          const runtime = payload.runtime || status?.runtime;
+          document.getElementById("runtimeProof").textContent = runtime
+            ? `Runtime: ${runtime.build_id || "unknown"} · pid ${runtime.pid || "?"} · started ${runtime.started_at || "unknown"}`
+            : "Runtime: process identity unavailable";
           const writebackMode = status && status.writeback ? status.writeback.mode : "read-only";
-          document.getElementById("dataMode").textContent = `${liveMode ? "Mode: live DataHub API" : "Mode: public API fixture"} - Write-back: ${writebackMode}`;
-          assetScope = payload.discovered ? "the connected DataHub" : "the configured review scope";
+          document.getElementById("dataMode").textContent = `${liveMode ? "Connected" : "Sample data"} · ${writebackMode}`;
+          environment.classList.remove("connected", "sample", "unavailable");
+          environment.classList.add(liveMode ? "connected" : "sample");
+          assetScope = payload.catalog_authoritative
+            ? "the connected DataHub catalog"
+            : payload.discovered
+            ? "the connected DataHub"
+            : "the configured review scope";
           document.getElementById("dataUpdate").textContent = liveMode
             ? "Live DataHub. Refresh after changes."
-            : "Demo data. Changes only when the fixture changes.";
+            : "Sample data. Refresh to run the check again.";
           render();
           loadIntegrationProof(runs[selected]);
+          loadProofLayers();
           const errors = Array.isArray(payload.errors) ? payload.errors : [];
           const discoveryNote = payload.discovery_error
             ? ` DataHub discovery issue: ${payload.discovery_error}`
-            : (payload.discovered ? ` ${resolvedCount} loaded dataset${resolvedCount === 1 ? "" : "s"} in this run.` : ` ${scopeLabel}.`);
-          const scopeWarning = configuredCount && resolvedCount !== configuredCount
-            ? ` Expected ${configuredCount} configured assets but received ${resolvedCount}.`
+            : (payload.discovered ? ` ${responseScopeCount} loaded dataset${responseScopeCount === 1 ? "" : "s"} in this run.` : ` ${scopeLabel}.`);
+          const scopeWarning = configuredCount && responseScopeCount !== configuredCount
+            ? ` Expected ${configuredCount} configured assets but received ${responseScopeCount}.`
             : "";
-          const savedCount = payload.runs.filter((run) => run.stale_until_rechecked).length;
           const savedNote = savedCount ? ` ${savedCount} saved check${savedCount === 1 ? "" : "s"} restored.` : "";
           document.getElementById("dataUpdate").textContent = errors.length
             ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.${discoveryNote}${scopeWarning}`
-            : `${liveMode ? "Live check complete" : "Demo check complete"} at ${new Date().toLocaleTimeString()}.${savedNote}${scopeWarning}`;
+            : `${liveMode ? "Live check complete" : "Sample check complete"} at ${new Date().toLocaleTimeString()}. ${visibleCount} visible result${visibleCount === 1 ? "" : "s"}.${savedNote}${scopeWarning}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action.";
+        } else if (refresh.running) {
+          document.getElementById("dataUpdate").textContent = "Refreshing DataHub in background. Showing the last saved result.";
+          document.getElementById("actionResult").textContent = "Your current result stays visible while DataHub updates.";
+        }
+        if (refreshPollTimer) {
+          clearTimeout(refreshPollTimer);
+          refreshPollTimer = null;
+        }
+        if (refresh.running) {
+          refreshPollTimer = setTimeout(() => loadLiveRuns(false, true), 1200);
         }
       } catch (error) {
         // Never substitute recorded fixture data for a configured API. Keep a
         // previously successful live result if one exists; otherwise show the
         // unavailable state so the UI cannot claim a stale decision is live.
         runs = activeApiBase ? visibleRuns : recordedRuns;
+        scoreMetricsAvailable = runs.length > 0;
         selected = runs.length ? Math.min(selected, runs.length - 1) : 0;
         render();
         document.getElementById("dataMode").textContent = activeApiBase
-          ? "Mode: live API unavailable"
-          : "Mode: recorded fallback data";
+          ? "Connection unavailable"
+          : "Sample data";
+        environment.classList.remove("connected", "sample", "unavailable");
+        environment.classList.add(activeApiBase ? "unavailable" : "sample");
         document.getElementById("dataUpdate").textContent = activeApiBase
           ? "Live results are unavailable. Start the review server or DataHub, then refresh."
-          : "Update failed. Showing the recorded demo.";
+          : "Update failed. Showing sample data.";
         document.getElementById("actionResult").textContent = friendlyApiError(error);
+        document.getElementById("runtimeProof").textContent = activeApiBase
+          ? "Runtime: review service unavailable"
+          : "Runtime: sample data";
+        scheduleLiveReconnect();
       }
       if (!background) {
         refreshData.disabled = false;
-        refreshData.textContent = "Refresh DataHub";
+        refreshData.textContent = "Refresh";
       }
     }
 
     assetSelect.addEventListener("change", (event) => {
       evaluationSequence += 1;
       if (evaluationController) evaluationController.abort();
+      assetPickerOpen = false;
       requestAction.disabled = false;
       requestAction.textContent = "Check selected action";
       selected = Number(event.target.value);
@@ -2921,6 +5122,25 @@
       const actionName = capabilitySelect.options[capabilitySelect.selectedIndex].textContent;
       document.getElementById("dataUpdate").textContent = `Asset changed to ${assetName}.`;
       document.getElementById("actionResult").textContent = `Ready to check ${actionName} on ${assetName}.`;
+    });
+    assetFilter.addEventListener("input", () => renderAssetControls());
+    assetPickerToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      assetPickerOpen = !assetPickerOpen;
+      renderAssetControls();
+    });
+    document.addEventListener("click", (event) => {
+      if (assetPickerOpen && assetPicker && !assetPicker.contains(event.target)) {
+        assetPickerOpen = false;
+        renderAssetControls();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && assetPickerOpen) {
+        assetPickerOpen = false;
+        renderAssetControls();
+        assetPickerToggle.focus();
+      }
     });
     capabilitySelect.addEventListener("change", () => {
       requestAction.textContent = "Check selected action";
@@ -2962,8 +5182,10 @@
       });
     });
     openRemediationDrawer.addEventListener("click", () => {
-      remediationDrawer.classList.add("open");
+      setReviewView("remediation-plan");
+      remediationDrawer.classList.remove("open");
     });
+    copyRepairPlan.addEventListener("click", copyFullRepairPlan);
     closeRemediationDrawer.addEventListener("click", () => {
       remediationDrawer.classList.remove("open");
     });
@@ -2975,10 +5197,17 @@
     refreshData.addEventListener("click", () => {
       document.getElementById("dataUpdate").textContent = "Updating DataHub in background...";
       document.getElementById("actionResult").textContent = "Your current result stays visible while the update runs.";
-      loadLiveRuns(true);
+      loadLiveRuns(true).then(loadHackathonResources).catch(() => {});
+    });
+    scanDataHub.addEventListener("click", scanConnectedDataHub);
+    runEnforcementDemo.addEventListener("click", showEnforcementDemo);
+    window.addEventListener("online", () => loadLiveRuns(false, true).catch(() => {}));
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) loadLiveRuns(false, true).catch(() => {});
     });
     render();
-    loadLiveRuns();
+    loadLiveRuns(true).then(loadHackathonResources).catch(() => {});
+    loadProofLayers();
   </script>
 </body>
 </html>

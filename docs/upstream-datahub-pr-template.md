@@ -8,7 +8,7 @@ Add AI metadata readiness certification example
 
 This PR proposes a DataHub example for certifying whether a metadata asset is
 ready for AI-assisted actions. The example uses DataHub metadata evidence to
-produce a Predicate Certificate, explain allowed and blocked capabilities, and
+produce a MetaGate Certificate, explain allowed and blocked capabilities, and
 show how metadata repairs change agent permissions over time.
 
 The contribution is intentionally example-first. It does not require a core
@@ -19,7 +19,7 @@ plugin if the community wants a deeper integration.
 
 AI agents need more than metadata access. They need an admission control layer
 that determines whether metadata is complete, fresh, and governed enough for a
-specific action. Predicate demonstrates this using DataHub evidence such
+specific action. MetaGate demonstrates this using DataHub evidence such
 as ownership, glossary terms, lineage, assertions, incidents, freshness, usage,
 and policy tags.
 
@@ -43,7 +43,7 @@ and policy tags.
 ## Screenshots or artifacts
 
 - Architecture diagram.
-- Predicate Certificate example.
+- MetaGate Certificate example.
 - Explainability report.
 - Readiness diff before and after metadata repair.
 

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 
 setup(
-    name="predicate",
+    name="metagate",
     version="0.1.0",
     description="AI readiness certification SDK and DataHub integration reference implementation.",
     long_description=open("README.md", encoding="utf-8").read(),
@@ -12,12 +12,12 @@ setup(
     packages=find_packages("src"),
     python_requires=">=3.9",
     entry_points={"console_scripts": [
-        "predicate=context_gradient.cli:main",
+        "metagate=context_gradient.cli:main",
         "context-gradient=context_gradient.cli:main",
-        "predicate-review=predicate.review:main",
-        "predicate-mcp=predicate.mcp_server:main",
-        "predicate-doctor=predicate.doctor:main",
-        "predicate-skill=context_gradient.skill:main",
-        "predicate-datahub-mcp-probe=predicate.datahub_mcp_probe:main",
+        "metagate-review=metagate.review:main",
+        "metagate-mcp=metagate.mcp_server:main",
+        "metagate-doctor=metagate.doctor:main",
+        "metagate-skill=context_gradient.skill:main",
+        "metagate-datahub-mcp-probe=metagate.datahub_mcp_probe:main",
     ]},
 )

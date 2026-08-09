@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "examples/outputs/predicate-demo-app.html"
+SOURCE = ROOT / "examples/outputs/metagate-demo-app.html"
 OUT = ROOT / "examples/outputs/live-datahub-proof.html"
 
 

@@ -20,10 +20,11 @@ from context_gradient.sdk.reports import explain_certificate
 from context_gradient.sdk.engine import ReadinessEngine
 from context_gradient.sdk.history import ReadinessHistory
 from context_gradient.sdk.policy import load_policy
-from predicate.contracts import build_constraint_contract
+from metagate.contracts import build_constraint_contract
+from metagate.agent_registry import apply_agent_registry_gate, resolve_agent_context
 
 
-def _predicate_expression(required_evidence: list) -> str:
+def _metagate_expression(required_evidence: list) -> str:
     terms = []
     for item in required_evidence:
         if item.value == "incidents":
@@ -33,7 +34,7 @@ def _predicate_expression(required_evidence: list) -> str:
     return " && ".join(terms) if terms else "true"
 
 
-def _action_predicate(
+def _action_metagate(
     certificate: dict,
     policy,
     capability: str,
@@ -50,7 +51,7 @@ def _action_predicate(
         profile_required,
         capability,
     )
-    expression = _predicate_expression(required)
+    expression = _metagate_expression(required)
     failed_terms = []
     for gap in certificate.get("gaps", []):
         if capability in gap.get("blocks", []):
@@ -71,7 +72,7 @@ def _action_predicate(
         failed_terms.append("action.guardrail")
     return {
         "action": capability,
-        "predicate": expression,
+        "metagate": expression,
         "result": bool(allowed),
         "failed_terms": list(dict.fromkeys(term for term in failed_terms if term)),
         "reasons": [guardrail_reason] if guardrail_reason and not allowed else [],
@@ -99,7 +100,7 @@ def _record_live_run(path: str | Path, certificate: dict, decision: dict) -> Non
             "confidence": certificate.get("confidence"),
             "policy": certificate.get("metadata", {}).get("policy"),
             "evidence": decision.get("evidence", []),
-            "action_predicate": decision.get("action_predicate", {}),
+            "action_metagate": decision.get("action_metagate", {}),
         }
     )
     target.write_text(json.dumps(runs, indent=2, sort_keys=True) + "\n")
@@ -107,7 +108,7 @@ def _record_live_run(path: str | Path, certificate: dict, decision: dict) -> Non
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="predicate",
+        prog="metagate",
         description="Decide when AI is allowed to act on DataHub entities.",
     )
     parser.add_argument("urn", help="DataHub entity URN")
@@ -123,7 +124,17 @@ def main() -> None:
     )
     parser.add_argument("--history-dir", default=".context-gradient/history")
     parser.add_argument("--writeback-file", default=".context-gradient/writeback.json")
-    parser.add_argument("--request-capability", help="Evaluate one agent action against the Predicate Certificate")
+    parser.add_argument("--request-capability", help="Evaluate one agent action against the MetaGate Certificate")
+    parser.add_argument("--registry-file", help="DataHub-shaped Agent Registry and Service Catalog JSON")
+    parser.add_argument("--agent-id", help="Registered DataHub agent URN")
+    parser.add_argument("--skill-id", help="Registered DataHub skill URN")
+    parser.add_argument("--tool-id", help="Registered DataHub API/tool URN")
+    parser.add_argument("--service-id", help="Registered DataHub service URN")
+    parser.add_argument(
+        "--require-agent-registry",
+        action="store_true",
+        help="Fail closed unless the agent, skill, tool, and service chain is verified.",
+    )
     parser.add_argument(
         "--enable-writeback",
         action="store_true",
@@ -154,7 +165,7 @@ def main() -> None:
     if args.request_capability:
         decision = enforce_action_guardrails(output, args.request_capability).__dict__
         decision["decision"] = "allowed" if decision["allowed"] else "blocked"
-        decision["action_predicate"] = _action_predicate(
+        decision["action_metagate"] = _action_metagate(
             output,
             policy,
             args.request_capability,
@@ -170,6 +181,22 @@ def main() -> None:
         decision["score_trace"] = output.get("metadata", {}).get("score_trace", {})
         decision["datahub_observation"] = output.get("metadata", {}).get("datahub_observation", {})
         decision["gaps"] = output.get("gaps", [])
+        agent_context = resolve_agent_context(
+            registry_path=args.registry_file,
+            dataset_urn=args.urn,
+            agent_id=args.agent_id,
+            skill_id=args.skill_id,
+            tool_id=args.tool_id,
+            service_id=args.service_id,
+            requested=args.require_agent_registry,
+            capability=args.request_capability,
+        )
+        decision["registry_required"] = bool(args.require_agent_registry)
+        decision["agent_context"] = agent_context
+        decision["registry_evidence"] = agent_context
+        if args.require_agent_registry:
+            apply_agent_registry_gate(decision, agent_context, args.request_capability)
+            decision["failed_terms"] = decision.get("action_metagate", {}).get("failed_terms", [])
         decision["constraint_contract"] = build_constraint_contract(decision, args.request_capability)
         if args.record_live_run:
             _record_live_run(args.live_runs_file, output, decision)

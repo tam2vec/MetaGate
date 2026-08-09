@@ -4,9 +4,9 @@
   "capability": "autonomous-agent-action",
   "allowed": false,
   "reason": "Missing required evidence: assertions; Readiness score below 92.0; Confidence below 88.0",
-  "action_predicate": {
+  "action_metagate": {
     "action": "autonomous-agent-action",
-    "predicate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
+    "metagate": "ownership.present && glossary.present && lineage.present && assertions.present && incidents.open == 0 && freshness.present && usage.present && policy.present",
     "result": false,
     "failed_terms": [
       "assertions.present",

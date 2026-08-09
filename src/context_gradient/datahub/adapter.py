@@ -32,7 +32,7 @@ class DataHubClient(Protocol):
         ...
 
 
-PREDICATE_CONTRACT_PROPERTY = "predicate.ai_context_contract"
+METAGATE_CONTRACT_PROPERTY = "metagate.ai_context_contract"
 
 
 class DataHubEvidenceExtractor:
@@ -77,6 +77,7 @@ class DataHubEvidenceExtractor:
         available_kinds = set(raw.get("_available_evidence", []))
         unavailable_reasons = raw.get("_unavailable_evidence", {})
         availability_declared = "_available_evidence" in raw
+        source = raw.get("_metagate_source")
         raw_evidence = []
         for kind in EvidenceKind:
             value = raw.get(kind.value)
@@ -88,12 +89,12 @@ class DataHubEvidenceExtractor:
                         "field was not returned by the DataHub response",
                     ),
                 }
-            raw_evidence.append(self._evidence(kind, value))
+            raw_evidence.append(self._evidence(kind, value, source=source))
         raw_evidence = self._detect_contradictions(raw, raw_evidence)
         return EntityNode(
             urn=raw["urn"],
             type=raw.get("type", "dataset"),
-            properties=raw.get("properties", {}),
+                properties=raw.get("properties", {}),
             evidence=raw_evidence,
             upstreams=raw.get("upstreams", []),
             downstreams=raw.get("downstreams", []),
@@ -117,8 +118,11 @@ class DataHubEvidenceExtractor:
             for item in evidence
         ]
 
-    def _evidence(self, kind: EvidenceKind, value: Any) -> EvidenceItem:
+    def _evidence(self, kind: EvidenceKind, value: Any, source: str | None = None) -> EvidenceItem:
         details = dict(value) if isinstance(value, dict) else {"value": value}
+        if source == "local_fixture":
+            details.setdefault("source", "local_fixture")
+            details.setdefault("freshness_semantics", "reproducible_snapshot")
         observed_at = details.get("observed_at")
         if isinstance(observed_at, str):
             observed_time = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
@@ -254,7 +258,7 @@ class DataHubWriteback:
         if isinstance(self.client, GraphQLDataHubClient) and not os.environ.get("DATAHUB_CERTIFICATE_QUERY"):
             raise RuntimeError(
                 "Live write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY "
-                "before enabling the mutation. Predicate will not write without read-back verification."
+                "before enabling the mutation. MetaGate will not write without read-back verification."
             )
         try:
             self.client.write_certificate(urn, certificate)
@@ -275,8 +279,8 @@ class DataHubWriteback:
         if not reader:
             raise RuntimeError("Write-back verification is not configured. Set DATAHUB_CERTIFICATE_QUERY.")
         try:
-            attempts = max(1, int(os.environ.get("PREDICATE_WRITEBACK_READBACK_ATTEMPTS", "4")))
-            interval = max(0.0, float(os.environ.get("PREDICATE_WRITEBACK_READBACK_INTERVAL", "0.5")))
+            attempts = max(1, int(os.environ.get("METAGATE_WRITEBACK_READBACK_ATTEMPTS", "4")))
+            interval = max(0.0, float(os.environ.get("METAGATE_WRITEBACK_READBACK_INTERVAL", "0.5")))
             readback = None
             for attempt in range(attempts):
                 readback = reader(urn)
@@ -304,7 +308,7 @@ class DataHubWriteback:
                     f"DataHub read-back decision_id {returned_decision_id!r} does not match "
                     f"{expected_decision_id!r} for {urn}"
                 )
-            stored_certificate = readback.get("_predicate_certificate")
+            stored_certificate = readback.get("_metagate_certificate")
             if stored_certificate is not None and stored_certificate != certificate:
                 raise RuntimeError(f"DataHub read-back contract does not match the written contract for {urn}")
             receipt["readback_fields"] = sorted(readback.keys())
@@ -323,16 +327,16 @@ class DataHubWriteback:
 
 
 class DataHubRestWritebackClient:
-    """Write and read one Predicate contract through DataHub's REST client.
+    """Write and read one MetaGate contract through DataHub's REST client.
 
     This deliberately uses the DatasetProperties aspect rather than guessing a
     GraphQL mutation. Existing dataset properties are preserved and only the
-    Predicate custom property is upserted. The DataHub Python SDK is imported
+    MetaGate custom property is upserted. The DataHub Python SDK is imported
     lazily so fixture-only installs do not need the SDK at import time.
     """
 
     transport = "datahub-rest-sdk"
-    property_name = PREDICATE_CONTRACT_PROPERTY
+    property_name = METAGATE_CONTRACT_PROPERTY
 
     def __init__(self, gms_url: str, token: str | None = None, graph: Any | None = None):
         self.gms_url = gms_url.rstrip("/")
@@ -367,7 +371,7 @@ class DataHubRestWritebackClient:
         graph = self._get_graph()
         existing = self._properties_aspect(graph, urn)
         custom_properties = dict(getattr(existing, "customProperties", {}) or {})
-        custom_properties[PREDICATE_CONTRACT_PROPERTY] = json.dumps(
+        custom_properties[METAGATE_CONTRACT_PROPERTY] = json.dumps(
             certificate, sort_keys=True, separators=(",", ":")
         )
         if existing is None:
@@ -382,20 +386,20 @@ class DataHubRestWritebackClient:
         aspect = self._properties_aspect(graph, urn)
         if aspect is None:
             return None
-        raw = (getattr(aspect, "customProperties", {}) or {}).get(PREDICATE_CONTRACT_PROPERTY)
+        raw = (getattr(aspect, "customProperties", {}) or {}).get(METAGATE_CONTRACT_PROPERTY)
         if not raw:
             return None
         try:
             certificate = json.loads(raw)
         except (TypeError, ValueError) as error:
             raise RuntimeError(
-                f"DataHub property {PREDICATE_CONTRACT_PROPERTY} is not valid JSON for {urn}"
+                f"DataHub property {METAGATE_CONTRACT_PROPERTY} is not valid JSON for {urn}"
             ) from error
         if not isinstance(certificate, dict):
             raise RuntimeError(
-                f"DataHub property {PREDICATE_CONTRACT_PROPERTY} is not a JSON object for {urn}"
+                f"DataHub property {METAGATE_CONTRACT_PROPERTY} is not a JSON object for {urn}"
             )
-        return {"urn": urn, "_predicate_certificate": certificate, **certificate}
+        return {"urn": urn, "_metagate_certificate": certificate, **certificate}
 
     def get_entity(self, urn: str) -> Dict[str, Any]:
         raise NotImplementedError("REST write-back client is only for contract publication")
@@ -404,7 +408,7 @@ class DataHubRestWritebackClient:
         return []
 
     def create_remediation_task(self, urn: str, title: str, body: str) -> None:
-        # Remediation tasks are local Predicate records unless a deployment
+        # Remediation tasks are local MetaGate records unless a deployment
         # separately configures a task mutation. Do not invent a REST aspect.
         return None
 
@@ -586,7 +590,7 @@ class GraphQLDataHubClient:
     """
 
     SEARCH_DATASETS_QUERY = """
-    query PredicateDatasetDiscovery($query: String!, $start: Int!, $count: Int!) {
+    query MetaGateDatasetDiscovery($query: String!, $start: Int!, $count: Int!) {
       search(input: { type: DATASET, query: $query, start: $start, count: $count }) {
         searchResults { entity { urn type } }
       }
@@ -680,10 +684,10 @@ class GraphQLDataHubClient:
         response is therefore retried, while the final normalized result still
         records the signal as unavailable when the deployment never exposes it.
         """
-        attempts = max(1, int(os.environ.get("PREDICATE_CONSISTENCY_ATTEMPTS", "3")))
-        interval = max(0.0, float(os.environ.get("PREDICATE_CONSISTENCY_INTERVAL", "0.25")))
+        attempts = max(1, int(os.environ.get("METAGATE_CONSISTENCY_ATTEMPTS", "3")))
+        interval = max(0.0, float(os.environ.get("METAGATE_CONSISTENCY_INTERVAL", "0.25")))
         pending_kinds = set(os.environ.get(
-            "PREDICATE_CONSISTENCY_SIGNALS",
+            "METAGATE_CONSISTENCY_SIGNALS",
             "assertions,freshness,usage,column_lineage,incidents",
         ).split(","))
         last = None

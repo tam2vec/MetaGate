@@ -1,0 +1,15 @@
+{
+  "name": "MetaGate Preflight",
+  "action": "metagate.preflight",
+  "event": "dataset.preflight.requested",
+  "endpoint": "https://metagate.example.invalid/datahub-action",
+  "request": {
+    "entityUrn": "urn:li:dataset:(urn:li:dataPlatform:hive,example,PROD)",
+    "capability": "answer-business-questions"
+  },
+  "response": {
+    "decision": "allowed | blocked",
+    "constraint_contract": "metagate.ai-context-contract/v1",
+    "writeback": "read_only"
+  }
+}

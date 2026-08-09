@@ -1,8 +1,8 @@
 # Write-back Safety
 
-Predicate is read-only by default.
+MetaGate is read-only by default.
 
-The engine can generate a Predicate Certificate and remediation task payload,
+The engine can generate a MetaGate Certificate and remediation task payload,
 but it does not write to live DataHub unless deployment-specific mutation
 documents are explicitly configured.
 
@@ -12,7 +12,7 @@ DataHub deployments differ by version, enabled features, custom aspects, and
 permissions. A generic mutation that works in one environment may fail or write
 the wrong shape in another.
 
-Predicate therefore separates:
+MetaGate therefore separates:
 
 - evaluation: always available
 - payload generation: always available
@@ -34,7 +34,7 @@ target DataHub version and custom aspect setup.
 ## Safe demo sequence
 
 1. Run read-only evaluation.
-2. Save the JSON decision and Predicate Certificate.
+2. Save the JSON decision and MetaGate Certificate.
 3. Inspect the generated write-back payload.
 4. Configure mutation documents only in a non-production namespace.
 5. Run write-back.
@@ -43,7 +43,7 @@ target DataHub version and custom aspect setup.
 Receipt-only demo command:
 
 ```bash
-predicate \
+metagate \
   "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)" \
   --policy examples/policies/enterprise_ai.yml \
   --datahub-url "$DATAHUB_GRAPHQL_URL" \
@@ -64,10 +64,10 @@ proof of the payload contract, not proof of a live DataHub UI mutation.
 
 Use:
 
-> Predicate is read-only by default. It can generate certificate and remediation
+> MetaGate is read-only by default. It can generate certificate and remediation
 > task payloads, and live DataHub write-back is enabled only when the deployment
 > owner provides the mutation documents for their DataHub version.
 
 Avoid:
 
-> Predicate writes certificates to every DataHub instance out of the box.
+> MetaGate writes certificates to every DataHub instance out of the box.

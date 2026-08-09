@@ -3,7 +3,7 @@
 Trust is event-valid, not a one-time audit result.
 
 ```text
-10:00  Predicate Certificate issued
+10:00  MetaGate Certificate issued
        Generate executive metrics: certified
 
 10:15  Freshness SLA violated in DataHub

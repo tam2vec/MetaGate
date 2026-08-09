@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" role="img" aria-labelledby="title desc">
-  <title id="title">Predicate demo sequence</title>
+  <title id="title">MetaGate demo sequence</title>
   <desc id="desc">An AI action is blocked, explained, repaired through metadata, rescanned, and certified.</desc>
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#356ae6"/></marker>

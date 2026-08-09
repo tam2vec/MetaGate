@@ -1,7 +1,7 @@
-mutation WritePredicateContract($urn: String!, $certificate: String!) {
+mutation WriteMetaGateContract($urn: String!, $certificate: String!) {
   # Replace this body with the mutation supported by your DataHub deployment.
   # Keep this file out of production until it is tested in a non-production namespace.
-  updateDataset(input: { urn: $urn, customProperties: [{ key: "predicate.ai_context_contract", value: $certificate }] }) {
+  updateDataset(input: { urn: $urn, customProperties: [{ key: "metagate.ai_context_contract", value: $certificate }] }) {
     urn
   }
 }

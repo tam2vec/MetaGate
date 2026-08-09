@@ -13,14 +13,14 @@
 
 ## Release notes draft
 
-Title: `Predicate v0.1.0`
+Title: `MetaGate v0.1.0`
 
-Predicate v0.1.0 is the first public release of an AI-readiness
+MetaGate v0.1.0 is the first public release of an AI-readiness
 certification SDK and DataHub integration reference.
 
 Highlights:
 
-- Generates Predicate Certificates from DataHub-style metadata evidence.
+- Generates MetaGate Certificates from DataHub-style metadata evidence.
 - Certifies capabilities such as explain, summarize, query, and modify.
 - Blocks risky actions when ownership, glossary, lineage, freshness,
   assertions, incidents, usage, or policy evidence is missing or stale.
@@ -56,6 +56,6 @@ Notes:
 ## Suggested GitHub commands
 
 ```bash
-git tag -a v0.1.0 -m "Predicate v0.1.0"
+git tag -a v0.1.0 -m "MetaGate v0.1.0"
 git push origin v0.1.0
 ```

@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Predicate for DataHub",
+  "name": "MetaGate for DataHub",
   "version": "0.1.0",
-  "description": "Automatically shows Predicate allow/block decisions on local DataHub asset pages.",
+  "description": "Automatically shows MetaGate allow/block decisions on local DataHub asset pages.",
   "permissions": ["storage"],
   "options_page": "options.html",
   "action": {
-    "default_title": "Predicate settings"
+    "default_title": "MetaGate settings"
   },
   "host_permissions": [
     "http://localhost:9002/*",
@@ -20,7 +20,7 @@
         "http://localhost:9002/*",
         "http://127.0.0.1:9002/*"
       ],
-      "js": ["predicate-datahub-panel.js"],
+      "js": ["metagate-datahub-panel.js"],
       "run_at": "document_start"
     }
   ]

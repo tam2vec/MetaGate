@@ -1,12 +1,12 @@
 {
   "name": "datahub-ai-readiness",
   "version": "0.1.0",
-  "description": "Packaged prototype DataHub Skill for Predicate AI-readiness certification.",
+  "description": "Packaged prototype DataHub Skill for MetaGate AI-readiness certification.",
   "entrypoint": "context_gradient.skill:certify",
   "capabilities": [
     "datahub.graph.read",
     "ai-readiness.certify",
-    "predicate.evaluate",
-    "predicate.constraint-contract"
+    "metagate.evaluate",
+    "metagate.constraint-contract"
   ]
 }

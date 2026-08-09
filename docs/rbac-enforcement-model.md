@@ -1,6 +1,6 @@
 # RBAC Enforcement Model
 
-Predicate does not replace DataHub auth. It uses DataHub policy controls as the
+MetaGate does not replace DataHub auth. It uses DataHub policy controls as the
 authority boundary.
 
 ## Production Roles
@@ -16,7 +16,7 @@ authority boundary.
 ## Enforcement Rules
 
 1. DataHub decides whether a user can request a verdict.
-2. Predicate reads only metadata visible to the request context.
+2. MetaGate reads only metadata visible to the request context.
 3. `PROCEED` allows the requested action within the returned constraints.
 4. `CAUTION` allows only constrained or read-only behavior.
 5. `BLOCKED` prevents the requested action.
@@ -45,10 +45,10 @@ authority boundary.
 
 Use:
 
-> Predicate defines the enforcement model: DataHub policies decide who can ask,
+> MetaGate defines the enforcement model: DataHub policies decide who can ask,
 > the AI agent inherits that user's permissions, and any override of a blocked
 > decision requires a steward reason and becomes auditable.
 
 Avoid:
 
-> Predicate ships complete enterprise auth out of the box.
+> MetaGate ships complete enterprise auth out of the box.

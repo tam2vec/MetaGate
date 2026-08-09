@@ -17,7 +17,7 @@ class IndependentLabelScorerTest(unittest.TestCase):
             labels = Path(directory) / "labels.csv"
             output = Path(directory) / "report.json"
             labels.write_text(
-                "asset_urn,predicate_decision,human_decision,human_agrees,reviewer_notes\n"
+                "asset_urn,metagate_decision,human_decision,human_agrees,reviewer_notes\n"
                 "urn:one,allowed,allowed,yes,looks right\n"
                 "urn:two,blocked,allowed,no,too strict\n"
             )
@@ -46,7 +46,7 @@ class IndependentLabelScorerTest(unittest.TestCase):
             labels = Path(directory) / "labels.csv"
             output = Path(directory) / "report.json"
             labels.write_text(
-                "asset_urn,predicate_decision,human_decision,human_agrees,reviewer_notes\n"
+                "asset_urn,metagate_decision,human_decision,human_agrees,reviewer_notes\n"
                 "urn:one,blocked,borderline,yes,uncertain evidence\n"
             )
             subprocess.run(

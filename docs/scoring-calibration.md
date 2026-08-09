@@ -1,6 +1,6 @@
 # Scoring and Calibration
 
-Predicate uses deterministic policy scoring. It does not train a model, infer
+MetaGate uses deterministic policy scoring. It does not train a model, infer
 semantic truth, or claim production accuracy.
 
 ## Readiness score
@@ -75,7 +75,7 @@ team can change weights and thresholds without retraining anything.
 
 Production calibration should use independently labeled enterprise cases. Those
 labels should come from data stewards, governance teams, or incident reviews,
-not from the Predicate rules themselves.
+not from the MetaGate rules themselves.
 
 Recommended production calibration set:
 

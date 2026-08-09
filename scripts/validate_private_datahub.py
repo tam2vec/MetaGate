@@ -1,4 +1,4 @@
-"""Run a read-only Predicate validation against a private DataHub deployment."""
+"""Run a read-only MetaGate validation against a private DataHub deployment."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ DEFAULT_URNS = [
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Read-only Predicate validation for a private DataHub deployment."
+        description="Read-only MetaGate validation for a private DataHub deployment."
     )
     parser.add_argument("--datahub-url", default=os.environ.get("DATAHUB_GRAPHQL_URL"), required=not os.environ.get("DATAHUB_GRAPHQL_URL"))
     parser.add_argument("--policy", default="examples/policies/finance-production.yml")
@@ -68,7 +68,7 @@ def main() -> None:
             results.append({"asset": urn, "status": "error", "error": str(error)})
 
     report = {
-        "product": "Predicate",
+        "product": "MetaGate",
         "mode": "private-datahub-read-only",
         "evaluated_at": datetime.now(timezone.utc).isoformat(),
         "datahub_url_configured": True,

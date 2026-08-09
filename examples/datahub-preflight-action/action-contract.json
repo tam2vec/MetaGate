@@ -1,5 +1,5 @@
 {
-  "name": "Predicate Preflight",
+  "name": "MetaGate Preflight",
   "trigger": "Request AI Readiness",
   "request": {
     "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)",

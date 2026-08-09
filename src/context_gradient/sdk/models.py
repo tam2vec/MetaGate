@@ -88,6 +88,8 @@ class CapabilityCertification:
     score: float
     confidence: float
     reasons: List[str] = field(default_factory=list)
+    required_evidence: List[str] = field(default_factory=list)
+    evidence_status: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

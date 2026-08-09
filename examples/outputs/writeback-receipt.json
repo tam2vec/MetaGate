@@ -9,7 +9,7 @@
     "policy": "enterprise-ai"
   },
   "would_write": {
-    "aspect": "predicateCertificate",
+    "aspect": "metagateCertificate",
     "decision": "blocked",
     "readiness_score": 91.22,
     "confidence": 86.25,
@@ -21,7 +21,7 @@
     "remediation_task": {
       "title": "Add assertion evidence before autonomous AI action",
       "severity": "high",
-      "body": "Predicate blocked autonomous-agent-action because assertion evidence is missing and the asset is below enterprise policy thresholds."
+      "body": "MetaGate blocked autonomous-agent-action because assertion evidence is missing and the asset is below enterprise policy thresholds."
     }
   },
   "enable_live_writeback_only_when": [

@@ -4,6 +4,11 @@ The hosted page calls the MetaGate API by default. The API has two explicit
 modes: `fixture` for a safe public fallback, and `live` for a real DataHub
 deployment. It never presents fixture data as live DataHub evidence.
 
+The public fixture includes the positive control, blocked proof assets, and
+showcase records for NYC Taxi, Healthcare, and Fiction Retail. Those showcase
+records are labelled fixture representations; they do not claim that Render
+can reach the local DataHub catalog.
+
 ## Architecture
 
 ```text

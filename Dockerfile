@@ -12,7 +12,7 @@ RUN python -c "from metagate.review import main; from context_gradient.datahub.a
 
 ENV METAGATE_DEMO_MODE=fixture
 ENV DATAHUB_GRAPHQL_URL=""
-ENV METAGATE_CATALOG_FIRST=1
+ENV METAGATE_CATALOG_FIRST=0
 ENV METAGATE_MAX_ASSETS=0
 ENV METAGATE_BUILD_ID=metagate-catalog-first-v1
 EXPOSE 8765

@@ -265,15 +265,22 @@ class ReadinessEngine:
         if state == "unavailable":
             return f"MetaGate could not read {name} from this DataHub response, so it is unknown rather than absent."
         if item.kind == EvidenceKind.ASSERTIONS:
-            count = details.get("count", 0)
+            latest_results = details.get("latest_results") or details.get("results") or []
             passing = details.get("passing", 0)
             failing = details.get("failing", 0)
             unknown = details.get("unknown", 0)
             missing = len(details.get("missing_results", []))
+            count = details.get("count")
+            if count is None:
+                count = len(latest_results) or sum(
+                    int(value or 0) for value in (passing, failing, unknown)
+                )
             if not count:
                 return "No DataHub assertions were returned for this asset."
             if failing or unknown or missing:
                 return f"DataHub returned {count} assertion(s): {passing} passed, {failing} failed, {unknown} unknown, and {missing} without a latest result."
+            if not latest_results:
+                return f"DataHub returned {count} assertion definition(s), but no latest run result was returned."
             return f"DataHub returned {count} assertion(s), and every latest run passed."
         if item.kind == EvidenceKind.FRESHNESS:
             if state == "missing":
@@ -282,9 +289,16 @@ class ReadinessEngine:
         if item.kind == EvidenceKind.LINEAGE:
             return f"DataHub returned {len(details.get('upstreams', []))} upstream and {len(details.get('downstreams', []))} downstream link(s)."
         if item.kind == EvidenceKind.COLUMN_LINEAGE:
-            return f"Column lineage covers {details.get('mapped_columns', 0)} of {details.get('total_columns', 0)} schema field(s); {len(details.get('missing_columns', []))} remain unmapped."
+            mapped = details.get("mapped_columns", 0)
+            total = details.get("total_columns")
+            missing = len(details.get("missing_columns", []))
+            if total in (None, 0) and mapped:
+                return f"Column lineage includes {mapped} mapped column(s); DataHub did not return a total schema-field count."
+            return f"Column lineage covers {mapped} of {total or 0} schema field(s); {missing} remain unmapped."
         if item.kind == EvidenceKind.USAGE:
             buckets = details.get("buckets", [])
+            if not buckets and details.get("weekly_users") is not None:
+                return f"Usage evidence records {details['weekly_users']} weekly user(s) for this asset."
             return f"DataHub returned {len(buckets)} usage bucket(s), so downstream demand is {'observed' if buckets else 'not observed'}."
         if state == "missing":
             return f"DataHub responded successfully, but no {name} value was attached to the asset."

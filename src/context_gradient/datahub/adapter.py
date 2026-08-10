@@ -210,10 +210,19 @@ class DataHubEvidenceExtractor:
             present = False
         if present and "confidence" not in details:
             details["quality_factor"] = self._infer_quality(kind, details)
+        complete = not details.get("incomplete", False)
+        # Assertion counts alone are not proof of current quality. A policy
+        # decision must have at least one readable latest result for the
+        # assertion set; aggregate passing/failing counts without those
+        # results are incomplete evidence.
+        if kind == EvidenceKind.ASSERTIONS and present:
+            latest_results = details.get("latest_results") or details.get("results") or []
+            if not latest_results:
+                complete = False
         return EvidenceItem(
             kind=kind,
             present=present,
-            complete=not details.get("incomplete", False),
+            complete=complete,
             stale=details.get("stale", False),
             contradictory=details.get("contradictory", False),
             confidence=float(details.get("confidence", details.get("quality_factor", 0.0) if present else 0.0)),

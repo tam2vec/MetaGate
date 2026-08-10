@@ -34,3 +34,33 @@ class AccuracyTest(unittest.TestCase):
         ]))
         certificate = ReadinessEngine(policy).certify(bundle)
         self.assertTrue(certificate.gaps)
+
+    def test_assertion_counts_without_latest_results_are_incomplete(self):
+        extractor = DataHubEvidenceExtractor(type("Client", (), {})())
+        item = extractor._evidence(
+            EvidenceKind.ASSERTIONS,
+            {"passing": 6, "failing": 0},
+        )
+        self.assertTrue(item.present)
+        self.assertFalse(item.complete)
+
+    def test_evidence_explanations_match_fixture_shapes(self):
+        extractor = DataHubEvidenceExtractor(type("Client", (), {})())
+        engine = ReadinessEngine(PolicyProfile("test", {}, {}, []))
+
+        assertion = extractor._evidence(
+            EvidenceKind.ASSERTIONS,
+            {"passing": 6, "failing": 0, "latest_results": [{"status": "SUCCESS"}] * 6},
+        )
+        column_lineage = extractor._evidence(
+            EvidenceKind.COLUMN_LINEAGE,
+            {"mapped_columns": 12, "complete": True},
+        )
+        usage = extractor._evidence(
+            EvidenceKind.USAGE,
+            {"weekly_users": 44},
+        )
+
+        self.assertIn("6 assertion(s)", engine._evidence_explanation(assertion, "present"))
+        self.assertIn("12 mapped column(s)", engine._evidence_explanation(column_lineage, "present"))
+        self.assertIn("44 weekly user(s)", engine._evidence_explanation(usage, "present"))

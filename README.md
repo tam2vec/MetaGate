@@ -50,7 +50,7 @@ under the same policy that blocks an incomplete one.
 
 | Surface | What it proves |
 | --- | --- |
-| [MetaGate Review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://metagate-ixz0.onrender.com) | Evidence-first decision, repair plan, audit trail, and policy views |
+| [MetaGate Review](https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com) | Evidence-first decision, repair plan, audit trail, and policy views |
 | [Chrome extension](examples/browser-extension/README.md) | Automatic decision panel on the DataHub asset page currently open in Chrome |
 | [MetaGate MCP](examples/mcp/README.md) | Agents can call the same governed evaluation through MCP |
 | [DataHub preflight contract](examples/datahub-preflight-action/README.md) | The intended DataHub action and Context Contract shape |

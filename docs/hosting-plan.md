@@ -9,7 +9,7 @@ review server.
 | --- | --- | --- |
 | Static visual proof | `examples/outputs/metagate-demo-app.html` | Works offline and is safe for screenshots |
 | Public static demo | `public-demo/index.html` | One-file deploy target for static hosting |
-| Public API-backed demo | `https://leafy-maamoul-4acf4b.netlify.app/?api=https://metagate-ixz0.onrender.com` | Hosted page calling Render API; source is labelled fixture or live DataHub |
+| Public API-backed demo | `https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com` | Hosted page calling Render API; source is labelled fixture or live DataHub |
 | Live local review app | `metagate-review` | Browser loads decisions from `/api/runs` |
 | Private review API container | `Dockerfile` | Runs the same review API behind a private network |
 | DataHub embed prototype | `examples/datahub-embed/` | Shows how the panel mounts beside a DataHub asset |

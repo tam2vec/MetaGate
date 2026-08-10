@@ -31,13 +31,13 @@ provided.
 6. Copy the deployed service URL, for example:
 
 ```text
-https://metagate-ixz0.onrender.com
+https://predicate-ixz0.onrender.com
 ```
 
 Test the API:
 
 ```bash
-curl https://metagate-ixz0.onrender.com/api/runs
+curl https://predicate-ixz0.onrender.com/api/runs
 ```
 
 You should see JSON with `runs`.
@@ -56,8 +56,8 @@ DATAHUB_TOKEN=<read-only-token>
 the browser URL. Redeploy Render, then verify the source before presenting it:
 
 ```bash
-curl -s https://metagate-ixz0.onrender.com/api/status | python3 -m json.tool
-curl -s https://metagate-ixz0.onrender.com/api/runs | python3 -m json.tool
+curl -s https://predicate-ixz0.onrender.com/api/status | python3 -m json.tool
+curl -s https://predicate-ixz0.onrender.com/api/runs | python3 -m json.tool
 ```
 
 The status must say `"mode": "live-datahub-api"`, `"live_datahub": true`,
@@ -74,7 +74,7 @@ There are two safe options.
 Open the public page with:
 
 ```text
-https://leafy-maamoul-4acf4b.netlify.app/?api=https://metagate-ixz0.onrender.com
+https://leafy-maamoul-4acf4b.netlify.app/?api=https://predicate-ixz0.onrender.com
 ```
 
 The current page already uses this Render API by default; the query parameter
@@ -85,7 +85,7 @@ is useful when testing another API.
 In `public-demo/index.html`, set:
 
 ```js
-const PUBLIC_API_BASE = "https://metagate-ixz0.onrender.com";
+const PUBLIC_API_BASE = "https://predicate-ixz0.onrender.com";
 ```
 
 Then redeploy Netlify.

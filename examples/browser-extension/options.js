@@ -3,7 +3,12 @@ const input = document.getElementById("apiBase");
 const status = document.getElementById("status");
 
 chrome.storage.sync.get({ apiBase: DEFAULT_API_BASE }, (settings) => {
-  input.value = settings.apiBase;
+  const saved = String(settings.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
+  const normalized = /^https?:\/\/(localhost|127\.0\.0\.1):8766$/i.test(saved)
+    ? DEFAULT_API_BASE
+    : saved;
+  input.value = normalized;
+  if (normalized !== saved) chrome.storage.sync.set({ apiBase: normalized });
 });
 
 document.getElementById("save").addEventListener("click", () => {

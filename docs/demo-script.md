@@ -19,7 +19,9 @@ Have these ready:
 3. Chrome with the unpacked extension loaded from `examples/browser-extension`.
 4. A DataHub page for `fct_users_created`.
 5. The bundled fixture demo on port `8766` for the positive control.
-6. A terminal only for the final proof backup.
+6. The saved proof at `examples/outputs/official-datahub-mcp-proof.md` for the
+   official DataHub MCP beat.
+7. A terminal only for the final proof backup.
 
 Before recording, run:
 
@@ -32,8 +34,9 @@ The live review scans the connected catalog (currently 74 datasets). Keep the
 six-asset fixture available only as a clearly labelled rehearsal fallback.
 
 Never show tokens, private URLs, or customer data. Do not claim that the
-Chrome extension is a native DataHub plugin, that the official DataHub MCP ran,
-or that a public deployment is connected unless that is separately verified.
+Chrome extension is a native DataHub plugin or that a public deployment is
+connected. If you show the official DataHub MCP, show the saved local proof or
+the live verification trace and label it as local, read-only verification.
 
 ## 0:00–0:18 — The hook
 
@@ -176,18 +179,21 @@ Say:
 Use the precise label `verified-local-rest` if showing that receipt. Do not
 imply that every deployment supports the same mutation.
 
-## 2:58–3:15 — Explain the scope and boundaries
+## 2:58–3:15 — Show the official DataHub path and boundaries
 
-Screen: Review status/source labels.
+Screen: briefly show `examples/outputs/official-datahub-mcp-proof.md`, then the
+JSON trace if time allows. Keep the `VERIFIED locally, read-only` label visible.
 
 Say:
 
 > This live local run reads the connected DataHub catalog and currently scans 74
 > datasets. In this recording, the live high-risk result is blocked because the
 > required evidence is not available from the current GraphQL response. The
-> positive contrast is explicitly labelled fixture evidence. Native deployment plugins, a public live DataHub, the
-> separately configured official MCP server, independent reviewers, and an
-> upstream merge remain external dependencies.
+> positive contrast is explicitly labelled fixture evidence. Separately, this
+> saved trace shows MetaGate calling DataHub's official MCP server, retrieving
+> `SampleHiveDataset`, and recording three dataset queries. A public MCP
+> deployment, native deployment plugins, independent reviewers, and an upstream
+> merge remain external dependencies.
 
 This short honesty moment increases trust; keep it to one sentence per label.
 
@@ -216,7 +222,7 @@ If the live DataHub or review API is unavailable, say:
 Run the fixture on another port:
 
 ```bash
-PYTHONPATH=src python3 scripts/serve_review.py \
+METAGATE_CATALOG_FIRST=0 PYTHONPATH=src python3 scripts/serve_review.py \
   --host 127.0.0.1 \
   --port 8766 \
   --policy examples/policies/enterprise_ai.yml \

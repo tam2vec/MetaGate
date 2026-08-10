@@ -6,7 +6,14 @@
   async function apiBase() {
     if (!globalThis.chrome?.storage?.sync) return DEFAULT_API_BASE;
     const settings = await new Promise((resolve) => chrome.storage.sync.get({ apiBase: DEFAULT_API_BASE }, resolve));
-    return String(settings.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
+    const configured = String(settings.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
+    // 8766 is the bundled positive-control fixture. Never let the DataHub
+    // extension silently send a real DataHub asset to that fixture server.
+    if (/^https?:\/\/(localhost|127\.0\.0\.1):8766$/i.test(configured)) {
+      chrome.storage.sync.set({ apiBase: DEFAULT_API_BASE });
+      return DEFAULT_API_BASE;
+    }
+    return configured;
   }
 
   function extractUrn() {
@@ -177,6 +184,19 @@
         line-height: 1.4;
         color: #617086;
       }
+      #${PANEL_ID} .metagate-retry {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        margin-top: 10px;
+        padding: 6px 10px;
+        border: 1px solid #cbdaf4;
+        border-radius: 7px;
+        background: #fff;
+        color: #315fd8;
+        cursor: pointer;
+        font-weight: 800;
+      }
       #${PANEL_ID} .metagate-decision {
         border-radius: 8px;
         padding: 13px;
@@ -334,12 +354,17 @@
       <ol class="metagate-compact-repair">${repairPreview.map((item) => `<li>${item}</li>`).join("")}</ol>
       ${moreRepairs}
       <h3 class="metagate-section-label metagate-evidence-heading">Evidence</h3>
-      <a class="metagate-link" href="${base}/review" target="_blank" rel="noreferrer">Open full evidence &amp; repair plan</a>
+    <a class="metagate-link" href="${base}/review?urn=${encodeURIComponent(run.urn || run.entity_urn || "")}" target="_blank" rel="noreferrer">Open full evidence &amp; repair plan</a>
     `;
   }
 
   function renderError(panel, message) {
     const status = panel.querySelector(".metagate-status");
+    if (/extension context invalidated/i.test(message)) {
+      status.innerHTML = `Chrome reloaded the MetaGate extension while this panel was open. Refresh this DataHub page to reconnect.<br><button class="metagate-retry" type="button">Refresh DataHub page</button>`;
+      status.querySelector(".metagate-retry").addEventListener("click", () => window.location.reload());
+      return;
+    }
     status.textContent = message;
   }
 

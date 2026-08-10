@@ -62,8 +62,8 @@ installed official server. This is optional and has no network side effect
 until you configure the command:
 
 ```bash
-export DATAHUB_GRAPHQL_URL="http://localhost:8080/api/graphql"
-export DATAHUB_TOKEN="<read-only-token-if-required>"
+export DATAHUB_GMS_URL="http://localhost:8080"
+# export DATAHUB_GMS_TOKEN="<read-only-token-if-required>"
 export METAGATE_DATAHUB_MCP_COMMAND='uvx mcp-server-datahub@latest --transport stdio'
 PYTHONPATH=src python3 scripts/probe_datahub_mcp.py \
   --urn "urn:li:dataset:(urn:li:dataPlatform:hive,fct_users_created,PROD)"
@@ -91,3 +91,12 @@ or server needs repair. DataHub's current official server and tool list are docu
 [official repository](https://github.com/acryldata/mcp-server-datahub). The
 official server is a Python package launched with `uvx`; there is no npm
 package named `@acryldata/mcp-server-datahub`.
+
+### Saved local proof
+
+MetaGate has been run successfully against the local DataHub with the official
+server. The short [proof summary](../outputs/official-datahub-mcp-proof.md) and
+[full JSON output](../outputs/official-datahub-mcp-proof.json) show the actual
+server version, tool list, entity lookup, and query lookup used for the check.
+This is local, read-only verification for the hackathon submission; it does not
+claim a public deployment, and unavailable fields are left unavailable.

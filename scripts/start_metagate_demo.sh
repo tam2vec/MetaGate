@@ -6,6 +6,7 @@ PROJECT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 cd "$PROJECT_DIR"
 
 export METAGATE_DEMO_MODE=fixture
+export METAGATE_CATALOG_FIRST=0
 export METAGATE_PORT="${METAGATE_PORT:-8765}"
 
 printf '%s\n' 'MetaGate six-asset demo is starting.'

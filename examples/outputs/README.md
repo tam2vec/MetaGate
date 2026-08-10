@@ -22,6 +22,9 @@ validation.
 - `readiness-diff.json`: before/after capability change after metadata repair.
 - `policy-simulation.json`: comparison of current and proposed policy outcomes.
 - `writeback-payload.json`: representative DataHub write-back body.
+- `official-datahub-mcp-proof.md`: judge-friendly summary of the verified local
+  official DataHub MCP run.
+- `official-datahub-mcp-proof.json`: machine-readable output from that run.
 
 Run the live validation documented in `docs/live-datahub-validation.md` before
 presenting these as deployment evidence.

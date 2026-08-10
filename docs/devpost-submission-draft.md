@@ -37,6 +37,8 @@ metadata graph.
 - Readiness diffs that show how metadata repairs change certified capabilities.
 - Context contracts that expose machine-readable permissions to agents.
 - DataHub-style graph traversal through fixture, adapter, or live GraphQL mode.
+- Verified local read-only integration with DataHub's official MCP Server,
+  including a saved entity and query lookup trace.
 - Browser extension prototype that auto-runs MetaGate when a local DataHub asset
   page opens.
 - Dockerized review API path for private demos.
@@ -63,6 +65,11 @@ The MVP includes a Python SDK, CLI, local DataHub-shaped fixture client, live
 GraphQL client, local API-backed review app, browser extension prototype,
 Dockerfile, DataHub Skill/plugin reference, DataHub embed prototype, benchmark,
 examples, and architecture documentation.
+
+The repository also includes a saved, locally verified run of the official
+DataHub MCP Server against `SampleHiveDataset`. It demonstrates the required
+DataHub integration path while clearly separating local verification from public
+deployment claims.
 
 ## Originality
 

@@ -361,6 +361,12 @@
       box-shadow: 0 14px 30px rgba(21, 35, 58, .18);
     }
     .asset-picker-menu[hidden] { display: none; }
+    /* Detail views never show the asset menu. Asset switching belongs to the
+       explicit Selected asset control, not to Evidence or Repair plan links. */
+    body[data-review-target="remediation-plan"] #assetPickerMenu,
+    body[data-review-target="evidence-section"] #assetPickerMenu {
+      display: none !important;
+    }
     .asset-picker-catalog-label {
       display: flex;
       align-items: center;
@@ -669,8 +675,11 @@
       font: inherit;
       font-size: 12px;
     }
+    .topbar > div:first-child > #refreshData {
+      margin-top: 16px;
+    }
     .asset-lookup {
-      margin-top: 12px;
+      margin-top: 20px;
       max-width: 760px;
     }
     .asset-lookup label { margin-bottom: 5px; }
@@ -3025,6 +3034,11 @@
 
     const initialApiParams = new URLSearchParams(window.location.search);
     const initialApiBase = (initialApiParams.get("api") || PUBLIC_API_BASE || "").replace(/\/$/, "");
+    // The extension passes the exact DataHub URN when opening the full review.
+    // Keep that identity through the first catalog response instead of
+    // defaulting to the first saved check (often Revenue Daily).
+    const requestedReviewUrn = String(initialApiParams.get("urn") || "").trim();
+    let requestedReviewEvaluationStarted = false;
     // A configured API starts empty until its first response arrives. This
     // prevents a stale recorded decision from appearing as live evidence.
     let runs = (initialApiBase || window.location.protocol !== "file:") ? [] : recordedRuns;
@@ -3115,15 +3129,31 @@
       if (targetId === "technical-proof") loadIntegrationProof(runs[selected]);
     }
 
-    document.querySelectorAll(".nav-item[data-target]").forEach((item) => {
-      item.addEventListener("click", () => setReviewView(item.dataset.target));
-    });
+    // Handle navigation during capture so the asset picker is closed before
+    // any other click path can reopen or repaint it.
+    document.addEventListener("click", (event) => {
+      const item = event.target && event.target.closest
+        ? event.target.closest(".nav-item[data-target]")
+        : null;
+      if (!item) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeAssetPicker();
+      setReviewView(item.dataset.target);
+    }, true);
     let selected = 0;
     let refreshPollTimer = null;
     let reconnectTimer = null;
     let reconnectAttempt = 0;
     let embeddedView = "summary";
     let activeApiBase = "";
+    // Keep the live catalog scan authoritative, but remove the known unstable
+    // Revenue Daily control from the presentation picker. The deterministic
+    // fixture still exposes Revenue Daily as the explicit positive control.
+    let liveCatalogMode = false;
+    const LIVE_PRESENTATION_EXCLUDED_URNS = new Set([
+      "urn:li:dataset:(urn:li:dataPlatform:snowflake,analytics.revenue_daily,PROD)"
+    ]);
     let assetScope = "configured review scope";
     let currentScopeCount = 0;
     let scoreMetricsAvailable = !(initialApiBase || window.location.protocol !== "file:");
@@ -3132,6 +3162,18 @@
     let evaluationController = null;
     let assetPickerOpen = false;
     const sidebarGroupOpenState = new Map();
+
+    function isPresentationExcluded(run) {
+      return liveCatalogMode
+        && !requestedReviewUrn
+        && LIVE_PRESENTATION_EXCLUDED_URNS.has(String(run && run.urn || ""));
+    }
+
+    function normalizeSelectedAsset() {
+      if (runs[selected] && !isPresentationExcluded(runs[selected])) return;
+      const firstVisible = runs.findIndex((run) => !isPresentationExcluded(run));
+      selected = firstVisible >= 0 ? firstVisible : 0;
+    }
     const capabilityThresholds = {
       "answer-business-questions": { score: 78, confidence: 75 },
       "generate-executive-metrics": { score: 84, confidence: 80 },
@@ -3602,6 +3644,50 @@
         .trim();
     }
 
+    const opaqueCollectionLabels = new Map();
+    const opaqueAssetLabels = new Map();
+
+    function isOpaqueIdentifier(value) {
+      const compact = String(value || "").replace(/[-_]+/g, "");
+      return compact.length >= 6 && /^[a-f0-9]+$/i.test(compact);
+    }
+
+    function platformDisplayName(run) {
+      const platform = assetPlatformFor(run).toLowerCase();
+      const known = {
+        dbt: "dbt",
+        hdfs: "HDFS",
+        hive: "Hive",
+        kafka: "Kafka",
+        looker: "Looker",
+        powerbi: "Power BI",
+        postgres: "Postgres",
+        s3: "S3",
+        snowflake: "Snowflake",
+        tableau: "Tableau"
+      };
+      return known[platform] || humanizeAssetPart(platform) || "DataHub";
+    }
+
+    function opaqueLabel(map, run, value, noun) {
+      const platform = platformDisplayName(run);
+      const platformKey = assetPlatformFor(run).toLowerCase();
+      const key = `${platformKey}:${String(value).toLowerCase()}`;
+      if (!map.has(key)) {
+        const ordinal = Array.from(map.keys()).filter((item) => item.startsWith(`${platformKey}:`)).length + 1;
+        map.set(key, `${platform} ${noun} ${ordinal}`);
+      }
+      return map.get(key);
+    }
+
+    function friendlyOpaqueCollectionLabel(run, value) {
+      return opaqueLabel(opaqueCollectionLabels, run, value, "collection");
+    }
+
+    function friendlyOpaqueAssetLabel(run, value) {
+      return opaqueLabel(opaqueAssetLabels, run, value, "dataset");
+    }
+
     function assetGroupFor(run) {
       const name = datasetNameFor(run);
       const lower = name.toLowerCase();
@@ -3633,7 +3719,7 @@
       const root = parts.find((part) => !ignored.has(part.toLowerCase())) || assetPlatformFor(run);
       return {
         key: `catalog::${String(root).toLowerCase()}`,
-        label: humanizeAssetPart(root),
+        label: isOpaqueIdentifier(root) ? friendlyOpaqueCollectionLabel(run, root) : humanizeAssetPart(root),
         namespaceParts: [],
         separator
       };
@@ -3653,6 +3739,7 @@
     function groupedAssets() {
       const groups = new Map();
       runs.forEach((run, index) => {
+        if (isPresentationExcluded(run)) return;
         const group = assetGroupFor(run);
         if (!groups.has(group.key)) groups.set(group.key, { ...group, items: [] });
         groups.get(group.key).items.push({ run, index });
@@ -3668,7 +3755,8 @@
         const suffix = parts.slice(group.namespaceParts.length).join(separator);
         return suffix || name;
       }
-      return humanizeAssetPart(parts[parts.length - 1] || name);
+      const leaf = parts[parts.length - 1] || name;
+      return isOpaqueIdentifier(leaf) ? friendlyOpaqueAssetLabel(run, leaf) : humanizeAssetPart(leaf);
     }
 
     function assetContextLabel(run, group) {
@@ -3684,7 +3772,8 @@
     function friendlyAssetLabel(run) {
       const asset = String(run && run.display_name || datasetNameFor(run)).trim();
       const pieces = asset.split(/[./]/).filter(Boolean);
-      return humanizeAssetPart(pieces[pieces.length - 1] || asset || "Asset");
+      const leaf = pieces[pieces.length - 1] || asset || "Asset";
+      return isOpaqueIdentifier(leaf) ? friendlyOpaqueAssetLabel(run, leaf) : humanizeAssetPart(leaf);
     }
 
     function displayAssetLabel(run) {
@@ -3744,7 +3833,11 @@
       ];
     }
 
-    function renderAssetControls() {
+    function renderAssetControls(options = {}) {
+      // Rebuilding the catalog is not permission to reopen the picker. The
+      // only caller allowed to preserve its open state is the explicit
+      // selected-asset toggle click.
+      if (!options.preservePicker) closeAssetPicker();
       assetList.innerHTML = "";
       assetSelect.innerHTML = "";
       const allGroups = groupedAssets();
@@ -3846,6 +3939,7 @@
               selected = index;
               closeAssetPicker();
               render();
+              scrollMainToTop();
               loadCapabilityDecision(capabilitySelect.value);
             });
             items.appendChild(button);
@@ -3919,6 +4013,7 @@
             button.addEventListener("click", () => {
               selected = index;
               render();
+              scrollMainToTop();
               loadCapabilityDecision(capabilitySelect.value);
             });
             items.appendChild(button);
@@ -4844,6 +4939,11 @@ Status: current and verified`,
     }
 
     function render() {
+      // The picker is an explicit control, not part of the page's render
+      // state. Any navigation, refresh, or decision update must leave it
+      // closed; only clicking the selected-asset toggle may open it.
+      closeAssetPicker();
+      normalizeSelectedAsset();
       const run = runs[selected];
       renderPrimaryEvidence(run);
       renderScoreboard();
@@ -5018,6 +5118,13 @@ Status: current and verified`,
       const target = document.getElementById("currentCheck") || document.getElementById("primaryEvidenceSubtitle");
       if (!target) return;
       window.requestAnimationFrame(() => target.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+
+    function scrollMainToTop() {
+      // The left catalog has its own scroll boundary. Move only the document
+      // that contains the main results so choosing an asset never moves the
+      // user's place in the catalog.
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     }
 
     function resourceUrnParts(urn) {
@@ -5320,6 +5427,7 @@ Status: current and verified`,
         const statusResponse = await fetch(`${apiBase}/api/status`, { cache: "no-store" });
         const status = statusResponse.ok ? await statusResponse.json() : null;
         const liveMode = status && status.mode === "live-datahub-api";
+        liveCatalogMode = Boolean(liveMode);
         // A refresh starts the background scan. A normal poll only reads the
         // latest saved results, so the page never waits for the whole catalog.
         const response = await fetch(forceRefresh ? refreshEndpoint : endpoint, { cache: "no-store" });
@@ -5338,10 +5446,13 @@ Status: current and verified`,
         clearLiveReconnect();
         if (Array.isArray(payload.runs) && payload.runs.length) {
           scoreMetricsAvailable = true;
-          const selectedUrn = runs[selected] && runs[selected].urn;
+          const selectedUrn = runs.length
+            ? (runs[selected] && runs[selected].urn)
+            : requestedReviewUrn;
           runs = payload.runs;
           const selectedIndex = selectedUrn ? runs.findIndex((run) => run.urn === selectedUrn) : -1;
           selected = selectedIndex >= 0 ? selectedIndex : 0;
+          normalizeSelectedAsset();
           document.getElementById("environmentTitle").textContent = liveMode ? "Connected" : "Sample data";
           const responseScopeCount = Number(payload.current_scope_count || payload.asset_count || payload.runs.length);
           currentScopeCount = responseScopeCount;
@@ -5392,6 +5503,11 @@ Status: current and verified`,
             ? `${errors.length} check${errors.length === 1 ? "" : "s"} failed. See DataHub status.${discoveryNote}${scopeWarning}`
             : `${liveMode ? "Live check complete" : "Sample check complete"} at ${new Date().toLocaleTimeString()}. ${visibleCount} visible result${visibleCount === 1 ? "" : "s"}.${savedNote}${scopeWarning}`;
           document.getElementById("actionResult").textContent = "Ready. Choose an action.";
+          if (requestedReviewUrn && selectedIndex < 0 && !requestedReviewEvaluationStarted && !refresh.running) {
+            requestedReviewEvaluationStarted = true;
+            urnInput.value = requestedReviewUrn;
+            evaluateNewAsset({ scrollToResult: false });
+          }
         } else if (refresh.running) {
           const contextStatus = document.getElementById("decisionContextStatus");
           if (contextStatus) contextStatus.textContent = "Refreshing connected catalog…";
@@ -5456,7 +5572,7 @@ Status: current and verified`,
     assetPickerToggle.addEventListener("click", (event) => {
       event.stopPropagation();
       assetPickerOpen = !assetPickerOpen;
-      renderAssetControls();
+      renderAssetControls({ preservePicker: true });
     });
     document.addEventListener("click", (event) => {
       if (assetPickerOpen && assetPicker && !assetPicker.contains(event.target)) {
@@ -5464,6 +5580,11 @@ Status: current and verified`,
         renderAssetControls();
       }
     });
+    document.addEventListener("pointerdown", (event) => {
+      if (assetPickerOpen && assetPicker && !assetPicker.contains(event.target)) {
+        closeAssetPicker();
+      }
+    }, true);
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && assetPickerOpen) {
         closeAssetPicker();

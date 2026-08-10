@@ -1,0 +1,223 @@
+{
+  "integration": "DataHub official MCP server",
+  "read_only": true,
+  "honesty_note": "Verified against a local DataHub and local official MCP server; this does not claim a public deployment.",
+  "checked_urn": "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+  "entity_call": {
+    "argument_shape": [
+      "urns"
+    ],
+    "content_blocks": 1,
+    "entity_found": true,
+    "evidence": {
+      "assertions": {
+        "count": 0,
+        "latest_results": [],
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable"
+      },
+      "column_lineage": {
+        "fields": [
+          "field_foo",
+          "field_bar"
+        ],
+        "mapping_count": 0,
+        "missing_columns": [
+          "field_bar",
+          "field_foo"
+        ],
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "present"
+      },
+      "description": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable"
+      },
+      "domain": {
+        "domains": [],
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable"
+      },
+      "freshness": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable",
+        "timestamp": null
+      },
+      "glossary": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable",
+        "terms": []
+      },
+      "incidents": {
+        "items": [],
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "open": 0,
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable"
+      },
+      "lineage": {
+        "downstreams": [],
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable",
+        "upstreams": []
+      },
+      "ownership": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "owners": [
+          "urn:li:corpuser:datahub",
+          "urn:li:corpuser:jdoe"
+        ],
+        "source": "DataHub official MCP get_entities",
+        "status": "present"
+      },
+      "policy": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable"
+      },
+      "tags": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "absent",
+        "tags": []
+      },
+      "usage": {
+        "observed_at": "2026-08-10T02:29:47.721572+00:00",
+        "source": "DataHub official MCP get_entities",
+        "status": "unavailable",
+        "value": null
+      }
+    },
+    "facts": {
+      "assertions": {
+        "count": 0,
+        "latest_results": []
+      },
+      "column_lineage": {
+        "fields": [
+          "field_foo",
+          "field_bar"
+        ],
+        "mapping_count": 0,
+        "missing_columns": [
+          "field_bar",
+          "field_foo"
+        ]
+      },
+      "description": null,
+      "domain": {
+        "domains": []
+      },
+      "freshness": {
+        "timestamp": null
+      },
+      "glossary": {
+        "terms": []
+      },
+      "incidents": {
+        "items": [],
+        "open": 0
+      },
+      "lineage": {
+        "downstreams": [],
+        "upstreams": []
+      },
+      "ownership": {
+        "owners": [
+          "urn:li:corpuser:datahub",
+          "urn:li:corpuser:jdoe"
+        ]
+      },
+      "policy": {},
+      "tags": {
+        "tags": []
+      },
+      "type": "dataset",
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:hive,SampleHiveDataset,PROD)",
+      "usage": {
+        "value": null
+      }
+    },
+    "notes": [],
+    "returned_content": true,
+    "returned_fields": [
+      "health",
+      "name",
+      "ownership",
+      "platform",
+      "properties",
+      "relatedDocuments",
+      "schemaMetadata",
+      "tags",
+      "urn"
+    ],
+    "status": "ok"
+  },
+  "missing_required_tools": [],
+  "optional_tools": [
+    "get_dataset_queries"
+  ],
+  "query_call": {
+    "argument_shape": [
+      "urn"
+    ],
+    "content_blocks": 1,
+    "latest_query_at": null,
+    "notes": [],
+    "query_count": 3,
+    "status": "present"
+  },
+  "required_tools": [
+    "search",
+    "get_entities",
+    "get_lineage",
+    "list_schema_fields"
+  ],
+  "server": "DataHub official MCP server",
+  "server_info": {
+    "name": "datahub",
+    "version": "3.4.6"
+  },
+  "status": "verified",
+  "tool_names": [
+    "get_dataset_queries",
+    "get_entities",
+    "get_lineage",
+    "get_lineage_paths_between",
+    "grep_documents",
+    "list_schema_fields",
+    "search",
+    "search_documents"
+  ],
+  "trace": [
+    {
+      "method": "initialize",
+      "status": "completed"
+    },
+    {
+      "method": "tools/list",
+      "status": "completed"
+    },
+    {
+      "argument_shape": [
+        "urns"
+      ],
+      "method": "tools/call:get_entities",
+      "status": "completed"
+    },
+    {
+      "argument_shape": [
+        "urn"
+      ],
+      "method": "tools/call:get_dataset_queries",
+      "status": "completed"
+    }
+  ]
+}

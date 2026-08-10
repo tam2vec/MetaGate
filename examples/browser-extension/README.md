@@ -103,6 +103,11 @@ After changing extension files, return to `chrome://extensions`, click the
 extension's **Reload** button once, then refresh the DataHub tab. This is a
 Chrome requirement for unpacked extensions, not a MetaGate evaluation step.
 
+If the panel says **Extension context invalidated**, Chrome reloaded the
+extension while the DataHub tab was still using the previous content script.
+Click **Refresh DataHub page** in the panel, or reload MetaGate from
+`chrome://extensions` and then refresh the DataHub tab.
+
 ## Screenshot Checklist
 
 Capture one screenshot with:

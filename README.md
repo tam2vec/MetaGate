@@ -72,8 +72,8 @@ authoritative demonstration for the connected DataHub run.
 - A fail-closed tool boundary: blocked requests report `tool_not_invoked`.
 - Agent Registry and Service Catalog checks for the execution chain.
 - A machine-readable Context Contract for agent workflows.
-- Optional DataHub MCP comparison, kept separate from the core proof unless it
-  is actually configured and verified.
+- A verified local read-only call through DataHub's official MCP server, saved as
+  [machine-readable proof](examples/outputs/official-datahub-mcp-proof.json).
 - Explicit read-only defaults and deployment-gated write-back.
 - Repair-loop, adversarial, policy, and regression tests.
 
@@ -159,11 +159,18 @@ The local proof includes a verified REST write-back/read-back for
 local evidence for that path, not proof that every DataHub deployment supports
 the same mutation.
 
+The repository also includes a verified local read-only run through DataHub's
+official MCP server for `SampleHiveDataset`. It lists the official tools,
+retrieves the entity, and records the optional dataset-query result. The saved
+proof is intentionally explicit about unavailable fields and does not imply a
+public or production MCP deployment. See the [official MCP instructions](examples/mcp/README.md)
+to reproduce it.
+
 The following remain deployment-specific or external dependencies:
 
 - a public live DataHub connection;
 - native DataHub plugin installation;
-- the separately configured official DataHub MCP server;
+- a public or production deployment of the official DataHub MCP server;
 - independent human reviewer agreement;
 - an upstream DataHub merge.
 
@@ -202,9 +209,8 @@ they are not a claim of production accuracy or independent human validation.
 
 ## Demo materials
 
-- [Three-minute hackathon video script](docs/demo-script.md)
-- [Video and screenshot checklist](docs/screenshots-checklist.md)
 - [Architecture and proof layers](docs/architecture.md)
+- [Official DataHub MCP proof](examples/outputs/official-datahub-mcp-proof.md)
 - [Why MetaGate](docs/why-metagate.md)
 - [Production proof boundaries](docs/production-proof.md)
 

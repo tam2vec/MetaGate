@@ -118,6 +118,12 @@ The review page will show the sanitized tool trace only after the command
 returns successfully. Until then it says `not configured`, rather than
 claiming that an MCP call occurred.
 
+For this repository, the official path has been verified locally against
+`SampleHiveDataset` with `uvx mcp-server-datahub@latest --transport stdio`.
+See the saved [proof summary](../examples/outputs/official-datahub-mcp-proof.md)
+and [JSON output](../examples/outputs/official-datahub-mcp-proof.json). A fresh
+deployment still needs its own configured command and credentials.
+
 ## Adversarial scenarios and human labels
 
 Generate the scenario set:
